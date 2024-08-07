@@ -16,11 +16,11 @@ console.log(container)
 const root = createRoot(container)
 
 root.render(
-    <React.StrictMode>
-        <React.Suspense fallback="loading">
-            <App />
-        </React.Suspense>
-    </React.StrictMode>,
+  <React.StrictMode>
+    <React.Suspense fallback="loading">
+      <App />
+    </React.Suspense>
+  </React.StrictMode>,
 )
 
 // If you want to start measuring performance in your app, pass a function
