@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Admin Entry
  */
@@ -15,27 +14,23 @@ use J7\WpTinwing\Bootstrap;
 /**
  * Class Entry
  */
-final class Entry
-{
-
+final class Entry {
 
 	use \J7\WpUtils\Traits\SingletonTrait;
 
 	/**
 	 * Constructor
 	 */
-	public function __construct()
-	{
-		\add_action('admin_menu', [$this, 'add_menu'], 20);
+	public function __construct() {
+		\add_action('admin_menu', [ $this, 'add_menu' ], 20);
 		// Add the admin page for full-screen.
-		\add_action('current_screen', [$this, 'maybe_output_admin_page'], 10);
+		\add_action('current_screen', [ $this, 'maybe_output_admin_page' ], 10);
 	}
 
 	/**
 	 * Add menu
 	 */
-	public function add_menu(): void
-	{
+	public function add_menu(): void {
 		\add_menu_page(
 			'Tinwing',       // 頁面標題
 			'Tinwing',       // 菜單標題
@@ -50,8 +45,7 @@ final class Entry
 	/**
 	 * Output the dashboard admin page.
 	 */
-	public function maybe_output_admin_page()
-	{
+	public function maybe_output_admin_page() {
 		// Exit if not in admin.
 		if (!\is_admin()) {
 			return;
@@ -74,13 +68,12 @@ final class Entry
 	 *
 	 * Credit: SliceWP Setup Wizard.
 	 */
-	public function render_page()
-	{
+	public function render_page() {
 		// Output header HTML.
 		Bootstrap::enqueue_script();
 		$blog_name = \get_bloginfo('name');
 
-?>
+		?>
 		<!doctype html>
 		<html lang="zh_tw">
 
@@ -94,19 +87,19 @@ final class Entry
 			<main id="power_course">
 
 			</main>
-			<?php
-			/**
-			 * Prints any scripts and data queued for the footer.
-			 *
-			 * @since 2.8.0
-			 */
-			\do_action('admin_print_footer_scripts');
+		<?php
+		/**
+		 * Prints any scripts and data queued for the footer.
+		 *
+		 * @since 2.8.0
+		 */
+		\do_action('admin_print_footer_scripts');
 
-			?>
+		?>
 		</body>
 
 		</html>
-<?php
+		<?php
 	}
 }
 
