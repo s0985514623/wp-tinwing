@@ -17,3 +17,6 @@ export const postId = window?.[APP_DOMAIN]?.env?.postId || '0'
 export const permalink = window?.[APP_DOMAIN]?.env?.permalink || '/'
 export const apiTimeout = '30000'
 export const ajaxNonce = window?.[APP_DOMAIN]?.env?.nonce || ''
+//移植
+// export const needAuth =
+//     process.env?.REACT_APP_NEED_AUTH === 'false' ? false : true

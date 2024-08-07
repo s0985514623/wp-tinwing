@@ -84,7 +84,7 @@ final class Entry {
 		</head>
 
 		<body class="pc">
-			<main id="power_course">
+			<main id="wp_tinwing">
 
 			</main>
 		<?php

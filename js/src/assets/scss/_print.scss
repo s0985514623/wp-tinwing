@@ -1,0 +1,39 @@
+@media print {
+	@page {
+		size: 10.79in 15.21in;
+		margin: 10mm 8mm;
+	}
+	html,
+	body {
+		height: 100vh; /* Use 100% here to support printing more than a single page*/
+		margin: 0 !important;
+		padding: 0 !important;
+
+		div {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+				"Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+				"Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
+		}
+	}
+
+	.print {
+		margin: 0;
+		border: initial;
+		border-radius: initial;
+		width: initial;
+		min-height: initial;
+		box-shadow: initial;
+		background: initial;
+		page-break-after: always;
+	}
+
+	.table {
+		p {
+			margin-bottom: 0px;
+			line-height: 1.5rem;
+		}
+		.th {
+			width: 12rem;
+		}
+	}
+}
