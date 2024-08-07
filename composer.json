@@ -1,0 +1,37 @@
+{
+  "name": "j7-dev/wp-tinwing",
+  "description": "This is a boilerplate for creating a WordPress plugin with React, Tailwind, Ant Design, TypeScript, Zod, MSW, React Router v6, React Query v4, SCSS and Vite.",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-only",
+  "authors": [
+    {
+      "name": "JerryLiu",
+      "email": "j7.dev.gg@gmail.com",
+      "homepage": "https://github.com/j7-dev",
+      "role": "Developer"
+    }
+  ],
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://wpackagist.org"
+    }
+  ],
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "require": {
+    "kucrut/vite-for-wp": "^0.8.0",
+    "j7-dev/wp-utils": "0.0.14"
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "@stable",
+    "wp-coding-standards/wpcs": "@stable",
+    "dealerdirect/phpcodesniffer-composer-installer": "@stable"
+  },
+  "scripts": {
+    "lint": "phpcs"
+  }
+}
