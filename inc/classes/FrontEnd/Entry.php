@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace J7\WpTinwing\FrontEnd;
 
-use J7\WpTinwing\Utils\Base;
 /**
  * Class Entry
  */
@@ -29,5 +28,3 @@ final class Entry {
 		echo '<div id="wp_tinwing"></div>';
 	}
 }
-
-Entry::instance();

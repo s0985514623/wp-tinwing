@@ -7,7 +7,6 @@ declare (strict_types = 1);
 
 namespace J7\WpTinwing;
 
-use J7\WpTinwing\Utils\Base;
 use Kucrut\Vite;
 
 /**
@@ -20,9 +19,10 @@ final class Bootstrap {
 	 * Constructor
 	 */
 	public function __construct() {
-		require_once __DIR__ . '/utils/index.php';
-		require_once __DIR__ . '/admin/index.php';
-		require_once __DIR__ . '/front-end/index.php';
+		// FrontEnd\Entry::instance();
+		Admin\Entry::instance();
+		Admin\CPT::instance();
+		Api\Quotations::instance();
 
 		\add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_script' ], 99 );
 		\add_action( 'wp_enqueue_scripts', [ $this, 'frontend_enqueue_script' ], 99 );
@@ -84,10 +84,10 @@ final class Bootstrap {
 					'APP_NAME'      => Plugin::$app_name,
 					'KEBAB'         => Plugin::$kebab,
 					'SNAKE'         => Plugin::$snake,
-					'BASE_URL'      => Base::BASE_URL,
-					'APP1_SELECTOR' => Base::APP1_SELECTOR,
-					'APP2_SELECTOR' => Base::APP2_SELECTOR,
-					'API_TIMEOUT'   => Base::API_TIMEOUT,
+					'BASE_URL'      => Utils\Base::BASE_URL,
+					'APP1_SELECTOR' => Utils\Base::APP1_SELECTOR,
+					'APP2_SELECTOR' => Utils\Base::APP2_SELECTOR,
+					'API_TIMEOUT'   => Utils\Base::API_TIMEOUT,
 					'nonce'         => \wp_create_nonce( Plugin::$kebab ),
 				],
 			]

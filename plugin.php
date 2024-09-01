@@ -33,7 +33,6 @@ if ( ! \class_exists( 'J7\WpTinwing\Plugin' ) ) {
 		 * Constructor
 		 */
 		public function __construct() {
-			require_once __DIR__ . '/inc/class/class-bootstrap.php';
 
 			// $this->required_plugins = array(
 			// array(

@@ -47,6 +47,10 @@
         <exclude name="Generic.Commenting.DocComment.MissingShort"/>
         <exclude name="Universal.Operators.DisallowShortTernary.Found"/>
 				<exclude name="Universal.Classes.RequireFinalClass.NonFinalClassFound"/>
+				<!-- 排除避免使用單一佔位符 %s 作為翻譯字符串規則 -->
+        <exclude name="WordPress.WP.I18n.NoEmptyStrings"/>
+				<exclude name="WordPress.WP.I18n.MissingTranslatorsComment"/>
+
     </rule>
 
     <exclude-pattern>.idea/*</exclude-pattern>

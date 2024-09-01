@@ -21,9 +21,6 @@
     "sync:version": "wp-update-project-version -s package.json -p plugin.php",
     "replace-string": "node ./replace-string.cjs"
   },
-  "pre-commit": [
-    "lint:fix"
-  ],
   "dependencies": {
     "@ant-design/charts": "^1.4.3",
     "@ant-design/icons": "^5.0.1",

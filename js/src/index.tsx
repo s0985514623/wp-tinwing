@@ -12,7 +12,6 @@ import reportWebVitals from './reportWebVitals'
 // }
 
 const container = document.getElementById('wp_tinwing') as HTMLElement
-console.log(container)
 const root = createRoot(container)
 
 root.render(

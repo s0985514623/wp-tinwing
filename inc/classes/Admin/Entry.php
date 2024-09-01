@@ -38,7 +38,7 @@ final class Entry {
 			Plugin::$kebab,       // 菜單的slug
 			'',       // 回調函數
 			'dashicons-admin-generic',       // 圖標
-			10       // 排序
+			25       // 排序
 		);
 	}
 
@@ -103,4 +103,4 @@ final class Entry {
 	}
 }
 
-Entry::instance();
+
