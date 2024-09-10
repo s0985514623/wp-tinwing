@@ -8,11 +8,11 @@ import { ConfigProvider } from 'antd'
 import routerBindings, {
   UnsavedChangesNotifier,
 } from '@refinedev/react-router-v6'
-
+import { dataProvider } from './rest-data-provider'
 // import { dataProvider } from '@refinedev/supabase';
 // import { mocksProvider } from 'mocks/mocksProvider';
 import { useTranslation } from 'react-i18next'
-import { BrowserRouter } from 'react-router-dom'
+import {HashRouter } from 'react-router-dom'
 
 // import { supabaseClient } from 'utils';
 // import authProvider from './authProvider';
@@ -20,6 +20,7 @@ import { ColorModeContextProvider } from './contexts/color-mode'
 import resources from './resources'
 import AppRoutes from './Routes'
 import antdThemeConfig from './antdThemeConfig'
+import { apiUrl, kebab } from '@/utils'
 
 function App() {
   const { t, i18n } = useTranslation()
@@ -33,14 +34,14 @@ function App() {
   // const defaultDataProvider = process.env.REACT_APP_MOCK_API === 'true' ? mocksProvider : dataProvider(supabaseClient);
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <RefineKbarProvider>
         <ColorModeContextProvider>
           <ConfigProvider theme={antdThemeConfig}>
             <Refine
-              // dataProvider={{
-              //     default: defaultDataProvider,
-              // }}
+              dataProvider={{
+								default: dataProvider(`${apiUrl}/${kebab}`),
+              }}
               // liveProvider={liveProvider(supabaseClient)}
 
               // authProvider={authProvider}
@@ -61,7 +62,7 @@ function App() {
           </ConfigProvider>
         </ColorModeContextProvider>
       </RefineKbarProvider>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 

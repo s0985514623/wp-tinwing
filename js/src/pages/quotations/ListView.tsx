@@ -53,9 +53,11 @@ export const ListView: React.FC = () => {
             return filters as CrudFilters;
         },
     });
+		console.log("🚀 ~ tableProps:", tableProps)
     const formattedTableProps = {
         ...tableProps,
         dataSource: tableProps?.dataSource?.map((theRecord) => {
+
             const motorAttr = theRecord?.motorAttr;
             const formattedMotorAttr = motorAttr
                 ? {

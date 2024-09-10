@@ -111,13 +111,13 @@ final class CPT {
 			'meta_type'         => 'object',
 			'sanitize_callback' =>'sanitize_motor_attributes',
 			'attr'              =>[
-				'manufacturing_year' =>[
+				'manufacturingYear' =>[
 					'display_function'  => 'render_meta_box',
 					'input_type'        => 'text',
 					'meta_type'         => 'string',
 					'sanitize_callback' => 'sanitize_text_field',
 				],
-				'registration_no' =>[
+				'registrationNo' =>[
 					'display_function'  => 'render_meta_box',
 					'input_type'        => 'text',
 					'meta_type'         => 'string',
@@ -135,25 +135,25 @@ final class CPT {
 					'meta_type'         => 'string',
 					'sanitize_callback' => 'sanitize_text_field',
 				],
-				'body_type' =>[
+				'bodyType' =>[
 					'display_function'  => 'render_meta_box',
 					'input_type'        => 'text',
 					'meta_type'         => 'string',
 					'sanitize_callback' => 'sanitize_text_field',
 				],
-				'chassis_no' =>[
+				'chassisNo' =>[
 					'display_function'  => 'render_meta_box',
 					'input_type'        => 'text',
 					'meta_type'         => 'string',
 					'sanitize_callback' => 'sanitize_text_field',
 				],
-				'additional_values' =>[
+				'additionalValues' =>[
 					'display_function'  => 'render_meta_box',
 					'input_type'        => 'text',
 					'meta_type'         => 'string',
 					'sanitize_callback' => 'sanitize_text_field',
 				],
-				'named_driver' =>[
+				'namedDriver' =>[
 					'display_function'  => 'render_meta_box',
 					'input_type'        => 'text',
 					'meta_type'         => 'string',
@@ -197,19 +197,19 @@ final class CPT {
 			'meta_type'         => 'number',
 			'sanitize_callback' => 'floatval',
 		],
-		'agentFee' =>[
+		'agent_fee' =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'text',
 			'meta_type'         => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
 		],
-		'insurerFeePercent' =>[
+		'insurer_fee_percent' =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'text',
 			'meta_type'         => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
 		],
-		'shortTermsContent' =>[
+		'short_terms_content' =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'text',
 			'meta_type'         => 'string',
@@ -221,7 +221,7 @@ final class CPT {
 			'meta_type'         => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
 		],
-		'motorEngineNo' =>[
+		'motor_engine_no' =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'text',
 			'meta_type'         => 'string',
@@ -239,7 +239,7 @@ final class CPT {
 			'meta_type'         => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
 		],
-		'extraField' =>[
+		'extra_field' =>[
 			'display_function'  => 'render_meta_box_json_extra_field',
 			'meta_type'         => 'object',
 			'sanitize_callback' =>'sanitize_motor_attributes',
@@ -258,7 +258,7 @@ final class CPT {
 				],
 			],
 		],
-		'extraField2' =>[
+		'extra_field2' =>[
 			'display_function'  => 'render_meta_box_json_extra_field',
 			'meta_type'         => 'object',
 			'sanitize_callback' =>'sanitize_motor_attributes',
@@ -277,13 +277,13 @@ final class CPT {
 				],
 			],
 		],
-		'isArchived' =>[
+		'is_archived' =>[
 			'display_function'  => 'render_meta_checkbox',
 			'input_type'        => 'checkbox',
 			'meta_type'         => 'boolean',
 			'sanitize_callback' => 'rest_sanitize_boolean',
 		],
-		'packageContent' =>[
+		'package_content' =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'text',
 			'meta_type'         => 'string',
@@ -599,7 +599,7 @@ final class CPT {
 	 */
 	public function render_meta_box_json( $post, $args ): void {
 		$meta_value = \get_post_meta( $post->ID, $args['title'], true );
-
+		$meta_value    =Maybe_unserialize($meta_value);
 		foreach ($args['args']['attr'] as $key => $value) {
 			\printf(
 				/*html*/'
@@ -613,7 +613,7 @@ final class CPT {
 				$value['input_type'],
 				$args['title'],
 				$key,
-				!empty($meta_value) ? esc_attr($meta_value[ $key ]) : ''
+				!empty($meta_value) && is_array($meta_value) ? esc_attr($meta_value[ $key ]) : ''
 				);
 		}
 	}
@@ -626,8 +626,9 @@ final class CPT {
 	 * @return void
 	 */
 	public function render_meta_box_json_extra_field( $post, $args ): void {
-		$meta_value_data = \get_post_meta( $post->ID, $args['title'], true );
-		$default_meta_value      =[
+		$meta_value_data    = \get_post_meta( $post->ID, $args['title'], true);
+		$meta_value_data    =Maybe_unserialize($meta_value_data);
+		$default_meta_value =[
 			'name'  => '',
 			'value' => '',
 		];
@@ -635,6 +636,7 @@ final class CPT {
 			$default_meta_value['name']  = $meta_key;
 			$default_meta_value['value'] = $meta_value;
 		}
+
 		foreach ($args['args']['attr'] as $args_key => $args_value) {
 			\printf(
 				/*html*/'
@@ -776,4 +778,3 @@ final class CPT {
 		return $template;
 	}
 }
-
