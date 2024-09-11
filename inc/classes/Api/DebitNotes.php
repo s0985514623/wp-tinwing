@@ -1,6 +1,6 @@
 <?php
 /**
- * Quotations Api Register
+ * DebitNotes Api Register
  */
 
 declare(strict_types=1);
@@ -13,7 +13,7 @@ use J7\WpUtils\Classes\WP;
 /**
  * Class Entry
  */
-final class Quotations {
+final class DebitNotes {
 	use \J7\WpUtils\Traits\SingletonTrait;
 	use \J7\WpUtils\Traits\ApiRegisterTrait;
 
@@ -21,7 +21,7 @@ final class Quotations {
 	 * Constructor.
 	 */
 	public function __construct() {
-		\add_action( 'rest_api_init', [ $this, 'register_api_quotations' ] );
+		\add_action( 'rest_api_init', [ $this, 'register_api_debit_notes' ] );
 	}
 
 	/**
@@ -35,27 +35,27 @@ final class Quotations {
 	protected function get_apis() {
 		return [
 			[
-				'endpoint'            => 'quotations',
+				'endpoint'            => 'debit_notes',
 				'method'              => 'get',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'quotations',
+				'endpoint'            => 'debit_notes',
 				'method'              => 'post',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'quotations/(?P<id>\d+)',
+				'endpoint'            => 'debit_notes/(?P<id>\d+)',
 				'method'              => 'post',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'quotations/(?P<id>\d+)',
+				'endpoint'            => 'debit_notes/(?P<id>\d+)',
 				'method'              => 'get',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'quotations/(?P<id>\d+)',
+				'endpoint'            => 'debit_notes/(?P<id>\d+)',
 				'method'              => 'delete',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
@@ -67,7 +67,7 @@ final class Quotations {
 	 *
 	 * @return void
 	 */
-	public function register_api_quotations(): void {
+	public function register_api_debit_notes(): void {
 		$this->register_apis(
 			apis: $this->get_apis(),
 			namespace: Plugin::$kebab,
@@ -75,17 +75,17 @@ final class Quotations {
 		);
 	}
 	/**
-	 * Get quotations callback
+	 * Get debit_notes callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function get_quotations_callback( $request ) { // phpcs:ignore
+	public function get_debit_notes_callback( $request ) { // phpcs:ignore
 		$params = $request->get_query_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
 		// 查詢 Custom Post Type 'book' 的文章
 		$args       = [
-			'post_type'      => 'quotations',   // 自定義文章類型名稱
+			'post_type'      => 'debit_notes',   // 自定義文章類型名稱
 			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
 			'orderby'        => $params['orderby'],   // 排序方式
 			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
@@ -142,18 +142,18 @@ final class Quotations {
 		return $response;
 	}
 	/**
-	 * Create quotations callback
+	 * Create debit_notes callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function post_quotations_callback( $request ) { // phpcs:ignore
+	public function post_debit_notes_callback( $request ) { // phpcs:ignore
 		$params = $request->get_json_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
 		// 創建文章
 		$post_id = wp_insert_post(
 			[
-				'post_type'    => 'quotations', // 自定義文章類型名稱
+				'post_type'    => 'debit_notes', // 自定義文章類型名稱
 				'post_title'   => $params['noteNo'], // 文章標題
 				'post_content' => '', // 文章內容
 				'post_status'  => 'publish', // 文章狀態
@@ -165,8 +165,8 @@ final class Quotations {
 		// 更新文章的 meta 資料
 		update_post_meta($post_id, 'template', $params['template']);
 		update_post_meta($post_id, 'term_id', $params['termId']);
-		update_post_meta($post_id, 'agent_id', $params['agentId']);
 		update_post_meta($post_id, 'client_id', $params['clientId']);
+		update_post_meta($post_id, 'agent_id ', $params['agentId']);
 		update_post_meta($post_id, 'insurer_id', $params['insurerId']);
 		update_post_meta($post_id, 'policy_no', $params['policyNo']);
 		update_post_meta($post_id, 'name_of_insured', $params['nameOfInsured']);
@@ -193,12 +193,12 @@ final class Quotations {
 		return $response;
 	}
 	/**
-	 * Update quotations callback
+	 * Update debit_notes callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function post_quotations_with_id_callback( $request ) { // phpcs:ignore
+	public function post_debit_notes_with_id_callback( $request ) { // phpcs:ignore
 		$params  = $request->get_json_params() ?? [];
 		$params  = WP::sanitize_text_field_deep( $params, false );
 		$post_id = $request->get_param('id');
@@ -217,8 +217,8 @@ final class Quotations {
 		// 更新文章的 meta 資料
 		update_post_meta($post_id, 'template', $params['template']);
 		update_post_meta($post_id, 'term_id', $params['termId']);
-		update_post_meta($post_id, 'agent_id', $params['agentId']);
 		update_post_meta($post_id, 'client_id', $params['clientId']);
+		update_post_meta($post_id, 'agent_id ', $params['agentId']);
 		update_post_meta($post_id, 'insurer_id', $params['insurerId']);
 		update_post_meta($post_id, 'policy_no', $params['policyNo']);
 		update_post_meta($post_id, 'name_of_insured', $params['nameOfInsured']);
@@ -245,12 +245,12 @@ final class Quotations {
 		return $response;
 	}
 	/**
-	 * Get quotations by id callback
+	 * Get debit_notes by id callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function get_quotations_with_id_callback( $request ) { // phpcs:ignore
+	public function get_debit_notes_with_id_callback( $request ) { // phpcs:ignore
 		$post_id = $request->get_param('id');
 		$post    = get_post($post_id);
 		if ( ! $post ) {
@@ -296,12 +296,12 @@ final class Quotations {
 		return $response;
 	}
 	/**
-	 * Delete quotations by id callback
+	 * Delete debit_notes by id callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function delete_quotations_with_id_callback( $request ) { // phpcs:ignore
+	public function delete_debit_notes_with_id_callback( $request ) { // phpcs:ignore
 		$post_id = $request->get_param('id');
 		// 刪除文章
 		$result = wp_delete_post($post_id, true);

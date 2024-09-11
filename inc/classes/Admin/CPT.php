@@ -34,278 +34,42 @@ final class CPT {
 	 */
 	public $post_type_array = [];
 	/**
-	 * 保單post meta
-	 * 適用於quotations, debit_notes, renewals, credit_note
+	 * 各post meta Array
 	 *
 	 * @var array
 	 */
-	public $insurance_meta = [
-		'template'                 =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'term_id'                  =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'number',
-			'meta_type'         => 'integer',
-			'sanitize_callback' => 'absint',
-		],
-		'agent_id'                 =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'number',
-			'meta_type'         => 'integer',
-			'sanitize_callback' => 'absint',
-		],
-		'client_id'                =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'number',
-			'meta_type'         => 'integer',
-			'sanitize_callback' => 'absint',
-		],
-		'insurer_id'               =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'number',
-			'meta_type'         => 'integer',
-			'sanitize_callback' => 'absint',
-		],
-		'policy_no'                =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'name_of_insured'          =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'sum_insured'              =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'period_of_insurance_from' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'number',
-			'meta_type'         => 'integer',
-			'sanitize_callback' => 'absint',
-		],
-		'period_of_insurance_to'   =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'number',
-			'meta_type'         => 'integer',
-			'sanitize_callback' => 'absint',
-		],
-		'insured_premises'         =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'motor_attr' =>[
-			'display_function'  => 'render_meta_box_json',
-			'meta_type'         => 'object',
-			'sanitize_callback' =>'sanitize_motor_attributes',
-			'attr'              =>[
-				'manufacturingYear' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-				'registrationNo' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-				'model' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-				'tonnes' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-				'bodyType' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-				'chassisNo' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-				'additionalValues' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-				'namedDriver' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-				'ls' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'number',
-					'meta_type'         => 'number',
-					'sanitize_callback' => 'floatval',
-				],
-				'ncb' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'number',
-					'meta_type'         => 'number',
-					'sanitize_callback' => 'floatval',
-				],
-				'mib' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'number',
-					'meta_type'         => 'number',
-					'sanitize_callback' => 'floatval',
-				],
-			],
-		],
-		'premium' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'number',
-			'meta_type'         => 'integer',
-			'sanitize_callback' => 'absint',
-		],
-		'less' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'number',
-			'meta_type'         => 'number',
-			'sanitize_callback' => 'floatval',
-		],
-		'levy' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'number',
-			'meta_type'         => 'number',
-			'sanitize_callback' => 'floatval',
-		],
-		'agent_fee' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'insurer_fee_percent' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'short_terms_content' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'particulars' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'motor_engine_no' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'chassi' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'remarks' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-		'extra_field' =>[
-			'display_function'  => 'render_meta_box_json_extra_field',
-			'meta_type'         => 'object',
-			'sanitize_callback' =>'sanitize_motor_attributes',
-			'attr'              =>[
-				'name' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-				'value' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-			],
-		],
-		'extra_field2' =>[
-			'display_function'  => 'render_meta_box_json_extra_field',
-			'meta_type'         => 'object',
-			'sanitize_callback' =>'sanitize_motor_attributes',
-			'attr'              =>[
-				'name' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-				'value' =>[
-					'display_function'  => 'render_meta_box',
-					'input_type'        => 'text',
-					'meta_type'         => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-				],
-			],
-		],
-		'is_archived' =>[
-			'display_function'  => 'render_meta_checkbox',
-			'input_type'        => 'checkbox',
-			'meta_type'         => 'boolean',
-			'sanitize_callback' => 'rest_sanitize_boolean',
-		],
-		'package_content' =>[
-			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-		],
-	];
+	public $cpt_post_meta_array =[];
+
 	/**
 	 * Constructor
 	 */
 	public function __construct() {
-		$args                  = [
-			'post_meta_array' => [ 'meta', 'settings' ],
-			'rewrite'         => [
+		$args                      = [
+			'post_meta_array'     => [ 'meta', 'settings' ],
+			'rewrite'             => [
 				'template_path' => 'test.php',
 				'slug'          => 'test',
 				'var'           => Plugin::$snake . '_test',
 			],
-			'post_type_array' => [ 'quotations', 'debit_notes', 'renewals', 'receipts', 'credit_note', 'terms', 'insurers', 'insurer_products', 'agents', 'clients', 'expenses' ],
+			'post_type_array'     => [ 'quotations', 'debit_notes', 'renewals', 'receipts', 'credit_notes', 'terms', 'insurers', 'insurer_products', 'agents', 'clients', 'expenses' ],
+			'cpt_post_meta_array' =>[
+				'quotations'       => PostType\Quotations::instance()->get_meta(),
+				'debit_notes'      => PostType\Quotations::instance()->get_meta(),
+				'renewals'         => PostType\Renewals::instance()->get_meta(),
+				'credit_notes'     => PostType\Quotations::instance()->get_meta(),
+				'receipts'         => PostType\Receipts::instance()->get_meta(),
+				'terms'            => PostType\Terms::instance()->get_meta(),
+				'insurers'         => PostType\Insurers::instance()->get_meta(),
+				'insurer_products' => PostType\InsurerProducts::instance()->get_meta(),
+				'agents'           => PostType\Agents::instance()->get_meta(),
+				'clients'          => PostType\Clients::instance()->get_meta(),
+				'expenses'         => PostType\Expenses::instance()->get_meta(),
+			],
 		];
-		$this->post_meta_array = $args['post_meta_array'];
-		$this->rewrite         = $args['rewrite'] ?? [];
-		$this->post_type_array = $args['post_type_array'] ?? [];
+		$this->post_meta_array     = $args['post_meta_array'];
+		$this->rewrite             = $args['rewrite'] ?? [];
+		$this->post_type_array     = $args['post_type_array'] ?? [];
+		$this->cpt_post_meta_array = $args['cpt_post_meta_array'] ?? [];
 
 		\add_action( 'init', [ $this, 'init' ] );
 
@@ -409,71 +173,6 @@ final class CPT {
 	}
 
 	/**
-	 * 棄用
-	 * Register wp-tinwing custom post meta
-	 */
-	public function register_post_meta(): void {
-		// $test = \get_post_meta(211, 'motor_attr', true);
-		// ob_start();
-		// var_dump($test);
-		// \J7\WpUtils\Classes\log::info('' . ob_get_clean());
-		foreach ( $this->insurance_meta as $meta_key=>$meta_args ) {
-			$show_in_rest =[
-				'schema' => [
-					'type' => $meta_args['meta_type'],
-				],
-				'prepare_callback' => function ( $meta_value ) {
-					return $meta_value;
-				},
-			];
-			if ($meta_args['meta_type'] === 'object') {
-				$show_in_rest['schema']['properties'] = [];
-				foreach ($meta_args['attr'] as $attr_key => $value) {
-					$show_in_rest['schema']['properties'][ $attr_key ] = [
-						'type' => $value['meta_type'],
-					];
-				}
-			}
-			// 統一註冊insurance_meta
-			\register_meta(
-				'post',
-				$meta_key,
-				[
-					'type'              => $meta_args['meta_type'],
-					'single'            => true,
-					'show_in_rest'      => $show_in_rest,
-					'sanitize_callback' => $meta_args['meta_type'] ==='object' ? [ $this, $meta_args['sanitize_callback'] ]:$meta_args['sanitize_callback'],
-					'auth_callback'     => function () {
-						return \current_user_can('edit_posts');
-					},
-				]
-			);
-		}
-	}
-
-	/**
-	 * 暫時用不到
-	 * 儲存時觸發的callback
-	 * 清理 Motor Attributes
-	 *
-	 * @param mixed $meta_value The meta value to sanitize.
-	 * @return mixed The sanitized meta value.
-	 */
-	public function sanitize_motor_attributes( $meta_value ) {
-		// 檢查特定欄位是否為數字，是的話轉換為浮點數
-		if (isset($meta_value['ls'])) {
-			$meta_value['ls'] = is_numeric($meta_value['ls']) ? (float) $meta_value['ls'] : null;
-		}
-		if (isset($meta_value['ncb'])) {
-			$meta_value['ncb'] = is_numeric($meta_value['ncb']) ? (float) $meta_value['ncb'] : null;
-		}
-		if (isset($meta_value['mib'])) {
-			$meta_value['mib'] = is_numeric($meta_value['mib']) ? (float) $meta_value['mib'] : null;
-		}
-
-		return $meta_value;
-	}
-	/**
 	 * Register meta fields for post type to show in rest api
 	 */
 	public function add_post_meta(): void {
@@ -509,8 +208,10 @@ final class CPT {
 	 * @param string $post_type Post type.
 	 */
 	public function add_metabox( string $post_type ): void {
+		// Post type array
 		if ( in_array( $post_type, $this->post_type_array ) ) {
-			foreach ( $this->insurance_meta as $key=>$meta_args ) {
+			// Post meta array
+			foreach ( $this->cpt_post_meta_array[ $post_type ] as $key=>$meta_args ) {
 				\add_meta_box(
 					$key . '-metabox',
 					\sprintf(__( '%s', 'wp_tinwing' ), $key),
@@ -521,25 +222,7 @@ final class CPT {
 					$meta_args// 額外帶入的參數
 				);
 			}
-			// \add_meta_box(
-			// Plugin::$kebab . '-metabox',
-			// __( 'Wp Tinwing', 'wp_tinwing' ),
-			// [ $this, 'render_meta_box_string' ],
-			// $post_type,
-			// 'advanced',
-			// 'high',
-			// $this->insurance_meta
-			// );
 		}
-	}
-
-	/**
-	 * 棄用
-	 * Render meta box.
-	 */
-	public function render_meta_box_old(): void {
-		// phpcs:ignore
-		echo '<div id="wp_tinwing_metabox"></div>';
 	}
 
 	/**
@@ -552,6 +235,7 @@ final class CPT {
 	 */
 	public function render_meta_box( $post, $args ): void {
 		$meta_value = \get_post_meta( $post->ID, $args['title'], true );
+
 		\printf(
 			/*html*/'
 			<p>
@@ -565,6 +249,7 @@ final class CPT {
 			esc_attr($meta_value),
 		);
 	}
+
 	/**
 	 * Render meta checkbox to input.
 	 *
@@ -589,6 +274,7 @@ final class CPT {
 			$checked
 		);
 	}
+
 	/**
 	 * Render meta box to JSON.
 	 *
@@ -599,7 +285,8 @@ final class CPT {
 	 */
 	public function render_meta_box_json( $post, $args ): void {
 		$meta_value = \get_post_meta( $post->ID, $args['title'], true );
-		$meta_value    =Maybe_unserialize($meta_value);
+		$meta_value = json_decode($meta_value, true);
+
 		foreach ($args['args']['attr'] as $key => $value) {
 			\printf(
 				/*html*/'
@@ -617,6 +304,7 @@ final class CPT {
 				);
 		}
 	}
+
 	/**
 	 * Render meta box to extraField JSON.
 	 *
@@ -626,8 +314,9 @@ final class CPT {
 	 * @return void
 	 */
 	public function render_meta_box_json_extra_field( $post, $args ): void {
-		$meta_value_data    = \get_post_meta( $post->ID, $args['title'], true);
-		$meta_value_data    =Maybe_unserialize($meta_value_data);
+		$meta_value_data = \get_post_meta( $post->ID, $args['title'], true);
+		$meta_value_data = json_decode($meta_value_data, true);
+
 		$default_meta_value =[
 			'name'  => '',
 			'value' => '',
@@ -728,7 +417,7 @@ final class CPT {
 
 		// Update the meta field.
 		// \update_post_meta( $post_id, Plugin::$snake . '_meta', $meta_data );
-		foreach ( $this->insurance_meta as $key=>$meta_args ) {
+		foreach ( $this->cpt_post_meta_array[ $post_type ] as $key=>$meta_args ) {
 			//檢查是否有輸入
 			if(!empty($_POST[ $key ])){
 				//檢查是否為陣列
@@ -740,8 +429,8 @@ final class CPT {
 				}
 				//檢查是否為extraField 及 extraField2
 				if("extraField"==$key||"extraField2"==$key){
-					$name = $meta_data['name'];
-						$value = $meta_data['value'];
+					$name  = $meta_data['name'];
+					$value = $meta_data['value'];
 					//檢查是否有輸入,否則跳出
 					if(empty ($name)||empty ($value)){
 						continue;

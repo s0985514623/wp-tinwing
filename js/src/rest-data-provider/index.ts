@@ -18,7 +18,7 @@ export const dataProvider = (
   getList: async ({ resource, pagination, filters, sorters, meta }) => {
     // TODO
 
-    console.log('⭐  filters:', filters)
+    // console.log('⭐  filters:', filters)
     const url = `${apiUrl}/${resource}`
 
     const { current = 1, pageSize = 10, mode = 'server' } = pagination ?? {}

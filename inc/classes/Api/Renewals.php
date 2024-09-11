@@ -13,7 +13,7 @@ use J7\WpUtils\Classes\WP;
 /**
  * Class Entry
  */
-final class Quotations {
+final class Renewals {
 	use \J7\WpUtils\Traits\SingletonTrait;
 	use \J7\WpUtils\Traits\ApiRegisterTrait;
 
@@ -21,7 +21,7 @@ final class Quotations {
 	 * Constructor.
 	 */
 	public function __construct() {
-		\add_action( 'rest_api_init', [ $this, 'register_api_quotations' ] );
+		\add_action( 'rest_api_init', [ $this, 'register_api_renewals' ] );
 	}
 
 	/**
@@ -35,27 +35,27 @@ final class Quotations {
 	protected function get_apis() {
 		return [
 			[
-				'endpoint'            => 'quotations',
+				'endpoint'            => 'renewals',
 				'method'              => 'get',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'quotations',
+				'endpoint'            => 'renewals',
 				'method'              => 'post',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'quotations/(?P<id>\d+)',
+				'endpoint'            => 'renewals/(?P<id>\d+)',
 				'method'              => 'post',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'quotations/(?P<id>\d+)',
+				'endpoint'            => 'renewals/(?P<id>\d+)',
 				'method'              => 'get',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'quotations/(?P<id>\d+)',
+				'endpoint'            => 'renewals/(?P<id>\d+)',
 				'method'              => 'delete',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
@@ -67,7 +67,7 @@ final class Quotations {
 	 *
 	 * @return void
 	 */
-	public function register_api_quotations(): void {
+	public function register_api_renewals(): void {
 		$this->register_apis(
 			apis: $this->get_apis(),
 			namespace: Plugin::$kebab,
@@ -75,17 +75,17 @@ final class Quotations {
 		);
 	}
 	/**
-	 * Get quotations callback
+	 * Get renewals callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function get_quotations_callback( $request ) { // phpcs:ignore
+	public function get_renewals_callback( $request ) { // phpcs:ignore
 		$params = $request->get_query_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
 		// 查詢 Custom Post Type 'book' 的文章
 		$args       = [
-			'post_type'      => 'quotations',   // 自定義文章類型名稱
+			'post_type'      => 'renewals',   // 自定義文章類型名稱
 			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
 			'orderby'        => $params['orderby'],   // 排序方式
 			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
@@ -129,6 +129,8 @@ final class Quotations {
 					'extraField2'           => $all_meta['extra_field2'][0]?json_decode($all_meta['extra_field2'][0]):\null,
 					'isArchived'            => filter_var($all_meta['is_archived'][0], FILTER_VALIDATE_BOOLEAN)??\null,
 					'packageContent'        => $all_meta['package_content'][0]??\null,
+					'debitNoteId'           => $all_meta['debit_note_id'][0]??\null,
+					'createdFromRenewalId'  => $all_meta['created_from_renewal_id'][0]??\null,
 				];
 			}
 			wp_reset_postdata();
@@ -142,18 +144,18 @@ final class Quotations {
 		return $response;
 	}
 	/**
-	 * Create quotations callback
+	 * Create renewals callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function post_quotations_callback( $request ) { // phpcs:ignore
+	public function post_renewals_callback( $request ) { // phpcs:ignore
 		$params = $request->get_json_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
 		// 創建文章
 		$post_id = wp_insert_post(
 			[
-				'post_type'    => 'quotations', // 自定義文章類型名稱
+				'post_type'    => 'renewals', // 自定義文章類型名稱
 				'post_title'   => $params['noteNo'], // 文章標題
 				'post_content' => '', // 文章內容
 				'post_status'  => 'publish', // 文章狀態
@@ -165,8 +167,8 @@ final class Quotations {
 		// 更新文章的 meta 資料
 		update_post_meta($post_id, 'template', $params['template']);
 		update_post_meta($post_id, 'term_id', $params['termId']);
-		update_post_meta($post_id, 'agent_id', $params['agentId']);
 		update_post_meta($post_id, 'client_id', $params['clientId']);
+		update_post_meta($post_id, 'agent_id ', $params['agentId']);
 		update_post_meta($post_id, 'insurer_id', $params['insurerId']);
 		update_post_meta($post_id, 'policy_no', $params['policyNo']);
 		update_post_meta($post_id, 'name_of_insured', $params['nameOfInsured']);
@@ -189,16 +191,18 @@ final class Quotations {
 		update_post_meta($post_id, 'extra_field2', wp_json_encode($params['extraField2']));
 		update_post_meta($post_id, 'is_archived', $params['isArchived']);
 		update_post_meta($post_id, 'package_content', $params['packageContent']);
+		update_post_meta($post_id, 'debit_note_id', $params['debitNoteId']);
+		update_post_meta($post_id, 'created_from_renewal_id', $params['createdFromRenewalId']);
 		$response = new \WP_REST_Response(  $post_id  );
 		return $response;
 	}
 	/**
-	 * Update quotations callback
+	 * Update renewals callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function post_quotations_with_id_callback( $request ) { // phpcs:ignore
+	public function post_renewals_with_id_callback( $request ) { // phpcs:ignore
 		$params  = $request->get_json_params() ?? [];
 		$params  = WP::sanitize_text_field_deep( $params, false );
 		$post_id = $request->get_param('id');
@@ -217,7 +221,7 @@ final class Quotations {
 		// 更新文章的 meta 資料
 		update_post_meta($post_id, 'template', $params['template']);
 		update_post_meta($post_id, 'term_id', $params['termId']);
-		update_post_meta($post_id, 'agent_id', $params['agentId']);
+		update_post_meta($post_id, 'agent_id ', $params['agentId']);
 		update_post_meta($post_id, 'client_id', $params['clientId']);
 		update_post_meta($post_id, 'insurer_id', $params['insurerId']);
 		update_post_meta($post_id, 'policy_no', $params['policyNo']);
@@ -241,16 +245,18 @@ final class Quotations {
 		update_post_meta($post_id, 'extra_field2', wp_json_encode($params['extraField2']));
 		update_post_meta($post_id, 'is_archived', $params['isArchived']);
 		update_post_meta($post_id, 'package_content', $params['packageContent']);
+		update_post_meta($post_id, 'debit_note_id', $params['debitNoteId']);
+		update_post_meta($post_id, 'created_from_renewal_id', $params['createdFromRenewalId']);
 		$response = new \WP_REST_Response(  $post_id  );
 		return $response;
 	}
 	/**
-	 * Get quotations by id callback
+	 * Get renewals by id callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function get_quotations_with_id_callback( $request ) { // phpcs:ignore
+	public function get_renewals_with_id_callback( $request ) { // phpcs:ignore
 		$post_id = $request->get_param('id');
 		$post    = get_post($post_id);
 		if ( ! $post ) {
@@ -267,8 +273,8 @@ final class Quotations {
 				'noteNo'                => get_the_title($post_id),
 				'template'              => $all_meta['template'][0]??\null,
 				'termId'                => intval($all_meta['term_id'][0])??\null,
-				'agentId'              => intval($all_meta['agent_id'][0])??\null,
 				'clientId'              => intval($all_meta['client_id'][0])??\null,
+				'agentId'              => intval($all_meta['agent_id'][0])??\null,
 				'insurerId'             => intval($all_meta['insurer_id'][0])??\null,
 				'policyNo'              => $all_meta['policy_no'][0]??\null,
 				'nameOfInsured'         => $all_meta['name_of_insured'][0]??\null,
@@ -291,17 +297,19 @@ final class Quotations {
 				'extraField2'           => $all_meta['extra_field2'][0]?json_decode($all_meta['extra_field2'][0]):\null,
 				'isArchived'            => filter_var($all_meta['is_archived'][0], FILTER_VALIDATE_BOOLEAN)??\null,
 				'packageContent'        => $all_meta['package_content'][0]??\null,
+				'debitNoteId'           => $all_meta['debit_note_id'][0]??\null,
+				'createdFromRenewalId'  => $all_meta['created_from_renewal_id'][0]??\null,
 			]
 		);
 		return $response;
 	}
 	/**
-	 * Delete quotations by id callback
+	 * Delete renewals by id callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function delete_quotations_with_id_callback( $request ) { // phpcs:ignore
+	public function delete_renewals_with_id_callback( $request ) { // phpcs:ignore
 		$post_id = $request->get_param('id');
 		// 刪除文章
 		$result = wp_delete_post($post_id, true);

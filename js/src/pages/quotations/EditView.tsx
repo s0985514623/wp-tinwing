@@ -24,6 +24,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
     const { formProps, saveButtonProps, form, queryResult } = useForm();
 
     const debitNoteData = queryResult?.data?.data as DataType;
+    console.log("🚀 ~ debitNoteData:", debitNoteData)
 
     const watchDate = Form.useWatch(['date'], form);
     const [dateProps, setDateProps] = useState<{

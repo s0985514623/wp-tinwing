@@ -44,6 +44,8 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
             enabled: !!debitNoteData,
         },
     });
+    console.log("🚀 ~ debitNoteData:", debitNoteData)
+		console.log('debitNoteData?.date', debitNoteData?.date)
     const agent = agentData?.data;
 
     const printRef = useRef<HTMLDivElement>(null);

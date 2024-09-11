@@ -22,7 +22,15 @@ final class Bootstrap {
 		// FrontEnd\Entry::instance();
 		Admin\Entry::instance();
 		Admin\CPT::instance();
+		Api\CreditNotes::instance();
 		Api\Quotations::instance();
+		Api\DebitNotes::instance();
+		Api\Renewals::instance();
+		Api\Insurers::instance();
+		Api\Terms::instance();
+		Api\Agents::instance();
+		Api\Expenses::instance();
+		Api\Clients::instance();
 
 		\add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_script' ], 99 );
 		\add_action( 'wp_enqueue_scripts', [ $this, 'frontend_enqueue_script' ], 99 );
