@@ -13,7 +13,7 @@ const EditTemplateShortTerms = () => {
     const form = Form.useFormInstance();
     const watchPremium = Form.useWatch(['premium'], form) || 0;
     const watchLevy = Form.useWatch(['levy'], form) || 0;
-    const watchExtraField = Form.useWatch(['extraField', 'value'], form) || 0;
+    const watchExtraField = Form.useWatch(['extra_field', 'value'], form) || 0;
     const watchLess = Form.useWatch(['less'], form) || 0;
     const totalPremium = getGeneralTotalPremium({
         premium: watchPremium,
@@ -21,8 +21,8 @@ const EditTemplateShortTerms = () => {
         less: watchLess,
         extraValue: watchExtraField,
     });
-    const watchPeriodOfInsuranceFrom = Form.useWatch(['periodOfInsuranceFrom'], form);
-    const watchPeriodOfInsuranceTo = Form.useWatch(['periodOfInsuranceTo'], form);
+    const watchPeriodOfInsuranceFrom = Form.useWatch(['period_of_insurance_from'], form);
+    const watchPeriodOfInsuranceTo = Form.useWatch(['period_of_insurance_to'], form);
 
     const [periodOfInsuranceProps, setPeriodOfInsuranceProps] = useState<{
         value?: [Dayjs, Dayjs];
@@ -36,8 +36,8 @@ const EditTemplateShortTerms = () => {
 
     const handlePeriodChange = (value: RangeValue<Dayjs>) => {
         if (!!value && !!value[0] && !!value[1]) {
-            form.setFieldValue(['periodOfInsuranceFrom'], value[0].unix());
-            form.setFieldValue(['periodOfInsuranceTo'], value[1].unix());
+            form.setFieldValue(['period_of_insurance_from'], value[0].unix());
+            form.setFieldValue(['period_of_insurance_to'], value[1].unix());
             setPeriodOfInsuranceProps({
                 value: [value[0], value[1]],
             });
@@ -60,7 +60,7 @@ const EditTemplateShortTerms = () => {
                         <div className="tr">
                             <div className="th">承保公司 Insurer</div>
                             <div className="td">
-                                <Form.Item noStyle name={['insurerId']}>
+                                <Form.Item noStyle name={['insurer_id']}>
                                     <Select {...insurerSelectProps} size="small" className="w-full" allowClear />
                                 </Form.Item>
                             </div>
@@ -68,7 +68,7 @@ const EditTemplateShortTerms = () => {
                         <div className="tr">
                             <div className="th">保單號碼 Policy No.</div>
                             <div className="td">
-                                <Form.Item noStyle name={['policyNo']}>
+                                <Form.Item noStyle name={['policy_no']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -76,7 +76,7 @@ const EditTemplateShortTerms = () => {
                         <div className="tr">
                             <div className="th">投保名稱 Name of Insured</div>
                             <div className="td">
-                                <Form.Item noStyle name={['nameOfInsured']}>
+                                <Form.Item noStyle name={['name_of_insured']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -84,7 +84,7 @@ const EditTemplateShortTerms = () => {
                         <div className="tr">
                             <div className="th">投保金額 Sum Insured</div>
                             <div className="td">
-                                <Form.Item noStyle name={['sumInsured']}>
+                                <Form.Item noStyle name={['sum_insured']}>
                                     <InputNumber className="w-full" size="small" />
                                 </Form.Item>
                             </div>
@@ -93,10 +93,10 @@ const EditTemplateShortTerms = () => {
                             <div className="th">保險期限 Period of Insurance</div>
                             <div className="td">
                                 <RangePicker size="small" className="w-full" placeholder={['From', 'To']} onChange={handlePeriodChange} {...periodOfInsuranceProps} />
-                                <Form.Item hidden name={['periodOfInsuranceFrom']}>
+                                <Form.Item hidden name={['period_of_insurance_from']}>
                                     <InputNumber />
                                 </Form.Item>
-                                <Form.Item hidden name={['periodOfInsuranceTo']}>
+                                <Form.Item hidden name={['period_of_insurance_to']}>
                                     <InputNumber />
                                 </Form.Item>
                             </div>
@@ -134,12 +134,12 @@ const EditTemplateShortTerms = () => {
                         </div>
                         <div className="tr">
                             <div className="th">
-                                <Form.Item noStyle name={['extraField', 'label']}>
+                                <Form.Item noStyle name={['extra_field', 'label']}>
                                     <Input className="w-full" size="small" />
                                 </Form.Item>
                             </div>
                             <div className="td">
-                                <Form.Item noStyle name={['extraField', 'value']}>
+                                <Form.Item noStyle name={['extra_field', 'value']}>
                                     <InputNumber className="w-full" size="small" addonAfter="%" min={0} stringMode step="0.01" />
                                 </Form.Item>
                             </div>

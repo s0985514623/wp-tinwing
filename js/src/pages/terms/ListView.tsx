@@ -7,11 +7,26 @@ export const ListView: React.FC<{ taxonomy: string }> = ({ taxonomy = '' }) => {
     const { tableProps } = useTable<DataType>({
         filters: {
             permanent: [
-                {
-                    field: 'taxonomy',
-                    operator: !!taxonomy ? 'eq' : 'nnull',
-                    value: taxonomy,
-                },
+                // {
+                //     field: 'taxonomy',
+                //     operator: !!taxonomy ? 'eq' : 'nnull',
+                //     value: taxonomy,
+                // },
+								{
+									field: 'meta_query[0][key]',
+									operator: 'eq',
+									value: 'taxonomy',
+								},
+								{
+									field: 'meta_query[0][value]',
+									operator: 'eq',
+									value: taxonomy,
+								},
+								{
+									field: 'meta_query[0][compare]',
+									operator: 'eq',
+									value: '=',
+								},
             ],
         },
     });

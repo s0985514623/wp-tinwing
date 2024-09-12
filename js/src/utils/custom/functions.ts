@@ -12,8 +12,8 @@ export const getGrossPremium = ({ premium, ls, ncb }: { premium: number; ls: num
 
 export const getGrossPremiumByDebitNote = (debitNote: TDebitNote | undefined) => {
     const premium = Number(debitNote?.premium) || 0;
-    const ls = Number(debitNote?.motorAttr?.ls) || 0;
-    const ncb = Number(debitNote?.motorAttr?.ncb) || 0;
+    const ls = Number(debitNote?.motor_attr?.ls) || 0;
+    const ncb = Number(debitNote?.motor_attr?.ncb) || 0;
 
     return !!debitNote ? round(premium * (1 + ls / 100) * (1 + ncb / 100), 2) : 0;
 };
@@ -24,9 +24,9 @@ export const getMotorTotalPremium = ({ grossPremium, mib, less, extraValue = 0 }
 
 export const getMotorTotalPremiumByDebitNote = (debitNote: TDebitNote | undefined) => {
     const grossPremium = getGrossPremiumByDebitNote(debitNote);
-    const mib = Number(debitNote?.motorAttr?.mib) || 0;
+    const mib = Number(debitNote?.motor_attr?.mib) || 0;
     const less = Number(debitNote?.less) || 0;
-    const extraValue = Number(debitNote?.extraField?.value) || 0;
+    const extraValue = Number(debitNote?.extra_field?.value) || 0;
 
     return !!debitNote ? round(grossPremium * (1 + (mib + extraValue) / 100) + less, 2) : 0;
 };
@@ -39,7 +39,7 @@ export const getGeneralTotalPremiumByDebitNote = (debitNote: TDebitNote | undefi
     const premium = Number(debitNote?.premium) || 0;
     const levy = Number(debitNote?.levy) || 0;
     const less = Number(debitNote?.less) || 0;
-    const extraValue = Number(debitNote?.extraField?.value) || 0;
+    const extraValue = Number(debitNote?.extra_field?.value) || 0;
     return !!debitNote ? round(premium * (1 + (levy + extraValue) / 100) + less, 2) : 0;
 };
 
@@ -77,7 +77,7 @@ export const getInsurerPayment = (receipt:TReceipt, debitNote:TDebitNote, insure
 	const template=debitNote?.template;
 
 	if ('motor' === template) {
-			const mib = debitNote?.motorAttr?.mib || 0;
+			const mib = debitNote?.motor_attr?.mib || 0;
 			const mibValue = round(premium * (mib / 100), 2);
 			const insurerTotalFee = mibValue + round(premium * (insurerPaymentRate / 100), 2);
 			return insurerTotalFee;

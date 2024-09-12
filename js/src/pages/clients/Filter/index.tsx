@@ -5,13 +5,13 @@ const Filter: React.FC<{ formProps: FormProps }> = ({ formProps }) => {
     return (
         <Form {...formProps} layout="vertical">
             <div className="grid grid-cols-6 gap-x-4 gap-y-0">
-                <Form.Item label="Client No." name={['clientNumber']}>
+                <Form.Item label="Client No." name={['client_number']}>
                     <Input className="w-full" size="small" allowClear={true} />
                 </Form.Item>
-                <Form.Item label="English Name" name={['nameEn']}>
+                <Form.Item label="English Name" name={['name_en']}>
                     <Input className="w-full" size="small" allowClear={true} />
                 </Form.Item>
-                <Form.Item label="Chinese Name" name={['nameZh']}>
+                <Form.Item label="Chinese Name" name={['name_zh']}>
                     <Input className="w-full" size="small" allowClear={true} />
                 </Form.Item>
                 <Form.Item label="Company" name={['company']}>

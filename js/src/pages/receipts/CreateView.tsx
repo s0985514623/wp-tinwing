@@ -27,15 +27,15 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
     const watchPremium = Form.useWatch(['premium'], form) ?? 0;
     //取得state
     const { state } = useLocation();
-    const debitNoteId = state?.debitNoteId || 0;
+    const debit_note_id = state?.debit_note_id || 0;
     const renewalId = state?.renewalId || 0;
-    const [selectOptions, setSelectOptions] = useState(renewalId ? 'renewal' : debitNoteId ? 'debitNote' : '');
+    const [selectOptions, setSelectOptions] = useState(renewalId ? 'renewal' : debit_note_id ? 'debitNote' : '');
     useEffect(() => {
         if (renewalId) {
-            form.setFieldValue(['createdFromRenewalId'], renewalId);
+            form.setFieldValue(['created_from_renewal_id'], renewalId);
         }
-        if (debitNoteId) {
-            form.setFieldValue(['debitNoteId'], debitNoteId);
+        if (debit_note_id) {
+            form.setFieldValue(['debit_note_id'], debit_note_id);
         }
     }, []);
     const handleChangeSelectOptions = (value: string) => {
@@ -45,28 +45,28 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
     //取得 debitNote
     const { selectProps: debitNoteSelectProps, queryResult: debitNoteQueryResult } = useSelect<TDebitNote>({
         resource: 'debit_notes',
-        optionLabel: 'noteNo',
+        optionLabel: 'note_no',
         optionValue: 'id',
     });
     //取得 renewal
     const { selectProps: renewalsProps, queryResult: renewalsQueryResult } = useSelect<TDebitNote>({
         resource: 'renewals',
-        optionLabel: 'noteNo',
+        optionLabel: 'note_no',
         optionValue: 'id',
     });
     //取得receipts
     const { data: receiptsData } = useList<DataType>({
         resource: 'receipts',
     });
-    //取得receipts的debitNoteId
+    //取得receipts的debit_note_id
     const receiptsIds =
         receiptsData?.data?.map((item) => {
-            return item?.debitNoteId;
+            return item?.debit_note_id;
         }) || [];
-    //取得receipts的createdFromRenewalId
+    //取得receipts的created_from_renewal_id
     const receiptsCreatedFromRenewalIds =
         receiptsData?.data?.map((item) => {
-            return item?.createdFromRenewalId;
+            return item?.created_from_renewal_id;
         }) || [];
     //過濾掉已經有receipts的debitNote
     const newData = debitNoteSelectProps.options?.filter((item) => !receiptsIds.includes(item?.value as number));
@@ -74,18 +74,18 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         ...debitNoteSelectProps,
         options: newData || [],
     };
-    //過濾掉已經有receipts的createdFromRenewalId
+    //過濾掉已經有receipts的created_from_renewal_id
     const renewalsData = renewalsProps.options?.filter((item) => !receiptsCreatedFromRenewalIds.includes(item?.value as number));
     const fxnRenewalsDataSelectProps = {
         ...renewalsProps,
         options: renewalsData || [],
     };
-    //取得選擇的debitNoteId
-    const selectedDebitNoteId = Form.useWatch(['debitNoteId'], form);
+    //取得選擇的debit_note_id
+    const selectedDebitNoteId = Form.useWatch(['debit_note_id'], form);
     const debitNotes = debitNoteQueryResult?.data?.data || [];
     const selectedDebitNote = debitNotes?.find((theDebitNote) => theDebitNote?.id === selectedDebitNoteId) || defaultDebitNote;
     //取得選擇的RenewalId
-    const selectedRenewalId = Form.useWatch(['createdFromRenewalId'], form);
+    const selectedRenewalId = Form.useWatch(['created_from_renewal_id'], form);
     const Renewals = renewalsQueryResult?.data?.data || [];
     const selectedRenewal = Renewals?.find((theRenewal) => theRenewal?.id === selectedRenewalId) || defaultDebitNote;
     //定義選擇的data資料是哪一組
@@ -104,35 +104,35 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
 
     const { data: clientResult, isLoading: clientIsLoading } = useOne<TClient>({
         resource: 'clients',
-        id: selectedData?.clientId || 0,
+        id: selectedData?.client_id || 0,
         queryOptions: {
-            enabled: !!selectedData?.clientId,
+            enabled: !!selectedData?.client_id,
         },
     });
 
     const selectedClient = clientResult?.data || defaultClient;
-    //檢查selectedClient?.addressArr是否為array
-    if (!Array.isArray(selectedClient?.addressArr)) {
+    //檢查selectedClient?.address_arr是否為array
+    if (!Array.isArray(selectedClient?.address_arr)) {
         try {
-            selectedClient.addressArr = JSON.parse(selectedClient.addressArr);
+            selectedClient.address_arr = JSON.parse(selectedClient.address_arr);
         } catch (error) {
-            selectedClient.addressArr = [];
+            selectedClient.address_arr = [];
             console.log('🚀 ~ error:', error);
         }
     }
-    const displayName = getDisplayName(selectedClient);
+    const display_name = getDisplayName(selectedClient);
 
     // TODO 同步更新 debitNote.receiptId
     const { mutate: _ } = useUpdate();
     const handleFinish = (values: BaseRecord) => {
         onFinish(values).catch((error) => error);
-        // if (!!values?.debitNoteId) {
+        // if (!!values?.debit_note_id) {
         //     mutate({
         //         resource: 'debit_notes',
         //         values: {
         //             receiptId: 'New receiptId',
         //         },
-        //         id: values?.debitNoteId,
+        //         id: values?.debit_note_id,
         //     })
         // }
     };
@@ -166,7 +166,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                     <div className={`tr ${selectOptions == 'renewal' ? '' : 'hidden'}`}>
                         <div className="th">Connected Renewal</div>
                         <div className="td">
-                            <Form.Item noStyle name={['createdFromRenewalId']}>
+                            <Form.Item noStyle name={['created_from_renewal_id']}>
                                 <Select {...fxnRenewalsDataSelectProps} size="small" className="w-full" allowClear />
                             </Form.Item>
                         </div>
@@ -175,7 +175,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                     <div className={`tr ${selectOptions == 'debitNote' ? '' : 'hidden'}`}>
                         <div className="th">Connected Debit Note </div>
                         <div className="td">
-                            <Form.Item noStyle name={['debitNoteId']}>
+                            <Form.Item noStyle name={['debit_note_id']}>
                                 <Select {...fxnDebitNoteSelectProps} size="small" className="w-full" allowClear />
                             </Form.Item>
                         </div>
@@ -203,11 +203,11 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                             <div className="th">To 致</div>
                             <div className="td">
                                 <p>{selectedClient?.company}</p>
-                                <p>{selectedClient?.nameEn || selectedClient?.nameZh || ' '}</p>
+                                <p>{selectedClient?.name_en || selectedClient?.name_zh || ' '}</p>
                             </div>
                             <div className="th">Receipt No 號碼</div>
                             <div className="td">
-                                <Form.Item noStyle name={['receiptNo']}>
+                                <Form.Item noStyle name={['receipt_no']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -217,7 +217,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                             <div className="th">Address 地址</div>
                             <div className="td">
                                 <p>
-                                    {selectedClient?.addressArr.map((address, index) => (
+                                    {selectedClient?.address_arr.map((address, index) => (
                                         <p key={index}>{address}</p>
                                     ))}
                                 </p>
@@ -237,7 +237,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                             <div className="table table_td-flex-1 w-full">
                                 <div className="tr mt-4">
                                     <div className="th">Received From 茲收到</div>
-                                    <div className="td">{displayName}</div>
+                                    <div className="td">{display_name}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th">THE SUM OF 款項</div>
@@ -248,11 +248,11 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 </div>
                                 <div className="tr">
                                     <div className="th w-60">POLICY 保單號碼</div>
-                                    <div className="td">{selectedData?.policyNo}</div>
+                                    <div className="td">{selectedData?.policy_no}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th w-60">DEBIT NOTE NO. 保費單號碼</div>
-                                    <div className="td">{selectedData?.noteNo}</div>
+                                    <div className="td">{selectedData?.note_no}</div>
                                 </div>
                             </div>
                         </Col>
@@ -264,8 +264,8 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr mt-4">
                                     <div className="th">Payment Date</div>
                                     <div className="td">
-                                        <DatePicker className="w-full" size="small" onChange={handleDateChange(['paymentDate'])} />
-                                        <Form.Item hidden name={['paymentDate']}>
+                                        <DatePicker className="w-full" size="small" onChange={handleDateChange(['payment_date'])} />
+                                        <Form.Item hidden name={['payment_date']}>
                                             <InputNumber />
                                         </Form.Item>
                                     </div>
@@ -273,7 +273,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">Payment Method</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['paymentMethod']}>
+                                        <Form.Item noStyle name={['payment_method']}>
                                             <Input size="small" />
                                         </Form.Item>
                                     </div>
@@ -281,7 +281,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">Cheque No</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['chequeNo']}>
+                                        <Form.Item noStyle name={['cheque_no']}>
                                             <Input size="small" />
                                         </Form.Item>
                                     </div>
@@ -289,7 +289,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">Code No</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['codeNo']}>
+                                        <Form.Item noStyle name={['code_no']}>
                                             <Input size="small" />
                                         </Form.Item>
                                     </div>

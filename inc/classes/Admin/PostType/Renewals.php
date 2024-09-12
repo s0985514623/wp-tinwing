@@ -15,7 +15,7 @@ final class Renewals {
 
 	/**
 	 * Renewals post meta
-	 * 多debitNoteId createdFromRenewalId
+	 * 多debit_note_id created_from_renewal_id
 	 *
 	 * @var array
 	 */

@@ -3,13 +3,13 @@ import { useLocation } from 'react-router-dom';
 
 const useDebitNoteId = (form: FormInstance) => {
     const { state } = useLocation();
-    const debitNoteId = state?.debitNoteId || 0;
+    const debit_note_id = state?.debit_note_id || 0;
 
-    if (debitNoteId) {
-        form.setFieldValue(['debitNoteId'], debitNoteId);
+    if (debit_note_id) {
+        form.setFieldValue(['debit_note_id'], debit_note_id);
     }
 
-    return debitNoteId;
+    return debit_note_id;
 };
 
 export default useDebitNoteId;

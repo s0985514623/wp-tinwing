@@ -21,7 +21,7 @@ export const useFormatLineGridData = ({ data, type, debitNotesData, insurerData 
             //取得date
             const date = dayjs.unix(receipt?.date as number).format('YYYY-MM-DD');
             //取得value
-            const premium = receipt?.premium ? Number(receipt?.premium) : getTotalPremiumByDebitNote((debitNotesData?.filter((debitNote) => debitNote?.id === (receipt as TReceipts)?.debitNoteId) as TDebitNote[])[0] ?? {});
+            const premium = receipt?.premium ? Number(receipt?.premium) : getTotalPremiumByDebitNote((debitNotesData?.filter((debitNote) => debitNote?.id === (receipt as TReceipts)?.debit_note_id) as TDebitNote[])[0] ?? {});
             // 尋找是否已經有該銀行的紀錄
             const existingDate = acc.find((item) => item.date === date);
             if (existingDate) {
@@ -53,8 +53,8 @@ export const useFormatLineGridData = ({ data, type, debitNotesData, insurerData 
         return (data as TReceipts[])?.reduce((acc, receipt) => {
             //取得date
             const date = dayjs.unix(receipt?.date as number).format('YYYY-MM-DD');
-            const debitNote = debitNotesData?.find((dn) => dn?.id === receipt?.debitNoteId);
-            const insurer = insurerData?.find((ins) => ins?.id === debitNote?.insurerId);
+            const debitNote = debitNotesData?.find((dn) => dn?.id === receipt?.debit_note_id);
+            const insurer = insurerData?.find((ins) => ins?.id === debitNote?.insurer_id);
             //取得value
             const premium = debitNote && insurer ? getInsurerPayment(receipt, debitNote, insurer) : 0;
 

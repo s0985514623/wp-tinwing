@@ -29,7 +29,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
 
     const { data: clientData } = useOne<TClient>({
         resource: 'clients',
-        id: debitNoteData?.clientId || 0,
+        id: debitNoteData?.client_id || 0,
         queryOptions: {
             enabled: !!debitNoteData,
         },
@@ -39,7 +39,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
 
     const { data: agentData } = useOne<TAgent>({
         resource: 'agents',
-        id: debitNoteData?.agentId || 0,
+        id: debitNoteData?.agent_id || 0,
         queryOptions: {
             enabled: !!debitNoteData,
         },
@@ -52,18 +52,18 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
 
     const { data: termData } = useOne<TTerm>({
         resource: 'terms',
-        id: debitNoteData?.termId || 0,
+        id: debitNoteData?.term_id || 0,
         queryOptions: {
             enabled: !!debitNoteData,
         },
     });
     const term = termData?.data;
-    //檢查selectedClient?.addressArr是否為array
-    if (!Array.isArray(client?.addressArr)) {
+    //檢查selectedClient?.address_arr是否為array
+    if (!Array.isArray(client?.address_arr)) {
         try {
-            client.addressArr = JSON.parse(client.addressArr);
+            client.address_arr = JSON.parse(client.address_arr);
         } catch (error) {
-            client.addressArr = [];
+            client.address_arr = [];
             console.log('🚀 ~ error:', error);
         }
     }
@@ -111,8 +111,8 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                         <Col span={12}>
                             <div className="w-full">
                                 <p>{client?.company || ' '}</p>
-                                <p>{client?.displayName ? client[client?.displayName] : ''}</p>
-                                {client?.addressArr?.map((address, index) => <p key={index}>{address}</p>) || ' '}
+                                <p>{client?.display_name ? client[client?.display_name] : ''}</p>
+                                {client?.address_arr?.map((address, index) => <p key={index}>{address}</p>) || ' '}
                             </div>
                         </Col>
                         <Col span={12}>
@@ -123,7 +123,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                                 </div>
                                 <div className="tr">
                                     <div className="th">號碼 Note No</div>
-                                    <div className="td">{debitNoteData?.noteNo || ''}</div>
+                                    <div className="td">{debitNoteData?.note_no || ''}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th">保險類別 Class of Insurance</div>
@@ -135,7 +135,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                                 </div>
                                 <div className="tr">
                                     <div className="th">客戶編號 Client No</div>
-                                    <div className="td">{client?.clientNumber || ' '}</div>
+                                    <div className="td">{client?.client_number || ' '}</div>
                                 </div>
                             </div>
                         </Col>

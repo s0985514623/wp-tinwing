@@ -16,68 +16,135 @@ export const ListView: React.FC = () => {
             return {
                 ...item,
                 date: dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
-                periodOfInsuranceFrom: dayjs.unix(item?.periodOfInsuranceFrom as number).format('YYYY-MM-DD'),
-                periodOfInsuranceTo: dayjs.unix(item?.periodOfInsuranceTo as number).format('YYYY-MM-DD'),
-                motorAttr: JSON.stringify(item?.motorAttr),
-                extraField: JSON.stringify(item?.extraField),
+                period_of_insurance_from: dayjs.unix(item?.period_of_insurance_from as number).format('YYYY-MM-DD'),
+                period_of_insurance_to: dayjs.unix(item?.period_of_insurance_to as number).format('YYYY-MM-DD'),
+                motor_attr: JSON.stringify(item?.motor_attr),
+                extra_field: JSON.stringify(item?.extra_field),
             };
         },
     });
     const { tableProps, searchFormProps } = useTable<DataType>({
-        sorters: {
-            initial: [
-                {
-                    field: 'id',
-                    order: 'desc',
-                },
-            ],
-        },
-        filters: {
-            initial: [
-                {
-                    field: 'periodOfInsuranceTo',
-                    operator: 'gt',
-                    value: dayjs('2022-01-01').unix(),
-                },
-            ] as CrudFilters,
-        },
-        onSearch: (values: any) => {
-            const filters = [
-                {
-                    field: 'periodOfInsuranceTo',
-                    operator: 'gt',
-                    value: values?.dateRange ? dayjs(values?.dateRange[0]?.startOf('day')).unix() : undefined,
-                },
-                {
-                    field: 'periodOfInsuranceTo',
-                    operator: 'lt',
-                    value: values?.dateRange ? dayjs(values?.dateRange[1]?.startOf('day')).unix() : undefined,
-                },
-                {
-                    field: 'motorEngineNo',
-                    operator: 'eq',
-                    value: values?.motorEngineNo === '' ? undefined : values?.motorEngineNo,
-                },
-            ];
-            return filters as CrudFilters;
-        },
-    });
+			sorters: {
+				initial: [
+					{
+						field: 'id',
+						order: 'desc',
+					},
+				],
+			},
+			filters: {
+				initial: [
+					{
+						field: 'meta_query[relation]',
+						operator: 'eq',
+						value: 'AND',
+					},
+					{
+						field: 'meta_query[1][key]',
+						operator: 'eq',
+						value: 'is_archived',
+					},
+					{
+						field: 'meta_query[1][value]',
+						operator: 'eq',
+						value: 1,
+					},
+					{
+						field: 'meta_query[1][type]',
+						operator: 'eq',
+						value: 'NUMERIC',
+					},
+					{
+						field: 'meta_query[1][compare]',
+						operator: 'eq',
+						value: '=',
+					},
+					{
+						field: 'meta_query[0][key]',
+						operator: 'eq',
+						value: 'period_of_insurance_to',
+					},
+					{
+						field: 'meta_query[0][value]',
+						operator: 'eq',
+						value: dayjs('2022-01-01').unix(),
+					},
+					{
+						field: 'meta_query[0][compare]',
+						operator: 'eq',
+						value: '>',
+					},
+					{
+						field: 'meta_query[0][type]',
+						operator: 'eq',
+						value: 'NUMERIC',
+					},
+				] as CrudFilters,
+			},
+			onSearch: (values: any) => {
+				const filters = [
+					{
+						field: 'meta_query[0][key]',
+						operator: 'eq',
+						value: 'period_of_insurance_to',
+					},
+					{
+						field: 'meta_query[0][value][0]',
+						operator: 'eq',
+						value: values?.dateRange
+							? dayjs(values?.dateRange[0]?.startOf('day')).unix()
+							: undefined,
+					},
+					{
+						field: 'meta_query[0][value][1]',
+						operator: 'eq',
+						value: values?.dateRange
+							? dayjs(values?.dateRange[1]?.startOf('day')).unix()
+							: undefined,
+					},
+					{
+						field: 'meta_query[0][compare]',
+						operator: 'eq',
+						value: values?.dateRange ? 'BETWEEN' : '>',
+					},
+					{
+						field: 'meta_query[1][key]',
+						operator: 'eq',
+						value: 'motor_engine_no',
+					},
+					{
+						field: 'meta_query[1][value]',
+						operator: 'eq',
+						value:
+							values?.motor_engine_no === ''
+								? undefined
+								: values?.motor_engine_no,
+					},
+					{
+						field: 'meta_query[1][compare]',
+						operator: 'eq',
+						value: '=',
+					},
+				]
+				return filters as CrudFilters
+			},
+		})
     const formattedTableProps = {
         ...tableProps,
         dataSource: tableProps?.dataSource?.map((theRecord) => {
-            const motorAttr = theRecord?.motorAttr;
-            const formattedMotorAttr = motorAttr
+            const motor_attr = theRecord?.motor_attr;
+            const formattedMotorAttr = motor_attr
                 ? {
-                      ...motorAttr,
-                      ls: motorAttr?.ls ? Number(motorAttr?.ls) : undefined,
-                      mib: motorAttr?.mib ? Number(motorAttr?.mib) : undefined,
-                      ncb: motorAttr?.ncb ? Number(motorAttr?.ncb) : undefined,
+                      ...motor_attr,
+                      ls: motor_attr?.ls ? Number(motor_attr?.ls) : undefined,
+                      mib: motor_attr?.mib ? Number(motor_attr?.mib) : undefined,
+                      ncb: motor_attr?.ncb ? Number(motor_attr?.ncb) : undefined,
                   }
                 : null;
 
             return {
                 ...theRecord,
-                motorAttr: formattedMotorAttr,
+                motor_attr: formattedMotorAttr,
             };
         }) as DataType[],
     };
@@ -88,7 +155,7 @@ export const ListView: React.FC = () => {
     });
     const { data: termData, isLoading: termIsLoading } = useMany<TTerm>({
         resource: 'terms',
-        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.termId || '0') ?? [],
+        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.term_id || '0') ?? [],
         queryOptions: {
             enabled: !!parsedTableProps?.dataSource,
         },
@@ -96,7 +163,7 @@ export const ListView: React.FC = () => {
 
     const { data: insurerData, isLoading: insurerIsLoading } = useMany({
         resource: 'insurers',
-        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.insurerId || '0') ?? [],
+        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.insurer_id || '0') ?? [],
         queryOptions: {
             enabled: !!parsedTableProps?.dataSource,
         },
@@ -104,7 +171,7 @@ export const ListView: React.FC = () => {
 
     const { data: clientData, isLoading: clientIsLoading } = useMany<TClient>({
         resource: 'clients',
-        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.clientId || '0') ?? [],
+        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.client_id || '0') ?? [],
         queryOptions: {
             enabled: !!parsedTableProps?.dataSource,
         },
@@ -147,29 +214,29 @@ export const ListView: React.FC = () => {
                 }}
                 rowKey="id"
                 size="middle">
-                <Table.Column width={100} dataIndex="periodOfInsuranceTo" title="End Date" render={(periodOfInsuranceTo: number) => (periodOfInsuranceTo ? dayjs.unix(periodOfInsuranceTo).format('YYYY-MM-DD') : '')} {...getSortProps<DataType>('periodOfInsuranceTo')} />
+                <Table.Column width={100} dataIndex="period_of_insurance_to" title="End Date" render={(period_of_insurance_to: number) => (period_of_insurance_to ? dayjs.unix(period_of_insurance_to).format('YYYY-MM-DD') : '')} {...getSortProps<DataType>('period_of_insurance_to')} />
                 <Table.Column
                     width={100}
-                    dataIndex="noteNo"
+                    dataIndex="note_no"
                     title="Note No."
                     {...getColumnSearchProps({
-                        dataIndex: 'noteNo',
+                        dataIndex: 'note_no',
                     })}
                 />
                 <Table.Column
                     width={120}
-                    dataIndex="clientId"
+                    dataIndex="client_id"
                     title="Client No"
-                    {...getSortProps<DataType>('clientId')}
+                    {...getSortProps<DataType>('client_id')}
                     {...getColumnSearchProps({
-                        dataIndex: 'clientId',
-                        render: (clientId) => {
-                            const clientNumber = clients.find((client) => client.id === clientId)?.clientNumber || 'N/A';
-                            return clientIsLoading && !clientNumber ? ((<>Loading...</>) as React.ReactNode) : (clientNumber.toString() as React.ReactNode);
+                        dataIndex: 'client_id',
+                        render: (client_id) => {
+                            const client_number = clients.find((client) => client.id === client_id)?.client_number || 'N/A';
+                            return clientIsLoading && !client_number ? ((<>Loading...</>) as React.ReactNode) : (client_number.toString() as React.ReactNode);
                         },
-                        renderText: (clientId) => {
-                            const clientNumber = clients.find((client) => client.id === clientId)?.clientNumber || 'N/A';
-                            return clientIsLoading && !clientNumber ? '' : (clientNumber.toString() as string);
+                        renderText: (client_id) => {
+                            const client_number = clients.find((client) => client.id === client_id)?.client_number || 'N/A';
+                            return clientIsLoading && !client_number ? '' : (client_number.toString() as string);
                         },
                     })}
                 />
@@ -179,18 +246,18 @@ export const ListView: React.FC = () => {
                     {...getColumnSearchProps({
                         dataIndex: 'id',
                         render: (id, record) => {
-                            const clientId = record?.clientId;
-                            const theClient = clients.find((client) => client.id === clientId) || defaultClient;
-                            const displayNameDataIndex = theClient?.displayName || 'nameEn';
-                            const displayName = theClient?.[displayNameDataIndex] || 'N/A';
-                            return clientIsLoading && !displayName ? ((<>Loading...</>) as React.ReactNode) : displayName;
+                            const client_id = record?.client_id;
+                            const theClient = clients.find((client) => client.id === client_id) || defaultClient;
+                            const display_nameDataIndex = theClient?.display_name || 'name_en';
+                            const display_name = theClient?.[display_nameDataIndex] || 'N/A';
+                            return clientIsLoading && !display_name ? ((<>Loading...</>) as React.ReactNode) : display_name;
                         },
                         renderText: (id, record) => {
-                            const clientId = record?.clientId;
-                            const theClient = clients.find((client) => client.id === clientId) || defaultClient;
-                            const displayNameDataIndex = theClient?.displayName || 'nameEn';
-                            const displayName = theClient?.[displayNameDataIndex] || 'N/A';
-                            return clientIsLoading && !displayName ? '' : displayName;
+                            const client_id = record?.client_id;
+                            const theClient = clients.find((client) => client.id === client_id) || defaultClient;
+                            const display_nameDataIndex = theClient?.display_name || 'name_en';
+                            const display_name = theClient?.[display_nameDataIndex] || 'N/A';
+                            return clientIsLoading && !display_name ? '' : display_name;
                         },
                     })}
                 />
@@ -214,35 +281,35 @@ export const ListView: React.FC = () => {
                     }}
                 />
                 <Table.Column
-                    dataIndex="termId"
+                    dataIndex="term_id"
                     title="Class of Insurance"
                     filters={InsuranceClassOptions}
                     onFilter={(value, record: DataType) => {
-                        return (record?.termId || undefined) === value;
+                        return (record?.term_id || undefined) === value;
                     }}
-                    render={(termId: number) => (termIsLoading ? <>Loading...</> : termData?.data?.find((theTerm) => theTerm.id === termId)?.name)}
+                    render={(term_id: number) => (termIsLoading ? <>Loading...</> : termData?.data?.find((theTerm) => theTerm.id === term_id)?.name)}
                 />
                 <Table.Column
-                    dataIndex="nameOfInsured"
+                    dataIndex="name_of_insured"
                     title="Name of Insured"
                     {...getColumnSearchProps({
-                        dataIndex: 'nameOfInsured',
+                        dataIndex: 'name_of_insured',
                     })}
                 />
                 <Table.Column
-                    dataIndex="insurerId"
+                    dataIndex="insurer_id"
                     title="Insurer"
                     {...getColumnSearchProps({
-                        dataIndex: 'insurerId',
-                        render: (insurerId) => (insurerIsLoading ? <>Loading...</> : insurerData?.data?.find((theInsurer) => theInsurer.id === insurerId)?.name),
-                        renderText: (insurerId) => (insurerIsLoading ? '' : insurerData?.data?.find((theInsurer) => theInsurer.id === insurerId)?.name || ''),
+                        dataIndex: 'insurer_id',
+                        render: (insurer_id) => (insurerIsLoading ? <>Loading...</> : insurerData?.data?.find((theInsurer) => theInsurer.id === insurer_id)?.name),
+                        renderText: (insurer_id) => (insurerIsLoading ? '' : insurerData?.data?.find((theInsurer) => theInsurer.id === insurer_id)?.name || ''),
                     })}
                 />
                 <Table.Column
-                    dataIndex="policyNo"
+                    dataIndex="policy_no"
                     title="Policy Number"
                     {...getColumnSearchProps({
-                        dataIndex: 'policyNo',
+                        dataIndex: 'policy_no',
                     })}
                 />
                 <Table.Column

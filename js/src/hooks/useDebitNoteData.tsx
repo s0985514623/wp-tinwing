@@ -5,12 +5,12 @@ import { DataType } from 'pages/debitNotes/types';
 
 const useDebitNoteData = () => {
     const { state } = useLocation();
-    const debitNoteId = state?.debitNoteId || 0;
+    const debit_note_id = state?.debit_note_id || 0;
     const { data: debitNoteResult } = useOne<DataType>({
         resource: 'debit_notes',
-        id: debitNoteId,
+        id: debit_note_id,
         queryOptions: {
-            enabled: !!debitNoteId,
+            enabled: !!debit_note_id,
         },
     });
 

@@ -38,16 +38,16 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
 
     const { selectProps: clientSelectProps, queryResult: clientQueryResult } = useSelect<TClient>({
         resource: 'clients',
-        optionLabel: 'displayName', //出來的是nameEn or nameZh 透過這個再去取得真實displayName
+        optionLabel: 'display_name', //出來的是name_en or name_zh 透過這個再去取得真實display_name
         optionValue: 'id',
     });
     //轉換新的clientSelectProps options
     const fxnClientSelectProps = {
         ...clientSelectProps,
         options: clientSelectProps?.options?.map((option) => {
-            const displayName = option.label as 'nameEn' | 'nameZh' | 'company';
+            const display_name = option.label as 'name_en' | 'name_zh' | 'company';
             return {
-                label: clientQueryResult?.data?.data.find((client) => client.id === option.value)?.[displayName],
+                label: clientQueryResult?.data?.data.find((client) => client.id === option.value)?.[display_name],
                 value: option.value,
             };
         }),
@@ -56,12 +56,12 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
 
     const clients = clientQueryResult?.data?.data || [];
     const selectedClient = clients.find((theClient) => theClient?.id === selectedClientId) || defaultClient;
-    //檢查selectedClient?.addressArr是否為array
-    if (!Array.isArray(selectedClient?.addressArr)) {
+    //檢查selectedClient?.address_arr是否為array
+    if (!Array.isArray(selectedClient?.address_arr)) {
         try {
-            selectedClient.addressArr = JSON.parse(selectedClient.addressArr);
+            selectedClient.address_arr = JSON.parse(selectedClient.address_arr);
         } catch (error) {
-            selectedClient.addressArr = [];
+            selectedClient.address_arr = [];
             console.log('🚀 ~ error:', error);
         }
     }
@@ -82,11 +82,26 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         optionLabel: 'name',
         optionValue: 'id',
         filters: [
-            {
-                field: 'taxonomy',
-                operator: 'eq',
-                value: 'insurance_class',
-            },
+            // {
+            //     field: 'taxonomy',
+            //     operator: 'eq',
+            //     value: 'insurance_class',
+            // },
+						{
+							field: 'meta_query[0][key]',
+							operator: 'eq',
+							value: 'taxonomy',
+						},
+						{
+							field: 'meta_query[0][value]',
+							operator: 'eq',
+							value: 'insurance_class',
+						},
+						{
+							field: 'meta_query[0][compare]',
+							operator: 'eq',
+							value: '=',
+						},
         ],
     });
 
@@ -99,52 +114,52 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
     useEffect(() => {
         //優先取得renewalsData，如果沒有再取得debitNoteData
         const data = renewalsData ?? debitNoteData;
-        //createdFromRenewalId
-        if (renewalsData) form.setFieldValue(['createdFromRenewalId'], renewalsData?.data?.id || null);
+        //created_from_renewal_id
+        if (renewalsData) form.setFieldValue(['created_from_renewal_id'], renewalsData?.data?.id || null);
         if (data) {
             //基本資料
-            setSelectedClientId(data.data.clientId as number);
+            setSelectedClientId(data.data.client_id as number);
             setSelectedTemplate(data.data.template as 'general' | 'motor' | 'shortTerms' | 'package');
             form.setFieldValue(['template'], data.data.template);
-            form.setFieldValue(['clientId'], data.data.clientId);
+            form.setFieldValue(['client_id'], data.data.client_id);
             if (data.data.date && isNumber(data.data.date)) {
                 form.setFieldValue(['date'], dayjs.unix(data.data.date));
             }
-            form.setFieldValue(['noteNo'], data.data.noteNo);
-            form.setFieldValue(['termId'], data.data.termId);
-            form.setFieldValue(['agentId'], data.data.agentId);
+            form.setFieldValue(['note_no'], data.data.note_no);
+            form.setFieldValue(['term_id'], data.data.term_id);
+            form.setFieldValue(['agent_id'], data.data.agent_id);
             //General
             form.setFieldValue(['particulars'], data.data.particulars);
             form.setFieldValue(['levy'], data.data.levy);
             //Motor
-            form.setFieldValue(['insurerId'], data.data.insurerId);
-            form.setFieldValue(['policyNo'], data.data.policyNo);
-            form.setFieldValue(['nameOfInsured'], data.data.nameOfInsured);
-            form.setFieldValue(['sumInsured'], data.data.sumInsured);
-            form.setFieldValue(['motorAttr', 'manufacturingYear'], data.data.motorAttr?.manufacturingYear);
-            form.setFieldValue(['motorAttr', 'registrationNo'], data.data.motorAttr?.registrationNo);
-            form.setFieldValue(['motorAttr', 'model'], data.data.motorAttr?.model);
-            form.setFieldValue(['motorAttr', 'tonnes'], data.data.motorAttr?.tonnes);
-            form.setFieldValue(['motorAttr', 'body'], data.data.motorAttr?.body);
-            form.setFieldValue(['motorAttr', 'chassi'], data.data.motorAttr?.chassi);
-            form.setFieldValue(['motorEngineNo'], data.data.motorEngineNo);
-            form.setFieldValue(['motorAttr', 'additionalValues'], data.data.motorAttr?.additionalValues);
-            form.setFieldValue(['motorAttr', 'namedDriver'], data.data.motorAttr?.namedDriver);
-            form.setFieldValue(['periodOfInsuranceFrom'], data.data.periodOfInsuranceFrom);
-            form.setFieldValue(['periodOfInsuranceTo'], data.data.periodOfInsuranceTo);
+            form.setFieldValue(['insurer_id'], data.data.insurer_id);
+            form.setFieldValue(['policy_no'], data.data.policy_no);
+            form.setFieldValue(['name_of_insured'], data.data.name_of_insured);
+            form.setFieldValue(['sum_insured'], data.data.sum_insured);
+            form.setFieldValue(['motor_attr', 'manufacturingYear'], data.data.motor_attr?.manufacturingYear);
+            form.setFieldValue(['motor_attr', 'registrationNo'], data.data.motor_attr?.registrationNo);
+            form.setFieldValue(['motor_attr', 'model'], data.data.motor_attr?.model);
+            form.setFieldValue(['motor_attr', 'tonnes'], data.data.motor_attr?.tonnes);
+            form.setFieldValue(['motor_attr', 'body'], data.data.motor_attr?.body);
+            form.setFieldValue(['motor_attr', 'chassi'], data.data.motor_attr?.chassi);
+            form.setFieldValue(['motor_engine_no'], data.data.motor_engine_no);
+            form.setFieldValue(['motor_attr', 'additionalValues'], data.data.motor_attr?.additionalValues);
+            form.setFieldValue(['motor_attr', 'namedDriver'], data.data.motor_attr?.namedDriver);
+            form.setFieldValue(['period_of_insurance_from'], data.data.period_of_insurance_from);
+            form.setFieldValue(['period_of_insurance_to'], data.data.period_of_insurance_to);
             form.setFieldValue(['premium'], data.data.premium);
-            form.setFieldValue(['motorAttr', 'ls'], data.data.motorAttr?.ls);
-            form.setFieldValue(['motorAttr', 'ncb'], data.data.motorAttr?.ncb);
-            form.setFieldValue(['motorAttr', 'mib'], data.data.motorAttr?.mib);
-            form.setFieldValue(['extraField', 'label'], data.data.extraField?.label);
-            form.setFieldValue(['extraField', 'value'], data.data.extraField?.value);
+            form.setFieldValue(['motor_attr', 'ls'], data.data.motor_attr?.ls);
+            form.setFieldValue(['motor_attr', 'ncb'], data.data.motor_attr?.ncb);
+            form.setFieldValue(['motor_attr', 'mib'], data.data.motor_attr?.mib);
+            form.setFieldValue(['extra_field', 'label'], data.data.extra_field?.label);
+            form.setFieldValue(['extra_field', 'value'], data.data.extra_field?.value);
             form.setFieldValue(['less'], data.data.less);
-            form.setFieldValue(['insurerFeePercent'], data.data.insurerFeePercent);
-            form.setFieldValue(['agentFee'], data.data.agentFee);
+            form.setFieldValue(['insurer_fee_percent'], data.data.insurer_fee_percent);
+            form.setFieldValue(['agent_fee'], data.data.agent_fee);
             //shortTerms
-            form.setFieldValue(['shortTermsContent'], data.data.shortTermsContent);
+            form.setFieldValue(['short_terms_content'], data.data.short_terms_content);
             //package
-            form.setFieldValue(['packageContent'], data.data?.packageContent);
+            form.setFieldValue(['package_content'], data.data?.package_content);
             //備註
             form.setFieldValue(['remark'], data.data.remark);
         }
@@ -159,7 +174,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
     return (
         <Create saveButtonProps={saveButtonProps}>
             <Form {...formProps} layout="vertical" onFinish={handleFinish}>
-                <Form.Item hidden name={['createdFromRenewalId']} initialValue={renewalsData?.data?.id} />
+                <Form.Item hidden name={['created_from_renewal_id']} initialValue={renewalsData?.data?.id} />
                 <DebitNoteHeader setSelectedTemplate={setSelectedTemplate} />
                 <div className="table table_td-flex-1 w-full">
                     <div className="w-full mb-4 flex justify-between border-b-2 border-solid border-black pb-6 px-4">
@@ -185,7 +200,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                     <Row gutter={24}>
                         <Col span={12}>
                             <div className="w-full">
-                                <Form.Item noStyle name={['clientId']}>
+                                <Form.Item noStyle name={['client_id']}>
                                     <Select
                                         {...fxnClientSelectProps}
                                         size="small"
@@ -200,8 +215,8 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                     />
                                 </Form.Item>
                                 <p>{selectedClient?.company || ' '}</p>
-                                <p>{selectedClient?.displayName ? selectedClient[selectedClient?.displayName] : ''}</p>
-                                {selectedClient?.addressArr?.map((address, index) => <p key={index}>{address}</p>) || ' '}
+                                <p>{selectedClient?.display_name ? selectedClient[selectedClient?.display_name] : ''}</p>
+                                {selectedClient?.address_arr?.map((address, index) => <p key={index}>{address}</p>) || ' '}
                             </div>
                         </Col>
                         <Col span={12}>
@@ -217,7 +232,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">號碼 Note No</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['noteNo']}>
+                                        <Form.Item noStyle name={['note_no']}>
                                             <Input className="w-full" size="small" />
                                         </Form.Item>
                                     </div>
@@ -225,7 +240,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">保險類別 Class of Insurance</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['termId']}>
+                                        <Form.Item noStyle name={['term_id']}>
                                             <Select {...termSelectProps} size="small" className="w-full" allowClear />
                                         </Form.Item>
                                     </div>
@@ -233,14 +248,14 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">代理 Agent</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['agentId']}>
+                                        <Form.Item noStyle name={['agent_id']}>
                                             <Select {...agentSelectProps} size="small" className="w-full" allowClear />
                                         </Form.Item>
                                     </div>
                                 </div>
                                 <div className="tr">
                                     <div className="th">客戶編號 Client No</div>
-                                    <div className="td">{selectedClient?.clientNumber || ' '}</div>
+                                    <div className="td">{selectedClient?.client_number || ' '}</div>
                                 </div>
                             </div>
                         </Col>

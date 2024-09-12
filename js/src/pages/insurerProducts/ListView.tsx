@@ -15,7 +15,7 @@ export const ListView: React.FC = () => {
 
     const { data: termData, isLoading: termIsLoading } = useMany({
         resource: 'terms',
-        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.termId || '0') ?? [],
+        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.term_id || '0') ?? [],
         queryOptions: {
             enabled: !!parsedTableProps?.dataSource,
         },
@@ -25,7 +25,7 @@ export const ListView: React.FC = () => {
 
     const { data: insurerData, isLoading: insurerIsLoading } = useMany({
         resource: 'insurers',
-        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.insurerId || '0') ?? [],
+        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.insurer_id || '0') ?? [],
         queryOptions: {
             enabled: !!parsedTableProps?.dataSource,
         },
@@ -34,11 +34,26 @@ export const ListView: React.FC = () => {
     const { data: allTermData } = useList({
         resource: 'terms',
         filters: [
-            {
-                field: 'taxonomy',
-                operator: 'eq',
-                value: 'insurance_class',
-            },
+            // {
+            //     field: 'taxonomy',
+            //     operator: 'eq',
+            //     value: 'insurance_class',
+            // },
+						{
+							field: 'meta_query[0][key]',
+							operator: 'eq',
+							value: 'taxonomy',
+						},
+						{
+							field: 'meta_query[0][value]',
+							operator: 'eq',
+							value: 'insurance_class',
+						},
+						{
+							field: 'meta_query[0][compare]',
+							operator: 'eq',
+							value: '=',
+						},
         ],
     });
     const allTerms = allTermData?.data ?? [];
@@ -51,14 +66,14 @@ export const ListView: React.FC = () => {
     return (
         <List createButtonProps={{ type: 'primary' }}>
             <Table {...parsedTableProps} rowKey="id" size="middle">
-                <Table.Column width={120} dataIndex="insurerProductsNumber" title="Product No." sorter={(a: DataType, b: DataType) => a.insurerProductsNumber.localeCompare(b.insurerProductsNumber)} />
+                <Table.Column width={120} dataIndex="insurer_products_number" title="Product No." sorter={(a: DataType, b: DataType) => a.insurer_products_number.localeCompare(b.insurer_products_number)} />
 
                 <Table.Column width={120} dataIndex="name" title="Package" sorter={(a: DataType, b: DataType) => a.name.localeCompare(b.name)} />
 
                 <Table.Column
-                    dataIndex="termId"
+                    dataIndex="term_id"
                     title="Class of Insurance"
-                    render={(termId: number) => (termIsLoading ? <>Loading...</> : terms.find((theTerm) => theTerm.id === termId)?.name)}
+                    render={(term_id: number) => (termIsLoading ? <>Loading...</> : terms.find((theTerm) => theTerm.id === term_id)?.name)}
                     filterDropdown={(props) => (
                         <FilterDropdown {...props}>
                             <Radio.Group>
@@ -74,9 +89,9 @@ export const ListView: React.FC = () => {
                     )}
                 />
 
-                <Table.Column dataIndex="policyNo" title="Policy Number" />
+                <Table.Column dataIndex="policy_no" title="Policy Number" />
 
-                <Table.Column dataIndex="insuranceAmount" title="Insurance Amount" />
+                <Table.Column dataIndex="insurance_amount" title="Insurance Amount" />
 
                 <Table.Column
                     dataIndex="remark"
@@ -96,7 +111,7 @@ export const ListView: React.FC = () => {
                 {/* TODO: fetch debitNoteName */}
                 <Table.Column
                     width={200}
-                    dataIndex="debitNoteIds"
+                    dataIndex="debit_note_ids"
                     title="Related"
                     render={(ids: number[]) => {
                         // console.log('🚀 ~ ids:', ids);
@@ -105,9 +120,9 @@ export const ListView: React.FC = () => {
                 />
 
                 <Table.Column
-                    dataIndex="insurerId"
+                    dataIndex="insurer_id"
                     title="Insurer"
-                    render={(insurerId: number) => (insurerIsLoading ? <>Loading...</> : insurerData?.data?.find((theInsurer) => theInsurer.id === insurerId)?.name)}
+                    render={(insurer_id: number) => (insurerIsLoading ? <>Loading...</> : insurerData?.data?.find((theInsurer) => theInsurer.id === insurer_id)?.name)}
                     filterDropdown={(props) => (
                         <FilterDropdown {...props}>
                             <Radio.Group>

@@ -35,16 +35,16 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
 
     const { selectProps: clientSelectProps, queryResult: clientQueryResult } = useSelect<TClient>({
         resource: 'clients',
-        optionLabel: 'displayName', //出來的是nameEn or nameZh 透過這個再去取得真實displayName
+        optionLabel: 'display_name', //出來的是name_en or name_zh 透過這個再去取得真實display_name
         optionValue: 'id',
     });
     //轉換新的clientSelectProps options
     const fxnClientSelectProps = {
         ...clientSelectProps,
         options: clientSelectProps?.options?.map((option) => {
-            const displayName = option.label as 'nameEn' | 'nameZh' | 'company';
+            const display_name = option.label as 'name_en' | 'name_zh' | 'company';
             return {
-                label: clientQueryResult?.data?.data.find((client) => client.id === option.value)?.[displayName],
+                label: clientQueryResult?.data?.data.find((client) => client.id === option.value)?.[display_name],
                 value: option.value,
             };
         }),
@@ -53,12 +53,12 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
 
     const clients = clientQueryResult?.data?.data || [];
     const selectedClient = clients.find((theClient) => theClient?.id === selectedClientId) || defaultClient;
-    //檢查selectedClient?.addressArr是否為array
-    if (!Array.isArray(selectedClient?.addressArr)) {
+    //檢查selectedClient?.address_arr是否為array
+    if (!Array.isArray(selectedClient?.address_arr)) {
         try {
-            selectedClient.addressArr = JSON.parse(selectedClient.addressArr);
+            selectedClient.address_arr = JSON.parse(selectedClient.address_arr);
         } catch (error) {
-            selectedClient.addressArr = [];
+            selectedClient.address_arr = [];
             console.log('🚀 ~ error:', error);
         }
     }
@@ -85,11 +85,26 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         optionLabel: 'name',
         optionValue: 'id',
         filters: [
-            {
-                field: 'taxonomy',
-                operator: 'eq',
-                value: 'insurance_class',
-            },
+            // {
+            //     field: 'taxonomy',
+            //     operator: 'eq',
+            //     value: 'insurance_class',
+            // },
+						{
+							field: 'meta_query[0][key]',
+							operator: 'eq',
+							value: 'taxonomy',
+						},
+						{
+							field: 'meta_query[0][value]',
+							operator: 'eq',
+							value: 'insurance_class',
+						},
+						{
+							field: 'meta_query[0][compare]',
+							operator: 'eq',
+							value: '=',
+						},
         ],
     });
 
@@ -121,7 +136,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                     <Row gutter={24}>
                         <Col span={12}>
                             <div className="w-full">
-                                <Form.Item noStyle name={['clientId']}>
+                                <Form.Item noStyle name={['client_id']}>
                                     <Select
                                         {...fxnClientSelectProps}
                                         size="small"
@@ -136,8 +151,8 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                     />
                                 </Form.Item>
                                 <p>{selectedClient?.company || ' '}</p>
-                                <p>{selectedClient?.displayName ? selectedClient[selectedClient?.displayName] : ''}</p>
-                                {selectedClient?.addressArr?.map((address, index) => <p key={index}>{address}</p>) || ' '}
+                                <p>{selectedClient?.display_name ? selectedClient[selectedClient?.display_name] : ''}</p>
+                                {selectedClient?.address_arr?.map((address, index) => <p key={index}>{address}</p>) || ' '}
                             </div>
                         </Col>
                         <Col span={12}>
@@ -154,7 +169,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">號碼 Note No</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['noteNo']}>
+                                        <Form.Item noStyle name={['note_no']}>
                                             <Input className="w-full" size="small" />
                                         </Form.Item>
                                     </div>
@@ -162,7 +177,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">保險類別 Class of Insurance</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['termId']}>
+                                        <Form.Item noStyle name={['term_id']}>
                                             <Select {...termSelectProps} size="small" className="w-full" allowClear />
                                         </Form.Item>
                                     </div>
@@ -170,14 +185,14 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">代理 Agent</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['agentId']}>
+                                        <Form.Item noStyle name={['agent_id']}>
                                             <Select {...agentSelectProps} size="small" className="w-full" allowClear />
                                         </Form.Item>
                                     </div>
                                 </div>
                                 <div className="tr">
                                     <div className="th">客戶編號 Client No</div>
-                                    <div className="td">{selectedClient?.clientNumber || ' '}</div>
+                                    <div className="td">{selectedClient?.client_number || ' '}</div>
                                 </div>
                             </div>
                         </Col>

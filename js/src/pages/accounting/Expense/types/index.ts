@@ -6,7 +6,7 @@ export const ZDataType = z.object({
 	date: z.number(),
 	amount: z.number(),
 	remark: z.string(),
-	termId:z.number(),
+	term_id:z.number(),
 
 })
 

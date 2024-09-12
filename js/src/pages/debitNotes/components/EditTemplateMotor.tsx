@@ -12,13 +12,13 @@ const { RangePicker } = DatePicker;
 const EditTemplateMotor = () => {
     const form = Form.useFormInstance();
     const watchPremium = Form.useWatch(['premium'], form) || 0;
-    const watchLs = Form.useWatch(['motorAttr', 'ls'], form) || 0;
-    const watchNcb = Form.useWatch(['motorAttr', 'ncb'], form) || 0;
-    const watchMib = Form.useWatch(['motorAttr', 'mib'], form) || 0;
-    const watchExtraField = Form.useWatch(['extraField', 'value'], form) || 0;
+    const watchLs = Form.useWatch(['motor_attr', 'ls'], form) || 0;
+    const watchNcb = Form.useWatch(['motor_attr', 'ncb'], form) || 0;
+    const watchMib = Form.useWatch(['motor_attr', 'mib'], form) || 0;
+    const watchExtraField = Form.useWatch(['extra_field', 'value'], form) || 0;
     const watchLess = Form.useWatch(['less'], form) || 0;
-    const watchPeriodOfInsuranceFrom = Form.useWatch(['periodOfInsuranceFrom'], form);
-    const watchPeriodOfInsuranceTo = Form.useWatch(['periodOfInsuranceTo'], form);
+    const watchPeriodOfInsuranceFrom = Form.useWatch(['period_of_insurance_from'], form);
+    const watchPeriodOfInsuranceTo = Form.useWatch(['period_of_insurance_to'], form);
     const [periodOfInsuranceProps, setPeriodOfInsuranceProps] = useState<{
         value?: [Dayjs, Dayjs];
     }>({});
@@ -44,8 +44,8 @@ const EditTemplateMotor = () => {
 
     const handlePeriodChange = (value: RangeValue<Dayjs>) => {
         if (!!value && !!value[0] && !!value[1]) {
-            form.setFieldValue(['periodOfInsuranceFrom'], value[0].unix());
-            form.setFieldValue(['periodOfInsuranceTo'], value[1].unix());
+            form.setFieldValue(['period_of_insurance_from'], value[0].unix());
+            form.setFieldValue(['period_of_insurance_to'], value[1].unix());
             setPeriodOfInsuranceProps({
                 value: [value[0], value[1]],
             });
@@ -67,7 +67,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">承保公司 Insurer</div>
                             <div className="td">
-                                <Form.Item noStyle name={['insurerId']}>
+                                <Form.Item noStyle name={['insurer_id']}>
                                     <Select {...insurerSelectProps} size="small" className="w-full" allowClear />
                                 </Form.Item>
                             </div>
@@ -75,7 +75,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">保單號碼 Policy No.</div>
                             <div className="td">
-                                <Form.Item noStyle name={['policyNo']}>
+                                <Form.Item noStyle name={['policy_no']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -83,7 +83,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">投保名稱 Name of Insured</div>
                             <div className="td">
-                                <Form.Item noStyle name={['nameOfInsured']}>
+                                <Form.Item noStyle name={['name_of_insured']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -91,7 +91,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">投保金額 Sum Insured</div>
                             <div className="td">
-                                <Form.Item noStyle name={['sumInsured']}>
+                                <Form.Item noStyle name={['sum_insured']}>
                                     <InputNumber className="w-full" size="small" />
                                 </Form.Item>
                             </div>
@@ -99,7 +99,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">製造年份 Manufacturing Year</div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorAttr', 'manufacturingYear']}>
+                                <Form.Item noStyle name={['motor_attr', 'manufacturingYear']}>
                                     <InputNumber className="w-full" size="small" controls={false} />
                                 </Form.Item>
                             </div>
@@ -107,7 +107,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">登記號碼 Registration No.</div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorAttr', 'registrationNo']}>
+                                <Form.Item noStyle name={['motor_attr', 'registrationNo']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -115,7 +115,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">廠名及型號 Make & Model</div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorAttr', 'model']}>
+                                <Form.Item noStyle name={['motor_attr', 'model']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -123,7 +123,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">容量 / 噸數 CC./ Tonnes </div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorAttr', 'tonnes']}>
+                                <Form.Item noStyle name={['motor_attr', 'tonnes']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -131,7 +131,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">車身 Body</div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorAttr', 'body']}>
+                                <Form.Item noStyle name={['motor_attr', 'body']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -139,7 +139,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">底盤 Chassi</div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorAttr', 'chassi']}>
+                                <Form.Item noStyle name={['motor_attr', 'chassi']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -147,7 +147,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">引擎號 Engine Number</div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorEngineNo']}>
+                                <Form.Item noStyle name={['motor_engine_no']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -155,7 +155,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">附加設備 Additional Values</div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorAttr', 'additionalValues']}>
+                                <Form.Item noStyle name={['motor_attr', 'additionalValues']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -163,7 +163,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">記名司機 Named Driver</div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorAttr', 'namedDriver']}>
+                                <Form.Item noStyle name={['motor_attr', 'namedDriver']}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -172,10 +172,10 @@ const EditTemplateMotor = () => {
                             <div className="th">保險期限 Period of Insurance</div>
                             <div className="td">
                                 <RangePicker size="small" className="w-full" placeholder={['From', 'To']} onChange={handlePeriodChange} {...periodOfInsuranceProps} />
-                                <Form.Item hidden name={['periodOfInsuranceFrom']} initialValue={dayjs().unix()}>
+                                <Form.Item hidden name={['period_of_insurance_from']} initialValue={dayjs().unix()}>
                                     <InputNumber />
                                 </Form.Item>
-                                <Form.Item hidden name={['periodOfInsuranceTo']} initialValue={dayjs().unix()}>
+                                <Form.Item hidden name={['period_of_insurance_to']} initialValue={dayjs().unix()}>
                                     <InputNumber />
                                 </Form.Item>
                             </div>
@@ -197,7 +197,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">LS</div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorAttr', 'ls']}>
+                                <Form.Item noStyle name={['motor_attr', 'ls']}>
                                     <InputNumber className="w-full" size="small" addonAfter="%" min={0} stringMode step="0.01" />
                                 </Form.Item>
                             </div>
@@ -206,7 +206,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th text-red-500">NCB</div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorAttr', 'ncb']}>
+                                <Form.Item noStyle name={['motor_attr', 'ncb']}>
                                     <InputNumber className="w-full" size="small" addonAfter="%" max={0} stringMode step="0.01" />
                                 </Form.Item>
                             </div>
@@ -220,7 +220,7 @@ const EditTemplateMotor = () => {
                         <div className="tr">
                             <div className="th">MIB</div>
                             <div className="td">
-                                <Form.Item noStyle name={['motorAttr', 'mib']}>
+                                <Form.Item noStyle name={['motor_attr', 'mib']}>
                                     <InputNumber className="w-full" size="small" addonAfter="%" min={0} stringMode step="0.01" />
                                 </Form.Item>
                             </div>
@@ -228,12 +228,12 @@ const EditTemplateMotor = () => {
                         </div>
                         <div className="tr">
                             <div className="th">
-                                <Form.Item noStyle name={['extraField', 'label']}>
+                                <Form.Item noStyle name={['extra_field', 'label']}>
                                     <Input className="w-full" size="small" />
                                 </Form.Item>
                             </div>
                             <div className="td">
-                                <Form.Item noStyle name={['extraField', 'value']}>
+                                <Form.Item noStyle name={['extra_field', 'value']}>
                                     <InputNumber className="w-full" size="small" addonAfter="%" min={0} stringMode step="0.01" />
                                 </Form.Item>
                             </div>

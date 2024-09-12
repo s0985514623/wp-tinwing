@@ -6,15 +6,15 @@ import { round } from 'lodash-es';
 const EditMetaMotor = () => {
     const form = Form.useFormInstance();
     const watchPremium = Form.useWatch(['premium'], form) || 0;
-    const watchLs = Form.useWatch(['motorAttr', 'ls'], form) || 0;
-    const watchNcb = Form.useWatch(['motorAttr', 'ncb'], form) || 0;
-    const watchMib = Form.useWatch(['motorAttr', 'mib'], form) || 0;
-    const watchExtraLabel = Form.useWatch(['extraField', 'label'], form) || '';
-    const watchExtraField = Form.useWatch(['extraField', 'value'], form) || 0;
+    const watchLs = Form.useWatch(['motor_attr', 'ls'], form) || 0;
+    const watchNcb = Form.useWatch(['motor_attr', 'ncb'], form) || 0;
+    const watchMib = Form.useWatch(['motor_attr', 'mib'], form) || 0;
+    const watchExtraLabel = Form.useWatch(['extra_field', 'label'], form) || '';
+    const watchExtraField = Form.useWatch(['extra_field', 'value'], form) || 0;
     const watchExtraValue = round(watchPremium * (watchExtraField / 100), 2);
     const watchLess = Form.useWatch(['less'], form) || 0;
-    const watchAgentFee = Form.useWatch(['agentFee'], form) || 0;
-    const watchInsurerFeePercent = Form.useWatch(['insurerFeePercent'], form) || 0;
+    const watchAgentFee = Form.useWatch(['agent_fee'], form) || 0;
+    const watchInsurerFeePercent = Form.useWatch(['insurer_fee_percent'], form) || 0;
 
     const grossPremium = getGrossPremium({
         premium: watchPremium,
@@ -45,7 +45,7 @@ const EditMetaMotor = () => {
                     <div className="th">承保公司收取</div>
                     <div className="td flex">
                         <div>
-                            <Form.Item noStyle name={['insurerFeePercent']}>
+                            <Form.Item noStyle name={['insurer_fee_percent']}>
                                 <InputNumber className="w-full" size="small" min={0} addonAfter="%" />
                             </Form.Item>
                         </div>
@@ -130,7 +130,7 @@ const EditMetaMotor = () => {
                 <Col span={8} className="text-center">
                     <p className="text-[#555] font-light">AGENT FEE</p>
                     <div>
-                        <Form.Item noStyle name={['agentFee']}>
+                        <Form.Item noStyle name={['agent_fee']}>
                             <InputNumber className="w-full" size="large" min={0} />
                         </Form.Item>
                     </div>

@@ -17,8 +17,8 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
         optionValue: 'id',
     });
 
-    const nameEn = Form.useWatch(['nameEn'], form);
-    const nameZh = Form.useWatch(['nameZh'], form);
+    const name_en = Form.useWatch(['name_en'], form);
+    const name_zh = Form.useWatch(['name_zh'], form);
     const company = Form.useWatch(['company'], form);
 
     return (
@@ -30,31 +30,31 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                             formItemProps={{
                                 label: 'Client No.',
                             }}
-                            name={['clientNumber']}
+                            name={['client_number']}
                         />
-                        <Form.Item label="English Name" name={['nameEn']}>
+                        <Form.Item label="English Name" name={['name_en']}>
                             <Input />
                         </Form.Item>
-                        <Form.Item label="Chinese Name" name={['nameZh']}>
+                        <Form.Item label="Chinese Name" name={['name_zh']}>
                             <Input />
                         </Form.Item>
 
-                        <Form.Item label="Address" name={['addressArr', 0]}>
+                        <Form.Item label="Address" name={['address_arr', 0]}>
                             <Input />
                         </Form.Item>
-                        <Form.Item name={['addressArr', 1]}>
+                        <Form.Item name={['address_arr', 1]}>
                             <Input />
                         </Form.Item>
-                        <Form.Item name={['addressArr', 2]}>
+                        <Form.Item name={['address_arr', 2]}>
                             <Input />
                         </Form.Item>
                         <Form.Item label="Company" name={['company']}>
                             <Input />
                         </Form.Item>
-                        <Form.Item label="Office Gen. Line" name={['officeGenLine']}>
+                        <Form.Item label="Office Gen. Line" name={['office_gen_line']}>
                             <Input />
                         </Form.Item>
-                        <Form.Item label="Direct Line" name={['directLine']}>
+                        <Form.Item label="Direct Line" name={['direct_line']}>
                             <Input />
                         </Form.Item>
                         <Form.Item label="Tel" name={['mobile1']}>
@@ -65,26 +65,26 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                         </Form.Item>
                     </Col>
                     <Col span={12}>
-                        <Form.Item label="Display Name" name={['displayName']}>
+                        <Form.Item label="Display Name" name={['display_name']}>
                             <Select
                                 options={[
                                     {
                                         label: (
                                             <div className="flex justify-between">
-                                                <span>{nameEn}</span>
+                                                <span>{name_en}</span>
                                                 <span className="text-gray-500">- English Name</span>
                                             </div>
                                         ),
-                                        value: 'nameEn',
+                                        value: 'name_en',
                                     },
                                     {
                                         label: (
                                             <div className="flex justify-between">
-                                                <span>{nameZh}</span>
+                                                <span>{name_zh}</span>
                                                 <span className="text-gray-500">- Chinese Name</span>
                                             </div>
                                         ),
-                                        value: 'nameZh',
+                                        value: 'name_zh',
                                     },
                                     {
                                         label: (
@@ -103,7 +103,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                             <Input.TextArea autoSize={{ minRows: 6 }} />
                         </Form.Item>
                         {/* TODO: agent select */}
-                        <Form.Item label="Agent" name={['agentId']}>
+                        <Form.Item label="Agent" name={['agent_id']}>
                             <Select {...selectProps} allowClear />
                         </Form.Item>
                     </Col>

@@ -6,10 +6,11 @@ const { RangePicker } = DatePicker;
 
 const Filter: React.FC<{ formProps: FormProps }> = ({ formProps }) => {
     const IsArchivedFormItem = () => {
-        if (window.location.pathname === '/clientsSummary')
+        if (window.location.hash === '#/clientsSummary')
+
             return (
                 <div className="col-span-full place-items-center z-0">
-                    <Form.Item name={['isArchived']} className="text-center" initialValue="false">
+                    <Form.Item name={['is_archived']} className="text-center" initialValue="false">
                         <Radio.Group>
                             <Radio.Button value="false">Current</Radio.Button>
                             <Radio.Button value="true">Archived</Radio.Button>
@@ -30,7 +31,7 @@ const Filter: React.FC<{ formProps: FormProps }> = ({ formProps }) => {
                 >
                     <RangePicker size="small" className="w-full" />
                 </Form.Item>
-                <Form.Item label="Engine" name={['motorEngineNo']}>
+                <Form.Item label="Engine" name={['motor_engine_no']}>
                     <Input className="w-full" size="small" allowClear={true} />
                 </Form.Item>
                 <Form.Item className="self-end">

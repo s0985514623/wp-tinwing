@@ -89,6 +89,7 @@ final class Agents {
 			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
 			'orderby'        => $params['orderby'],   // 排序方式
 			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
+			'meta_query'     => $params['meta_query'], // meta 查詢
 		];
 		$query      = new \WP_Query($args);
 		$posts_data = [];

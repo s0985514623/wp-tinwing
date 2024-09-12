@@ -13,24 +13,24 @@ export const useGetSummary = () => {
     const setFilters = (values: any) => {
         return [
             {
-                field: 'periodOfInsuranceTo',
+                field: 'period_of_insurance_to',
                 operator: 'gt',
                 value: values?.dateRange ? dayjs(values?.dateRange[0]?.startOf('day')).unix() : undefined,
             },
             {
-                field: 'periodOfInsuranceTo',
+                field: 'period_of_insurance_to',
                 operator: 'lt',
                 value: values?.dateRange ? dayjs(values?.dateRange[1]?.startOf('day')).unix() : undefined,
             },
             {
-                field: 'motorEngineNo',
+                field: 'motor_engine_no',
                 operator: 'eq',
-                value: values?.motorEngineNo === '' ? undefined : values?.motorEngineNo,
+                value: values?.motor_engine_no === '' ? undefined : values?.motor_engine_no,
             },
             {
-                field: 'isArchived',
+                field: 'is_archived',
                 operator: 'eq',
-                value: values?.isArchived,
+                value: values?.is_archived,
             },
         ];
     };
@@ -48,7 +48,7 @@ export const useGetSummary = () => {
         filters: {
             initial: [
                 {
-                    field: 'isArchived',
+                    field: 'is_archived',
                     operator: 'eq',
                     value: false,
                 },
@@ -80,7 +80,7 @@ export const useGetSummary = () => {
         filters: {
             initial: [
                 {
-                    field: 'isArchived',
+                    field: 'is_archived',
                     operator: 'eq',
                     value: false,
                 },
@@ -112,7 +112,7 @@ export const useGetSummary = () => {
         filters: {
             initial: [
                 {
-                    field: 'isArchived',
+                    field: 'is_archived',
                     operator: 'eq',
                     value: false,
                 },
@@ -145,15 +145,15 @@ export const useGetSummary = () => {
             defaultBehavior: 'replace',
             initial: [
                 {
-                    field: 'isArchived',
+                    field: 'is_archived',
                     operator: 'eq',
                     value: false,
                 },
             ],
         },
         onSearch: (values: any) => {
-            //當dateRange有值或motorEngineNo有值時，才會去搜尋
-            if (values?.dateRange !== null || (values?.motorEngineNo !== '' && values?.motorEngineNo !== undefined)) {
+            //當dateRange有值或motor_engine_no有值時，才會去搜尋
+            if (values?.dateRange !== null || (values?.motor_engine_no !== '' && values?.motor_engine_no !== undefined)) {
                 //設定一個永遠不存在的ID值使搜尋不到資料
                 return [
                     {
@@ -162,18 +162,18 @@ export const useGetSummary = () => {
                         value: -1,
                     },
                     {
-                        field: 'isArchived',
+                        field: 'is_archived',
                         operator: 'eq',
-                        value: values?.isArchived,
+                        value: values?.is_archived,
                     },
                 ];
             }
-            //當dateRange沒有值或motorEngineNo沒有值時，不會去搜尋
+            //當dateRange沒有值或motor_engine_no沒有值時，不會去搜尋
             return [
                 {
-                    field: 'isArchived',
+                    field: 'is_archived',
                     operator: 'eq',
-                    value: values?.isArchived,
+                    value: values?.is_archived,
                 },
             ];
         },

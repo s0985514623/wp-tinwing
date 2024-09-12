@@ -14,11 +14,11 @@ const EditDebitNoteHeader: React.FC<{
 
     const form = Form.useFormInstance();
 
-    const _debitNoteId = useDebitNoteId(form);
+    const _debit_note_id = useDebitNoteId(form);
 
     const { selectProps: debitNoteSelectProps } = useSelect<TDebitNote>({
         resource: 'debit_notes',
-        optionLabel: 'noteNo',
+        optionLabel: 'note_no',
         optionValue: 'id',
     });
     return (
@@ -41,7 +41,7 @@ const EditDebitNoteHeader: React.FC<{
                     </div>
                     <div className="th">Connected Debit Note</div>
                     <div className="td">
-                        <Form.Item noStyle name={['debitNoteId']}>
+                        <Form.Item noStyle name={['debit_note_id']}>
                             <Select {...debitNoteSelectProps} size="small" className="w-full" allowClear />
                         </Form.Item>
                     </div>

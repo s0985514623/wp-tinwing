@@ -84,12 +84,17 @@ final class Clients {
 		$params = $request->get_query_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
 		// 查詢 Custom Post Type 'book' 的文章
-		$args       = [
+		$args = [
 			'post_type'      => 'clients',   // 自定義文章類型名稱
 			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
 			'orderby'        => $params['orderby'],   // 排序方式
 			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
+			'meta_query'     => $params['meta_query'], // meta 查詢
 		];
+		if (isset($params['s']) && $params['s']) {
+			$args['s'] = $params['s'];
+		}
+
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
@@ -99,24 +104,24 @@ final class Clients {
 				// 獲取文章的所有 meta 資料
 				$all_meta     = get_post_meta(get_the_ID());
 				$posts_data[] = [
-					'id'            => get_the_ID(),
-					'created_at'    => strtotime(get_the_date('Y-m-d')),
-					'clientNumber'  => get_the_title(),
-					'nameZh'        => $all_meta['name_zh'][0]??\null,
-					'nameEn'        => $all_meta['name_en'][0]??\null,
-					'company'       => $all_meta['company'][0]??\null,
-					'officeGenLine' => $all_meta['office_gen_line'][0]??\null,
-					'directLine'    => $all_meta['direct_line'][0]??\null,
-					'mobile1'       => $all_meta['mobile1'][0]??\null,
-					'mobile2'       => $all_meta['mobile2'][0]??\null,
-					'contact2'      => $all_meta['contact2'][0]??\null,
-					'tel2'          => $all_meta['tel2'][0]??\null,
-					'contact3'      => $all_meta['contact3'][0]??\null,
-					'tel3'          => $all_meta['tel3'][0]??\null,
-					'remark'        => $all_meta['remark'][0]??\null,
-					'agentId'       => $all_meta['agent_id'][0]??\null,
-					'displayName'   => $all_meta['display_name'][0]??\null,
-					'addressArr'    => $all_meta['address_arr'][0]?maybe_unserialize($all_meta['address_arr'][0]):\null,
+					'id'              => get_the_ID(),
+					'created_at'      => strtotime(get_the_date('Y-m-d')),
+					'client_number'   => get_the_title(),
+					'name_zh'         => $all_meta['name_zh'][0]??\null,
+					'name_en'         => $all_meta['name_en'][0]??\null,
+					'company'         => $all_meta['company'][0]??\null,
+					'office_gen_line' => $all_meta['office_gen_line'][0]??\null,
+					'direct_line'     => $all_meta['direct_line'][0]??\null,
+					'mobile1'         => $all_meta['mobile1'][0]??\null,
+					'mobile2'         => $all_meta['mobile2'][0]??\null,
+					'contact2'        => $all_meta['contact2'][0]??\null,
+					'tel2'            => $all_meta['tel2'][0]??\null,
+					'contact3'        => $all_meta['contact3'][0]??\null,
+					'tel3'            => $all_meta['tel3'][0]??\null,
+					'remark'          => $all_meta['remark'][0]??\null,
+					'agent_id'        => $all_meta['agent_id'][0]??\null,
+					'display_name'    => $all_meta['display_name'][0]??\null,
+					'address_arr'     => $all_meta['address_arr'][0]?maybe_unserialize($all_meta['address_arr'][0]):\null,
 				];
 			}
 			wp_reset_postdata();
@@ -142,7 +147,7 @@ final class Clients {
 		$post_id = wp_insert_post(
 			[
 				'post_type'    => 'clients', // 自定義文章類型名稱
-				'post_title'   => $params['clientNumber'], // 文章標題
+				'post_title'   => $params['client_number'], // 文章標題
 				'post_content' => '', // 文章內容
 				'post_status'  => 'publish', // 文章狀態
 			]
@@ -151,11 +156,11 @@ final class Clients {
 			return new \WP_Error( 'error_creating_post', 'Unable to create post', [ 'status' => 500 ] );
 		}
 		// 更新文章的 meta 資料
-		update_post_meta($post_id, 'name_zh', $params['nameZh']);
-		update_post_meta($post_id, 'name_en', $params['nameEn']);
+		update_post_meta($post_id, 'name_zh', $params['name_zh']);
+		update_post_meta($post_id, 'name_en', $params['name_en']);
 		update_post_meta($post_id, 'company', $params['company']);
-		update_post_meta($post_id, 'office_gen_line', $params['officeGenLine']);
-		update_post_meta($post_id, 'direct_line', $params['directLine']);
+		update_post_meta($post_id, 'office_gen_line', $params['office_gen_line']);
+		update_post_meta($post_id, 'direct_line', $params['direct_line']);
 		update_post_meta($post_id, 'mobile1', $params['mobile1']);
 		update_post_meta($post_id, 'mobile2', $params['mobile2']);
 		update_post_meta($post_id, 'contact2', $params['contact2']);
@@ -163,9 +168,9 @@ final class Clients {
 		update_post_meta($post_id, 'contact3', $params['contact3']);
 		update_post_meta($post_id, 'tel3', $params['tel3']);
 		update_post_meta($post_id, 'remark', $params['remark']);
-		update_post_meta($post_id, 'agent_id', $params['agentId']);
-		update_post_meta($post_id, 'display_name', $params['displayName']);
-		update_post_meta($post_id, 'address_arr', $params['addressArr']);
+		update_post_meta($post_id, 'agent_id', $params['agent_id']);
+		update_post_meta($post_id, 'display_name', $params['display_name']);
+		update_post_meta($post_id, 'address_arr', $params['address_arr']);
 		$response = new \WP_REST_Response(  $post_id  );
 		return $response;
 	}
@@ -184,7 +189,7 @@ final class Clients {
 		$post_id = wp_update_post(
 			[
 				'ID'           => $post_id,
-				'post_title'   => $params['clientNumber'], // 文章標題
+				'post_title'   => $params['client_number'], // 文章標題
 				'post_content' => '', // 文章內容
 				'post_status'  => 'publish', // 文章狀態
 			]
@@ -193,11 +198,11 @@ final class Clients {
 			return new \WP_Error( 'error_creating_post', 'Unable to create post', [ 'status' => 500 ] );
 		}
 		// 更新文章的 meta 資料
-		update_post_meta($post_id, 'name_zh', $params['nameZh']);
-		update_post_meta($post_id, 'name_en', $params['nameEn']);
+		update_post_meta($post_id, 'name_zh', $params['name_zh']);
+		update_post_meta($post_id, 'name_en', $params['name_en']);
 		update_post_meta($post_id, 'company', $params['company']);
-		update_post_meta($post_id, 'office_gen_line', $params['officeGenLine']);
-		update_post_meta($post_id, 'direct_line', $params['directLine']);
+		update_post_meta($post_id, 'office_gen_line', $params['office_gen_line']);
+		update_post_meta($post_id, 'direct_line', $params['direct_line']);
 		update_post_meta($post_id, 'mobile1', $params['mobile1']);
 		update_post_meta($post_id, 'mobile2', $params['mobile2']);
 		update_post_meta($post_id, 'contact2', $params['contact2']);
@@ -205,9 +210,9 @@ final class Clients {
 		update_post_meta($post_id, 'contact3', $params['contact3']);
 		update_post_meta($post_id, 'tel3', $params['tel3']);
 		update_post_meta($post_id, 'remark', $params['remark']);
-		update_post_meta($post_id, 'agent_id', $params['agentId']);
-		update_post_meta($post_id, 'display_name', $params['displayName']);
-		update_post_meta($post_id, 'address_arr', $params['addressArr']);
+		update_post_meta($post_id, 'agent_id', $params['agent_id']);
+		update_post_meta($post_id, 'display_name', $params['display_name']);
+		update_post_meta($post_id, 'address_arr', $params['address_arr']);
 		$response = new \WP_REST_Response(  $post_id  );
 		return $response;
 	}
@@ -228,24 +233,24 @@ final class Clients {
 
 		$response = new \WP_REST_Response(
 			[
-				'id'            => $post_id,
-				'created_at'    => strtotime(get_the_date('Y-m-d', $post_id)),
-				'clientNumber'  => get_the_title($post_id),
-				'nameZh'        => $all_meta['name_zh'][0]??\null,
-				'nameEn'        => $all_meta['name_en'][0]??\null,
-				'company'       => $all_meta['company'][0]??\null,
-				'officeGenLine' => $all_meta['office_gen_line'][0]??\null,
-				'directLine'    => $all_meta['direct_line'][0]??\null,
-				'mobile1'       => $all_meta['mobile1'][0]??\null,
-				'mobile2'       => $all_meta['mobile2'][0]??\null,
-				'contact2'      => $all_meta['contact2'][0]??\null,
-				'tel2'          => $all_meta['tel2'][0]??\null,
-				'contact3'      => $all_meta['contact3'][0]??\null,
-				'tel3'          => $all_meta['tel3'][0]??\null,
-				'remark'        => $all_meta['remark'][0]??\null,
-				'agentId'       => $all_meta['agent_id'][0]??\null,
-				'displayName'   => $all_meta['display_name'][0]??\null,
-				'addressArr'    => $all_meta['address_arr'][0]?\maybe_unserialize($all_meta['address_arr'][0]):\null,
+				'id'              => $post_id,
+				'created_at'      => strtotime(get_the_date('Y-m-d', $post_id)),
+				'client_number'   => get_the_title($post_id),
+				'name_zh'         => $all_meta['name_zh'][0]??\null,
+				'name_en'         => $all_meta['name_en'][0]??\null,
+				'company'         => $all_meta['company'][0]??\null,
+				'office_gen_line' => $all_meta['office_gen_line'][0]??\null,
+				'direct_line'     => $all_meta['direct_line'][0]??\null,
+				'mobile1'         => $all_meta['mobile1'][0]??\null,
+				'mobile2'         => $all_meta['mobile2'][0]??\null,
+				'contact2'        => $all_meta['contact2'][0]??\null,
+				'tel2'            => $all_meta['tel2'][0]??\null,
+				'contact3'        => $all_meta['contact3'][0]??\null,
+				'tel3'            => $all_meta['tel3'][0]??\null,
+				'remark'          => $all_meta['remark'][0]??\null,
+				'agent_id'        => $all_meta['agent_id'][0]??\null,
+				'display_name'    => $all_meta['display_name'][0]??\null,
+				'address_arr'     => $all_meta['address_arr'][0]?\maybe_unserialize($all_meta['address_arr'][0]):\null,
 			]
 		);
 		return $response;

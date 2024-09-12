@@ -10,7 +10,7 @@ const EditTemplateGeneral = () => {
     const form = Form.useFormInstance();
     const watchPremium = Form.useWatch(['premium'], form) || 0;
     const watchLevy = Form.useWatch(['levy'], form) || 0;
-    const watchExtraField = Form.useWatch(['extraField', 'value'], form) || 0;
+    const watchExtraField = Form.useWatch(['extra_field', 'value'], form) || 0;
     const watchLess = Form.useWatch(['less'], form) || 0;
     const totalPremium = getGeneralTotalPremium({
         premium: watchPremium,
@@ -24,7 +24,7 @@ const EditTemplateGeneral = () => {
             <Row gutter={0} className="mt-12">
                 <Col span={12} className="pr-2">
                     <p>Particulars</p>
-                    <Form.Item noStyle name={['shortTermsContent']}>
+                    <Form.Item noStyle name={['short_terms_content']}>
                         <TextArea showCount className="h-60 mb-6" />
                     </Form.Item>
                 </Col>
@@ -51,12 +51,12 @@ const EditTemplateGeneral = () => {
                         </div>
                         <div className="tr">
                             <div className="th">
-                                <Form.Item noStyle name={['extraField', 'label']}>
+                                <Form.Item noStyle name={['extra_field', 'label']}>
                                     <Input className="w-full" size="small" />
                                 </Form.Item>
                             </div>
                             <div className="td">
-                                <Form.Item noStyle name={['extraField', 'value']}>
+                                <Form.Item noStyle name={['extra_field', 'value']}>
                                     <InputNumber className="w-full" size="small" addonAfter="%" min={0} stringMode step="0.01" />
                                 </Form.Item>
                             </div>

@@ -13,36 +13,36 @@ const ShowMetaGeneral = () => {
     // console.log('🚀 ~ premium:', premium);
     const levy = debitNoteData?.levy || 0;
     const less = debitNoteData?.less || 0;
-    const extraFieldLabel = debitNoteData?.extraField?.label || '';
-    const extraFieldField = debitNoteData?.extraField?.value || '';
-    const insurerId = debitNoteData?.insurerId || 0;
-    const insurerFeePercent = debitNoteData?.insurerFeePercent || 0;
+    const extra_fieldLabel = debitNoteData?.extra_field?.label || '';
+    const extra_fieldField = debitNoteData?.extra_field?.value || '';
+    const insurer_id = debitNoteData?.insurer_id || 0;
+    const insurer_fee_percent = debitNoteData?.insurer_fee_percent || 0;
     const { data: insurerData } = useOne({
         resource: 'insurers',
-        id: insurerId,
+        id: insurer_id,
         queryOptions: {
-            enabled: !!insurerId,
+            enabled: !!insurer_id,
         },
     });
     const insurer = insurerData?.data;
 
-    const insurerPaymentRate = insurerFeePercent ?? insurer?.paymentRate;
+    const insurerPaymentRate = insurer_fee_percent ?? insurer?.paymentRate;
 
-    const agentFee = debitNoteData?.agentFee || 0;
-    const extraFieldValue = round(premium * (Number(extraFieldField) / 100), 2);
+    const agent_fee = debitNoteData?.agent_fee || 0;
+    const extra_fieldValue = round(premium * (Number(extra_fieldField) / 100), 2);
     const levyValue = round(premium * (levy / 100), 2);
 
     const totalPremium = getGeneralTotalPremium({
         premium,
         levy,
         less,
-        extraValue: Number(extraFieldField),
+        extraValue: Number(extra_fieldField),
     });
 
-    const profit = totalPremium - (levyValue + extraFieldValue + round(totalPremium * (insurerPaymentRate / 100), 2)) - agentFee;
+    const profit = totalPremium - (levyValue + extra_fieldValue + round(totalPremium * (insurerPaymentRate / 100), 2)) - agent_fee;
     const margin = round(profit / totalPremium, 2);
 
-    const insurerTotalFee = levyValue + extraFieldValue + round(premium * (insurerPaymentRate / 100), 2);
+    const insurerTotalFee = levyValue + extra_fieldValue + round(premium * (insurerPaymentRate / 100), 2);
 
     return (
         <>
@@ -54,7 +54,7 @@ const ShowMetaGeneral = () => {
                         <div className="text-right">{getPrice(round(premium * (insurerPaymentRate / 100), 2))}</div>
                     </div>
                     <div className="th">除稅後款項</div>
-                    <div className="td flex justify-end">{getPrice(totalPremium - levyValue - extraFieldValue)}</div>
+                    <div className="td flex justify-end">{getPrice(totalPremium - levyValue - extra_fieldValue)}</div>
                 </div>
                 <div className="tr">
                     <div className="th">IA Levy</div>
@@ -65,14 +65,14 @@ const ShowMetaGeneral = () => {
                     <div className="th"></div>
                     <div className="td flex justify-end">{getPrice(levyValue)}</div>
                 </div>
-                <div className={`${extraFieldLabel ? '' : 'hidden'} tr `}>
-                    <div className="th">{extraFieldLabel}</div>
+                <div className={`${extra_fieldLabel ? '' : 'hidden'} tr `}>
+                    <div className="th">{extra_fieldLabel}</div>
                     <div className="td flex">
-                        <div>{extraFieldField}%</div>
-                        <div className="text-right">{getPrice(extraFieldValue)}</div>
+                        <div>{extra_fieldField}%</div>
+                        <div className="text-right">{getPrice(extra_fieldValue)}</div>
                     </div>
                     <div className="th"></div>
-                    <div className="td flex justify-end">{getPrice(extraFieldValue)}</div>
+                    <div className="td flex justify-end">{getPrice(extra_fieldValue)}</div>
                 </div>
                 <div className="tr">
                     <div className="th">該付承保公司款項</div>
@@ -87,7 +87,7 @@ const ShowMetaGeneral = () => {
             <Row gutter={48} className="mt-12">
                 <Col span={8} className="text-center">
                     <p className="text-[#555] font-light">AGENT FEE</p>
-                    <p className="font-black text-4xl">{getPrice(agentFee, 'w-full')}</p>
+                    <p className="font-black text-4xl">{getPrice(agent_fee, 'w-full')}</p>
                 </Col>
                 <Col span={8} className="text-center">
                     <p className="text-[#555] font-light">Profit</p>

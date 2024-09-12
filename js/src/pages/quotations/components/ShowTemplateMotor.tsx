@@ -9,12 +9,12 @@ import { getGrossPremium, getMotorTotalPremium, getPrice } from 'utils';
 
 const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData }) => {
     const premium = debitNoteData?.premium || 0;
-    const ls = debitNoteData?.motorAttr?.ls || 0;
-    const ncb = debitNoteData?.motorAttr?.ncb || 0;
-    const mib = debitNoteData?.motorAttr?.mib || 0;
+    const ls = debitNoteData?.motor_attr?.ls || 0;
+    const ncb = debitNoteData?.motor_attr?.ncb || 0;
+    const mib = debitNoteData?.motor_attr?.mib || 0;
     const less = debitNoteData?.less || 0;
-    const extraFieldLabel = debitNoteData?.extraField?.label || '';
-    const extraFieldValue = debitNoteData?.extraField?.value || '';
+    const extra_fieldLabel = debitNoteData?.extra_field?.label || '';
+    const extra_fieldValue = debitNoteData?.extra_field?.value || '';
 
     const grossPremium = getGrossPremium({
         premium,
@@ -25,12 +25,12 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
         grossPremium,
         mib,
         less,
-        extraValue: Number(extraFieldValue),
+        extraValue: Number(extra_fieldValue),
     });
 
     const { data: insurerData } = useOne<TInsurer>({
         resource: 'insurers',
-        id: debitNoteData?.insurerId || 0,
+        id: debitNoteData?.insurer_id || 0,
         queryOptions: {
             enabled: !!debitNoteData,
         },
@@ -48,55 +48,55 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                         </div>
                         <div className="tr">
                             <div className="th">保單號碼 Policy No.</div>
-                            <div className="td">{debitNoteData?.policyNo}</div>
+                            <div className="td">{debitNoteData?.policy_no}</div>
                         </div>
                         <div className="tr">
                             <div className="th">投保名稱 Name of Insured</div>
-                            <div className="td">{debitNoteData?.nameOfInsured}</div>
+                            <div className="td">{debitNoteData?.name_of_insured}</div>
                         </div>
                         <div className="tr">
                             <div className="th">投保金額 Sum Insured</div>
-                            <div className="td">{debitNoteData?.sumInsured}</div>
+                            <div className="td">{debitNoteData?.sum_insured}</div>
                         </div>
                         <div className="tr">
                             <div className="th">製造年份 Manufacturing Year</div>
-                            <div className="td">{debitNoteData?.motorAttr?.manufacturingYear}</div>
+                            <div className="td">{debitNoteData?.motor_attr?.manufacturingYear}</div>
                         </div>
                         <div className="tr">
                             <div className="th">登記號碼 Registration No.</div>
-                            <div className="td">{debitNoteData?.motorAttr?.registrationNo}</div>
+                            <div className="td">{debitNoteData?.motor_attr?.registrationNo}</div>
                         </div>
                         <div className="tr">
                             <div className="th">廠名及型號 Make & Model</div>
-                            <div className="td">{debitNoteData?.motorAttr?.model}</div>
+                            <div className="td">{debitNoteData?.motor_attr?.model}</div>
                         </div>
                         <div className="tr">
                             <div className="th">容量 / 噸數 CC./ Tonnes </div>
-                            <div className="td">{debitNoteData?.motorAttr?.tonnes}</div>
+                            <div className="td">{debitNoteData?.motor_attr?.tonnes}</div>
                         </div>
                         <div className="tr">
                             <div className="th">車身 Body</div>
-                            <div className="td">{debitNoteData?.motorAttr?.body}</div>
+                            <div className="td">{debitNoteData?.motor_attr?.body}</div>
                         </div>
                         <div className="tr">
                             <div className="th">底盤 Chassi</div>
-                            <div className="td">{debitNoteData?.motorAttr?.chassi}</div>
+                            <div className="td">{debitNoteData?.motor_attr?.chassi}</div>
                         </div>
                         <div className="tr">
                             <div className="th">引擎號 Engine Number</div>
-                            <div className="td">{debitNoteData?.motorEngineNo}</div>
+                            <div className="td">{debitNoteData?.motor_engine_no}</div>
                         </div>
                         <div className="tr">
                             <div className="th">附加設備 Additional Values</div>
-                            <div className="td">{debitNoteData?.motorAttr?.additionalValues}</div>
+                            <div className="td">{debitNoteData?.motor_attr?.additionalValues}</div>
                         </div>
                         <div className="tr">
                             <div className="th">記名司機 Named Driver</div>
-                            <div className="td">{debitNoteData?.motorAttr?.namedDriver}</div>
+                            <div className="td">{debitNoteData?.motor_attr?.namedDriver}</div>
                         </div>
                         <div className="tr">
                             <div className="th">保險期限 Period of Insurance</div>
-                            <div className="td">{`From ${dayjs.unix(debitNoteData?.periodOfInsuranceFrom || dayjs().unix()).format('YYYY-MM-DD')}   To ${dayjs.unix(debitNoteData?.periodOfInsuranceTo || dayjs().unix()).format('YYYY-MM-DD')}`}</div>
+                            <div className="td">{`From ${dayjs.unix(debitNoteData?.period_of_insurance_from || dayjs().unix()).format('YYYY-MM-DD')}   To ${dayjs.unix(debitNoteData?.period_of_insurance_to || dayjs().unix()).format('YYYY-MM-DD')}`}</div>
                         </div>
                     </div>
                 </Col>
@@ -129,10 +129,10 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                             <div className="td text-right">{mib ? `${mib}%` : ''}</div>
                             <div className="td text-right">{getPrice(round(grossPremium * (mib / 100), 2))}</div>
                         </div>
-                        <div className={`${extraFieldLabel ? '' : 'hidden'} tr`}>
-                            <div className="th">{extraFieldLabel}</div>
-                            <div className="td text-right">{extraFieldValue}%</div>
-                            <div className="td text-right">{getPrice(round(grossPremium * (Number(extraFieldValue) / 100), 2))}</div>
+                        <div className={`${extra_fieldLabel ? '' : 'hidden'} tr`}>
+                            <div className="th">{extra_fieldLabel}</div>
+                            <div className="td text-right">{extra_fieldValue}%</div>
+                            <div className="td text-right">{getPrice(round(grossPremium * (Number(extra_fieldValue) / 100), 2))}</div>
                         </div>
                         <div className="tr mt-10">
                             <div className="th text-red-500 print:text-inherit">Less</div>

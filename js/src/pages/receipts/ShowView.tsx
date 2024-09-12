@@ -23,33 +23,33 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
 
     const { data: debitNoteData } = useOne<TDebitNote>({
         resource: 'debit_notes',
-        id: receiptData?.debitNoteId || 0,
+        id: receiptData?.debit_note_id || 0,
         queryOptions: {
             enabled: !!receiptData,
         },
     });
     const receiptPremium = queryResult?.data?.data.premium;
     const debitNote = debitNoteData?.data;
-    const debitNoteNo = debitNote?.noteNo || '';
+    const debitNoteNo = debitNote?.note_no || '';
     const templateText = getTemplateText(debitNote?.template || 'general');
 
     const { data: clientData } = useOne<TClient>({
         resource: 'clients',
-        id: debitNote?.clientId || 0,
+        id: debitNote?.client_id || 0,
         queryOptions: {
             enabled: !!debitNote,
         },
     });
     const client = clientData?.data || defaultClient;
-    const displayName = getDisplayName(client);
+    const display_name = getDisplayName(client);
 
     const printRef = useRef<HTMLDivElement>(null);
-    //檢查selectedClient?.addressArr是否為array
-    if (!Array.isArray(client?.addressArr)) {
+    //檢查selectedClient?.address_arr是否為array
+    if (!Array.isArray(client?.address_arr)) {
         try {
-            client.addressArr = JSON.parse(client.addressArr);
+            client.address_arr = JSON.parse(client.address_arr);
         } catch (error) {
-            client.addressArr = [];
+            client.address_arr = [];
             console.log('🚀 ~ error:', error);
         }
     }
@@ -75,7 +75,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                     <div className="th">Connected Debit Note</div>
                     <div className="td flex justify-between">
                         <span>{debitNoteNo}</span>
-                        <span>{displayName}</span>
+                        <span>{display_name}</span>
                     </div>
                     <div className="th"></div>
                     <div className="td"></div>
@@ -104,16 +104,16 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                             <div className="th">To 致</div>
                             <div className="td">
                                 <p>{client?.company}</p>
-                                <p>{client?.nameEn || client?.nameZh || ' '}</p>
+                                <p>{client?.name_en || client?.name_zh || ' '}</p>
                             </div>
                             <div className="th">Receipt No 號碼</div>
-                            <div className="td">{receiptData?.receiptNo}</div>
+                            <div className="td">{receiptData?.receipt_no}</div>
                         </div>
 
                         <div className="tr">
                             <div className="th">Address 地址</div>
                             <div className="td">
-                                <p>{client?.addressArr?.map((address, index) => <p key={index}>{address}</p>) || ' '}</p>
+                                <p>{client?.address_arr?.map((address, index) => <p key={index}>{address}</p>) || ' '}</p>
                             </div>
                             <div className="th">Date 日期</div>
                             <div className="td">{!!receiptData?.date ? dayjs.unix(receiptData?.date).format('YYYY-MM-DD') : ''}</div>
@@ -125,7 +125,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                             <div className="table table_td-flex-1 w-full">
                                 <div className="tr mt-4">
                                     <div className="th">Received From 茲收到</div>
-                                    <div className="td">{displayName}</div>
+                                    <div className="td">{display_name}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th">THE SUM OF 款項</div>
@@ -136,7 +136,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                                 </div>
                                 <div className="tr">
                                     <div className="th w-60">POLICY 保單號碼</div>
-                                    <div className="td">{debitNote?.policyNo}</div>
+                                    <div className="td">{debitNote?.policy_no}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th w-60">DEBIT NOTE NO. 保費單號碼</div>
@@ -151,19 +151,19 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                             <div className="table table_td-flex-1 w-full">
                                 <div className="tr mt-4">
                                     <div className="th">Payment Date</div>
-                                    <div className="td">{!!receiptData?.paymentDate ? dayjs.unix(receiptData?.paymentDate).format('YYYY-MM-DD') : ''}</div>
+                                    <div className="td">{!!receiptData?.payment_date ? dayjs.unix(receiptData?.payment_date).format('YYYY-MM-DD') : ''}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th">Payment Method</div>
-                                    <div className="td">{receiptData?.paymentMethod}</div>
+                                    <div className="td">{receiptData?.payment_method}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th">Cheque No</div>
-                                    <div className="td">{receiptData?.chequeNo}</div>
+                                    <div className="td">{receiptData?.cheque_no}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th">Code No</div>
-                                    <div className="td">{receiptData?.codeNo}</div>
+                                    <div className="td">{receiptData?.code_no}</div>
                                 </div>
                             </div>
                         </Col>

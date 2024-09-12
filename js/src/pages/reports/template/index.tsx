@@ -18,20 +18,22 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
             const start = values?.dateRange ? values?.dateRange[0]?.unix() : undefined;
             const end = values?.dateRange ? values?.dateRange[1]?.unix() : undefined;
 
-            const defaultFilters = [
+            const defaultFilters = start?[
                 {
-                    field: 'date',
-                    operator: 'gte',
+                    field: 'date[0]',
+                    operator: 'eq',
                     value: start,
                 },
                 {
-                    field: 'date',
-                    operator: 'lte',
+                    field: 'date[1]',
+                    operator: 'eq',
                     value: end,
                 },
-            ];
+            ]:[];
             return defaultFilters as CrudFilters;
         },
+
+
     });
 
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -52,7 +54,7 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
         ],
         mapData: (item) => {
             return {
-                'Note No.': item.noteNo,
+                'Note No.': item.note_no,
                 Date: dayjs.unix(item.date).format('YYYY-MM-DD'),
                 'Payment Date': dayjs.unix(item.date).add(1, 'month').format('YYYY-MM-DD'),
                 'Premium (HKD)': `${item.premium.toLocaleString()}`,
@@ -99,9 +101,9 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
                                     </>
                                 );
                             }}>
-                            <Table.Column width={120} dataIndex={resource === 'receipts' ? 'receiptNo' : 'noteNo'} title="Note No." sorter={(a: T, b: T) => a?.noteNo.localeCompare(b.noteNo || '')} />
+                            <Table.Column width={120} dataIndex={resource === 'receipts' ? 'receipt_no' : 'note_no'} title="Note No." sorter={(a: T, b: T) => a?.note_no.localeCompare(b.note_no || '')} />
                             <Table.Column key="date" dataIndex="date" title="Date" render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')} sorter={(a: T, b: T) => a.date - b.date} />
-                            <Table.Column key="paymentDate" dataIndex="date" title="Payment Date" render={(date: number) => dayjs.unix(date).add(1, 'month').format('YYYY-MM-DD')} />
+                            <Table.Column key="payment_date" dataIndex="date" title="Payment Date" render={(date: number) => dayjs.unix(date).add(1, 'month').format('YYYY-MM-DD')} />
                             <Table.Column dataIndex="premium" title="Premium" render={(premium: number) => getPrice(premium)} sorter={(a: T, b: T) => a.premium - b.premium} />
                         </Table>
                         <hr className="my-8" />

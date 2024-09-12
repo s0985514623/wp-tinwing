@@ -24,30 +24,70 @@ export const ListView: React.FC = () => {
         },
         filters: {
             initial: [
-                {
-                    field: 'date',
-                    operator: 'gt',
-                    value: year?.startOf('year').unix(),
-                },
-                {
-                    field: 'date',
-                    operator: 'lt',
-                    value: year?.endOf('year').unix(),
-                },
+                // {
+                //     field: 'date',
+                //     operator: 'gt',
+                //     value: year?.startOf('year').unix(),
+                // },
+                // {
+                //     field: 'date',
+                //     operator: 'lt',
+                //     value: year?.endOf('year').unix(),
+                // },
+								{
+									field: 'meta_query[0][key]',
+									operator: 'eq',
+									value: 'date',
+								},
+								{
+									field: 'meta_query[0][value][0]',
+									operator: 'eq',
+									value: year?.startOf('year').unix(),
+								},
+								{
+									field: 'meta_query[0][value][1]',
+									operator: 'eq',
+									value: year?.endOf('year').unix(),
+								},
+								{
+									field: 'meta_query[0][compare]',
+									operator: 'eq',
+									value: 'BETWEEN',
+								},
             ],
         },
         onSearch: (values: any) => {
             const filters = [
-                {
-                    field: 'date',
-                    operator: 'gt',
-                    value: values?.year ? values?.year.startOf('year').unix() : undefined,
-                },
-                {
-                    field: 'date',
-                    operator: 'lt',
-                    value: values?.year ? values?.year.endOf('year').unix() : undefined,
-                },
+                // {
+                //     field: 'date',
+                //     operator: 'gt',
+                //     value: values?.year ? values?.year.startOf('year').unix() : undefined,
+                // },
+                // {
+                //     field: 'date',
+                //     operator: 'lt',
+                //     value: values?.year ? values?.year.endOf('year').unix() : undefined,
+                // },
+								{
+									field: 'meta_query[0][key]',
+									operator: 'eq',
+									value: 'date',
+								},
+								{
+									field: 'meta_query[0][value][0]',
+									operator: 'eq',
+									value: values?.year ? values?.year.startOf('year').unix() : undefined,
+								},
+								{
+									field: 'meta_query[0][value][1]',
+									operator: 'eq',
+									value: values?.year ? values?.year.endOf('year').unix() : undefined,
+								},
+								{
+									field: 'meta_query[0][compare]',
+									operator: 'eq',
+									value: 'BETWEEN',
+								},
             ];
             return filters as CrudFilters;
         },
@@ -60,7 +100,7 @@ export const ListView: React.FC = () => {
     //取得符合當前搜尋dataSource的terms
     const { data: _termsData } = useMany<TTerms>({
         resource: 'terms',
-        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.termId || '0') ?? [],
+        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.term_id || '0') ?? [],
         queryOptions: {
             enabled: !!parsedTableProps?.dataSource,
         },

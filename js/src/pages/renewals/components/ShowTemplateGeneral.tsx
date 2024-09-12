@@ -10,7 +10,7 @@ import { getGeneralTotalPremium, getPrice } from 'utils';
 const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteData }) => {
     const { data: insurerData } = useOne<TInsurer>({
         resource: 'insurers',
-        id: debitNoteData?.insurerId || 0,
+        id: debitNoteData?.insurer_id || 0,
         queryOptions: {
             enabled: !!debitNoteData,
         },
@@ -20,15 +20,15 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
     const premium = debitNoteData?.premium || 0;
     const levy = debitNoteData?.levy || 0;
     const less = debitNoteData?.less || 0;
-    const extraFieldLabel = debitNoteData?.extraField?.label || '';
-    const extraFieldValue = debitNoteData?.extraField?.value || '';
+    const extra_fieldLabel = debitNoteData?.extra_field?.label || '';
+    const extra_fieldValue = debitNoteData?.extra_field?.value || '';
     const particulars = debitNoteData?.particulars || '';
     const particularsArray = particulars.split('\n');
     const totalPremium = getGeneralTotalPremium({
         premium,
         levy,
         less,
-        extraValue: Number(extraFieldValue),
+        extraValue: Number(extra_fieldValue),
     });
 
     return (
@@ -42,20 +42,20 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
                         </div>
                         <div className="tr">
                             <div className="th">保單號碼 Policy No.</div>
-                            <div className="td">{debitNoteData?.policyNo}</div>
+                            <div className="td">{debitNoteData?.policy_no}</div>
                         </div>
                         <div className="tr">
                             <div className="th">投保名稱 Name of Insured</div>
-                            <div className="td">{debitNoteData?.nameOfInsured}</div>
+                            <div className="td">{debitNoteData?.name_of_insured}</div>
                         </div>
                         <div className="tr">
                             <div className="th">投保金額 Sum Insured</div>
-                            <div className="td">{debitNoteData?.sumInsured}</div>
+                            <div className="td">{debitNoteData?.sum_insured}</div>
                         </div>
 
                         <div className="tr">
                             <div className="th">保險期限 Period of Insurance</div>
-                            <div className="td">{`From ${dayjs.unix(debitNoteData?.periodOfInsuranceFrom || dayjs().unix()).format('YYYY-MM-DD')}   To ${dayjs.unix(debitNoteData?.periodOfInsuranceTo || dayjs().unix()).format('YYYY-MM-DD')}`}</div>
+                            <div className="td">{`From ${dayjs.unix(debitNoteData?.period_of_insurance_from || dayjs().unix()).format('YYYY-MM-DD')}   To ${dayjs.unix(debitNoteData?.period_of_insurance_to || dayjs().unix()).format('YYYY-MM-DD')}`}</div>
                         </div>
                         <div className="tr">
                             <div className="th">Particulars</div>
@@ -76,10 +76,10 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
                             <div className="td text-right">{levy}%</div>
                             <div className="td text-right">{getPrice(round(premium * (levy / 100), 2))}</div>
                         </div>
-                        <div className={`${extraFieldLabel ? '' : 'hidden'} tr `}>
-                            <div className="th">{extraFieldLabel}</div>
-                            <div className="td text-right">{extraFieldValue}%</div>
-                            <div className="td text-right">{getPrice(round(premium * (Number(extraFieldValue) / 100), 2))}</div>
+                        <div className={`${extra_fieldLabel ? '' : 'hidden'} tr `}>
+                            <div className="th">{extra_fieldLabel}</div>
+                            <div className="td text-right">{extra_fieldValue}%</div>
+                            <div className="td text-right">{getPrice(round(premium * (Number(extra_fieldValue) / 100), 2))}</div>
                         </div>
                         <div className="tr mt-10">
                             <div className="th text-red-500 print:text-inherit">Less</div>

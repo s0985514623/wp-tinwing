@@ -10,15 +10,15 @@ const { TextArea } = Input;
 const EditTemplateGeneral = () => {
     const form = Form.useFormInstance();
     const { queryResult } = useForm();
-    const extraFieldLabel = queryResult?.data?.data?.extraField?.label || '';
-    const extraFieldValue = queryResult?.data?.data?.extraField?.value || '';
-    const extraField2Label = queryResult?.data?.data?.extraField2?.label || '';
-    const extraField2Value = queryResult?.data?.data?.extraField2?.value || '';
+    const extra_fieldLabel = queryResult?.data?.data?.extra_field?.label || '';
+    const extra_fieldValue = queryResult?.data?.data?.extra_field?.value || '';
+    const extra_field2Label = queryResult?.data?.data?.extra_field2?.label || '';
+    const extra_field2Value = queryResult?.data?.data?.extra_field2?.value || '';
 
     const watchPremium = Form.useWatch(['premium'], form) || 0;
     const watchLevy = Form.useWatch(['levy'], form) || 0;
-    const watchExtraField = Form.useWatch(['extraField', 'value'], form) || 0;
-    const watchExtraField2 = Form.useWatch(['extraField2', 'value'], form) || 0;
+    const watchExtraField = Form.useWatch(['extra_field', 'value'], form) || 0;
+    const watchExtraField2 = Form.useWatch(['extra_field2', 'value'], form) || 0;
     const watchLess = Form.useWatch(['less'], form) || 0;
     const totalPremium = getGeneralTotalPremium({
         premium: watchPremium,
@@ -33,7 +33,7 @@ const EditTemplateGeneral = () => {
             <Row gutter={0} className="mt-12">
                 <Col span={12} className="pr-2">
                     <p>Particulars</p>
-                    <Form.Item noStyle name={['packageContent']}>
+                    <Form.Item noStyle name={['package_content']}>
                         <TextArea showCount className="h-60 mb-6" />
                     </Form.Item>
                 </Col>
@@ -51,12 +51,12 @@ const EditTemplateGeneral = () => {
                         </div>
                         <div className="tr">
                             <div className="th">
-                                <Form.Item noStyle name={['extraField', 'label']} initialValue={extraFieldLabel}>
+                                <Form.Item noStyle name={['extra_field', 'label']} initialValue={extra_fieldLabel}>
                                     <Input className="w-full" size="small" />
                                 </Form.Item>
                             </div>
                             <div className="td">
-                                <Form.Item noStyle name={['extraField', 'value']} initialValue={extraFieldValue}>
+                                <Form.Item noStyle name={['extra_field', 'value']} initialValue={extra_fieldValue}>
                                     <InputNumber className="w-full" size="small" addonAfter="%" min={0} stringMode step="0.01" />
                                 </Form.Item>
                             </div>
@@ -64,12 +64,12 @@ const EditTemplateGeneral = () => {
                         </div>
                         <div className="tr">
                             <div className="th">
-                                <Form.Item noStyle name={['extraField2', 'label']} initialValue={extraField2Label}>
+                                <Form.Item noStyle name={['extra_field2', 'label']} initialValue={extra_field2Label}>
                                     <Input className="w-full" size="small" />
                                 </Form.Item>
                             </div>
                             <div className="td">
-                                <Form.Item noStyle name={['extraField2', 'value']} initialValue={extraField2Value}>
+                                <Form.Item noStyle name={['extra_field2', 'value']} initialValue={extra_field2Value}>
                                     <InputNumber className="w-full" size="small" addonAfter="%" min={0} stringMode step="0.01" />
                                 </Form.Item>
                             </div>

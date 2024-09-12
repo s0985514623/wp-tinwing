@@ -18,12 +18,12 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
     const { formProps, saveButtonProps, form, queryResult } = useForm();
     const receiptData = queryResult?.data?.data as DataType;
     const watchDate = Form.useWatch(['date'], form);
-    const watchPaymentDate = Form.useWatch(['paymentDate'], form);
+    const watchPaymentDate = Form.useWatch(['payment_date'], form);
     const watchPremium = Form.useWatch(['premium'], form) ?? 0;
     const [dateProps, setDateProps] = useState<{
         value?: Dayjs;
     }>({});
-    const [paymentDateProps, setPaymentDateProps] = useState<{
+    const [payment_dateProps, setPaymentDateProps] = useState<{
         value?: Dayjs;
     }>({});
 
@@ -35,17 +35,17 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
 
     const { selectProps: debitNoteSelectProps, queryResult: debitNoteQueryResult } = useSelect<TDebitNote>({
         resource: 'debit_notes',
-        optionLabel: 'noteNo',
+        optionLabel: 'note_no',
         optionValue: 'id',
     });
     //取得receipts
     const { data: receiptsData } = useList<DataType>({
         resource: 'receipts',
     });
-    //取得receipts的debitNoteId
+    //取得receipts的debit_note_id
     const receiptsIds =
         receiptsData?.data?.map((item) => {
-            return item?.debitNoteId;
+            return item?.debit_note_id;
         }) || [];
     //過濾掉已經沒有receipts的debitNote
     const newData = debitNoteSelectProps.options?.filter((item) => receiptsIds.includes(item?.value as number));
@@ -53,14 +53,14 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
         ...debitNoteSelectProps,
         options: newData || [],
     };
-    const selectedDebitNoteId = Form.useWatch(['debitNoteId'], form);
+    const selectedDebitNoteId = Form.useWatch(['debit_note_id'], form);
     const debitNotes = debitNoteQueryResult?.data?.data || [];
     const selectedDebitNote = debitNotes?.find((theDebitNote) => theDebitNote?.id === selectedDebitNoteId) || defaultDebitNote;
 
     // 當selectedDebitNoteId改變時，更新premium的值
     useEffect(() => {
         if (!!selectedDebitNoteId) {
-            const setPremium = receiptsData?.data.find((item) => item?.debitNoteId === selectedDebitNoteId)?.premium || getTotalPremiumByDebitNote(selectedDebitNote);
+            const setPremium = receiptsData?.data.find((item) => item?.debit_note_id === selectedDebitNoteId)?.premium || getTotalPremiumByDebitNote(selectedDebitNote);
             form.setFieldValue(['premium'], setPremium);
         }
     }, [selectedDebitNoteId]);
@@ -69,13 +69,13 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
 
     const { data: clientResult, isLoading: clientIsLoading } = useOne<TClient>({
         resource: 'clients',
-        id: selectedDebitNote?.clientId || 0,
+        id: selectedDebitNote?.client_id || 0,
         queryOptions: {
-            enabled: !!selectedDebitNote?.clientId,
+            enabled: !!selectedDebitNote?.client_id,
         },
     });
     const selectedClient = clientResult?.data || defaultClient;
-    const displayName = getDisplayName(selectedClient);
+    const display_name = getDisplayName(selectedClient);
 
     const Link = useLink();
 
@@ -91,12 +91,12 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
             });
         }
     }, [watchDate, watchPaymentDate]);
-    //檢查selectedClient?.addressArr是否為array
-    if (!Array.isArray(selectedClient?.addressArr)) {
+    //檢查selectedClient?.address_arr是否為array
+    if (!Array.isArray(selectedClient?.address_arr)) {
         try {
-            selectedClient.addressArr = JSON.parse(selectedClient.addressArr);
+            selectedClient.address_arr = JSON.parse(selectedClient.address_arr);
         } catch (error) {
-            selectedClient.addressArr = [];
+            selectedClient.address_arr = [];
             console.log('🚀 ~ error:', error);
         }
     }
@@ -118,7 +118,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                     <div className="tr">
                         <div className="th">Connected Debit Note</div>
                         <div className="td">
-                            <Form.Item noStyle name={['debitNoteId']}>
+                            <Form.Item noStyle name={['debit_note_id']}>
                                 <Select {...fxnDebitNoteSelectProps} size="small" className="w-full" allowClear />
                             </Form.Item>
                         </div>
@@ -148,11 +148,11 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                             <div className="th">To 致</div>
                             <div className="td">
                                 <p>{selectedClient?.company}</p>
-                                <p>{selectedClient?.nameEn || selectedClient?.nameZh || ' '}</p>
+                                <p>{selectedClient?.name_en || selectedClient?.name_zh || ' '}</p>
                             </div>
                             <div className="th">Receipt No 號碼</div>
                             <div className="td">
-                                <Form.Item noStyle name={['receiptNo']} initialValue={receiptData?.receiptNo}>
+                                <Form.Item noStyle name={['receipt_no']} initialValue={receiptData?.receipt_no}>
                                     <Input size="small" />
                                 </Form.Item>
                             </div>
@@ -160,7 +160,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
 
                         <div className="tr">
                             <div className="th">Address 地址</div>
-                            <div className="td">{<p>{selectedClient?.addressArr?.join(' ')}</p>}</div>
+                            <div className="td">{<p>{selectedClient?.address_arr?.join(' ')}</p>}</div>
                             <div className="th">Date 日期</div>
                             <div className="td">
                                 <DatePicker className="w-full" size="small" onChange={handleDateChange(['date'])} {...dateProps} />
@@ -176,7 +176,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                             <div className="table table_td-flex-1 w-full">
                                 <div className="tr mt-4">
                                     <div className="th">Received From 茲收到</div>
-                                    <div className="td">{displayName}</div>
+                                    <div className="td">{display_name}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th">THE SUM OF 款項</div>
@@ -187,11 +187,11 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                                 </div>
                                 <div className="tr">
                                     <div className="th w-60">POLICY 保單號碼</div>
-                                    <div className="td">{selectedDebitNote?.policyNo}</div>
+                                    <div className="td">{selectedDebitNote?.policy_no}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th w-60">DEBIT NOTE NO. 保費單號碼</div>
-                                    <div className="td">{selectedDebitNote?.noteNo || ''}</div>
+                                    <div className="td">{selectedDebitNote?.note_no || ''}</div>
                                 </div>
                             </div>
                         </Col>
@@ -203,8 +203,8 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr mt-4">
                                     <div className="th">Payment Date</div>
                                     <div className="td">
-                                        <DatePicker className="w-full" size="small" onChange={handleDateChange(['paymentDate'])} {...paymentDateProps} />
-                                        <Form.Item hidden name={['paymentDate']}>
+                                        <DatePicker className="w-full" size="small" onChange={handleDateChange(['payment_date'])} {...payment_dateProps} />
+                                        <Form.Item hidden name={['payment_date']}>
                                             <InputNumber />
                                         </Form.Item>
                                     </div>
@@ -212,7 +212,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">Payment Method</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['paymentMethod']}>
+                                        <Form.Item noStyle name={['payment_method']}>
                                             <Input size="small" />
                                         </Form.Item>
                                     </div>
@@ -220,7 +220,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">Cheque No</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['chequeNo']}>
+                                        <Form.Item noStyle name={['cheque_no']}>
                                             <Input size="small" />
                                         </Form.Item>
                                     </div>
@@ -228,7 +228,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">Code No</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['codeNo']}>
+                                        <Form.Item noStyle name={['code_no']}>
                                             <Input size="small" />
                                         </Form.Item>
                                     </div>

@@ -89,7 +89,11 @@ final class Expenses {
 			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
 			'orderby'        => $params['orderby'],   // 排序方式
 			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
+			'meta_query'     => $params['meta_query'], // meta 查詢
 		];
+		ob_start();
+		var_dump($args);
+		\J7\WpUtils\Classes\log::info('' . ob_get_clean());
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
@@ -103,7 +107,7 @@ final class Expenses {
 					'created_at'    => strtotime(get_the_date('Y-m-d')),
 					'remark'        => get_the_title(),
 					'amount'        => $all_meta['amount'][0]??\null,
-					'termId'        => $all_meta['term_id'][0]??\null,
+					'term_id'        => $all_meta['term_id'][0]??\null,
 					'date'          => $all_meta['date'][0]??\null,
 					'cheque_number' => $all_meta['cheque_number'][0]??\null,
 				];
@@ -141,7 +145,7 @@ final class Expenses {
 		}
 		// 更新文章的 meta 資料
 		update_post_meta($post_id, 'amount', $params['amount']);
-		update_post_meta($post_id, 'term_id', $params['termId']);
+		update_post_meta($post_id, 'term_id', $params['term_id']);
 		update_post_meta($post_id, 'date', $params['date']);
 		update_post_meta($post_id, 'cheque_number', $params['cheque_number']);
 		$response = new \WP_REST_Response(  $post_id  );
@@ -171,7 +175,7 @@ final class Expenses {
 		}
 		// 更新文章的 meta 資料
 		update_post_meta($post_id, 'amount', $params['amount']);
-		update_post_meta($post_id, 'term_id', $params['termId']);
+		update_post_meta($post_id, 'term_id', $params['term_id']);
 		update_post_meta($post_id, 'date', $params['date']);
 		update_post_meta($post_id, 'cheque_number', $params['cheque_number']);
 		$response = new \WP_REST_Response(  $post_id  );
@@ -198,7 +202,7 @@ final class Expenses {
 				'created_at'    => strtotime(get_the_date('Y-m-d', $post_id)),
 				'remark'        => get_the_title($post_id),
 				'amount'        => $all_meta['amount'][0]??\null,
-				'termId'        => $all_meta['term_id'][0]??\null,
+				'term_id'        => $all_meta['term_id'][0]??\null,
 				'date'          => $all_meta['date'][0]??\null,
 				'cheque_number' => $all_meta['cheque_number'][0]??\null,
 			]

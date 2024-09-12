@@ -9,15 +9,15 @@ const ShowTemplateShortTerms: React.FC<{ data?: DataType }> = ({ data: debitNote
     const premium = debitNoteData?.premium || 0;
     const levy = debitNoteData?.levy || 0;
     const less = debitNoteData?.less || 0;
-    const extraFieldLabel = debitNoteData?.extraField?.label || '';
-    const extraFieldValue = debitNoteData?.extraField?.value || '';
+    const extra_fieldLabel = debitNoteData?.extra_field?.label || '';
+    const extra_fieldValue = debitNoteData?.extra_field?.value || '';
     const totalPremium = getGeneralTotalPremium({
         premium,
         levy,
         less,
-        extraValue: Number(extraFieldValue),
+        extraValue: Number(extra_fieldValue),
     });
-    const particulars = debitNoteData?.shortTermsContent || '';
+    const particulars = debitNoteData?.short_terms_content || '';
     const particularsArray = particulars.split('\n');
     return (
         <div className="mt-12 table table_td-flex-1 w-full border-2 border-solid border-black ">
@@ -39,10 +39,10 @@ const ShowTemplateShortTerms: React.FC<{ data?: DataType }> = ({ data: debitNote
                             <div className="td text-right">{levy}%</div>
                             <div className="td">{getPrice(round(premium * (levy / 100), 2))}</div>
                         </div>
-                        <div className={`${extraFieldLabel ? '' : 'hidden'} tr `}>
-                            <div className="th">{extraFieldLabel}</div>
-                            <div className="td text-right">{extraFieldValue}%</div>
-                            <div className="td text-right">{getPrice(round(premium * (Number(extraFieldValue) / 100), 2))}</div>
+                        <div className={`${extra_fieldLabel ? '' : 'hidden'} tr `}>
+                            <div className="th">{extra_fieldLabel}</div>
+                            <div className="td text-right">{extra_fieldValue}%</div>
+                            <div className="td text-right">{getPrice(round(premium * (Number(extra_fieldValue) / 100), 2))}</div>
                         </div>
                         <div className="tr mt-10">
                             <div className="th text-red-500 print:text-inherit">Less</div>

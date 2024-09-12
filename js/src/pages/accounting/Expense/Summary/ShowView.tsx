@@ -17,16 +17,36 @@ export const ShowView: React.FC = () => {
     const { tableProps } = useTable<DataType>({
         filters: {
             initial: [
-                {
-                    field: 'date',
-                    operator: 'gt',
-                    value: startOfMonth.unix(),
-                },
-                {
-                    field: 'date',
-                    operator: 'lt',
-                    value: endOfMonth.unix(),
-                },
+                // {
+                //     field: 'date',
+                //     operator: 'gt',
+                //     value: startOfMonth.unix(),
+                // },
+                // {
+                //     field: 'date',
+                //     operator: 'lt',
+                //     value: endOfMonth.unix(),
+                // },
+								{
+									field: 'meta_query[0][key]',
+									operator: 'eq',
+									value: 'date',
+								},
+								{
+									field: 'meta_query[0][value][0]',
+									operator: 'eq',
+									value: startOfMonth.unix(),
+								},
+								{
+									field: 'meta_query[0][value][1]',
+									operator: 'eq',
+									value: endOfMonth.unix(),
+								},
+								{
+									field: 'meta_query[0][compare]',
+									operator: 'eq',
+									value: 'BETWEEN',
+								},
             ],
         },
     });
@@ -37,7 +57,7 @@ export const ShowView: React.FC = () => {
     // });
     const { data: termsData, isLoading: termsLoading } = useMany<TTerms>({
         resource: 'terms',
-        ids: tableProps?.dataSource?.map((theRecord) => theRecord?.termId || '0') ?? [],
+        ids: tableProps?.dataSource?.map((theRecord) => theRecord?.term_id || '0') ?? [],
         queryOptions: {
             enabled: !!tableProps?.dataSource,
         },
@@ -46,22 +66,42 @@ export const ShowView: React.FC = () => {
     const disabledBtn = tableProps.dataSource?.length == 0 ? true : false;
     const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
         filters: [
-            {
-                field: 'date',
-                operator: 'gt',
-                value: startOfMonth.unix(),
-            },
-            {
-                field: 'date',
-                operator: 'lt',
-                value: endOfMonth.unix(),
-            },
+            // {
+            //     field: 'date',
+            //     operator: 'gt',
+            //     value: startOfMonth.unix(),
+            // },
+            // {
+            //     field: 'date',
+            //     operator: 'lt',
+            //     value: endOfMonth.unix(),
+            // },
+						{
+							field: 'meta_query[0][key]',
+							operator: 'eq',
+							value: 'date',
+						},
+						{
+							field: 'meta_query[0][value][0]',
+							operator: 'eq',
+							value: startOfMonth.unix(),
+						},
+						{
+							field: 'meta_query[0][value][1]',
+							operator: 'eq',
+							value: endOfMonth.unix(),
+						},
+						{
+							field: 'meta_query[0][compare]',
+							operator: 'eq',
+							value: 'BETWEEN',
+						},
         ],
         mapData: (item) => {
             // console.log('🚀 ~ item:', item);
             return {
                 Date: dayjs.unix(item.date).format('YYYY-MM-DD'),
-                Category: termsData?.data?.find((term) => term.id === item.termId)?.name,
+                Category: termsData?.data?.find((term) => term.id === item.term_id)?.name,
                 Amount: item.amount.toLocaleString(),
                 Remark: item.remark,
             };
@@ -81,10 +121,10 @@ export const ShowView: React.FC = () => {
 
                 <Table.Column
                     width={120}
-                    dataIndex="termId"
+                    dataIndex="term_id"
                     title="Category"
-                    render={(termId: number) => {
-                        const termData = termsData?.data?.find((term) => term.id === termId);
+                    render={(term_id: number) => {
+                        const termData = termsData?.data?.find((term) => term.id === term_id);
                         return termData?.name;
                     }}
                 />

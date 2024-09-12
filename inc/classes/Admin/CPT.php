@@ -265,13 +265,14 @@ final class CPT {
 			/*html*/'
 			<p>
 				<label for="%1$s">%1$s</label>
-				<input type="%2$s" id="%3$s" name="%3$s" value="1" %4$s />
+				<input type="%2$s" id="%3$s" name="%3$s" value="%5$s" %4$s />
 			</p>
 			',
 			$args['title'],
 			$args['args']['input_type'],
 			$args['title'],
-			$checked
+			$checked,
+			$meta_value
 		);
 	}
 
@@ -285,7 +286,11 @@ final class CPT {
 	 */
 	public function render_meta_box_json( $post, $args ): void {
 		$meta_value = \get_post_meta( $post->ID, $args['title'], true );
-		$meta_value = json_decode($meta_value, true);
+
+		if (!is_array($meta_value)) {
+			$meta_value = json_decode($meta_value, true);
+		}
+		// $meta_value = json_decode($meta_value, true);
 
 		foreach ($args['args']['attr'] as $key => $value) {
 			\printf(
@@ -306,7 +311,7 @@ final class CPT {
 	}
 
 	/**
-	 * Render meta box to extraField JSON.
+	 * Render meta box to extra_field JSON.
 	 *
 	 * @param \WP_Post $post Post.
 	 * @param array    $args Args.
@@ -315,7 +320,10 @@ final class CPT {
 	 */
 	public function render_meta_box_json_extra_field( $post, $args ): void {
 		$meta_value_data = \get_post_meta( $post->ID, $args['title'], true);
-		$meta_value_data = json_decode($meta_value_data, true);
+		if (!is_array($meta_value_data)) {
+			$meta_value_data = json_decode($meta_value_data, true);
+		}
+		// $meta_value_data = json_decode($meta_value_data, true);
 
 		$default_meta_value =[
 			'name'  => '',
@@ -427,8 +435,8 @@ final class CPT {
 				else{
 					$meta_data = \sanitize_text_field( $_POST[ $key ] );
 				}
-				//檢查是否為extraField 及 extraField2
-				if("extraField"==$key||"extraField2"==$key){
+				//檢查是否為extra_field 及 extra_field2
+				if("extra_field"==$key||"extra_field2"==$key){
 					$name  = $meta_data['name'];
 					$value = $meta_data['value'];
 					//檢查是否有輸入,否則跳出

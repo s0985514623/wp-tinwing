@@ -21,11 +21,26 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         optionLabel: 'name',
         optionValue: 'id',
         filters: [
-            {
-                field: 'taxonomy',
-                operator: 'eq',
-                value: 'insurance_class',
-            },
+            // {
+            //     field: 'taxonomy',
+            //     operator: 'eq',
+            //     value: 'insurance_class',
+            // },
+						{
+							field: 'meta_query[0][key]',
+							operator: 'eq',
+							value: 'taxonomy',
+						},
+						{
+							field: 'meta_query[0][value]',
+							operator: 'eq',
+							value: 'insurance_class',
+						},
+						{
+							field: 'meta_query[0][compare]',
+							operator: 'eq',
+							value: '=',
+						},
         ],
     });
 
@@ -38,20 +53,20 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                             formItemProps={{
                                 label: 'Insurer Product No.',
                             }}
-                            name={['insurerProductsNumber']}
+                            name={['insurer_products_number']}
                         />
                         <Form.Item label="Package" name={['name']}>
                             <Input />
                         </Form.Item>
-                        {/* TODO: termId */}
+                        {/* TODO: term_id */}
 
-                        <Form.Item label="Class of Insurance" name={['termId']}>
+                        <Form.Item label="Class of Insurance" name={['term_id']}>
                             <Select {...termSelectProps} allowClear />
                         </Form.Item>
-                        <Form.Item label="Policy Number" name={['policyNo']}>
+                        <Form.Item label="Policy Number" name={['policy_no']}>
                             <Input />
                         </Form.Item>
-                        <Form.Item label="Insurance Amount" name={['insuranceAmount']}>
+                        <Form.Item label="Insurance Amount" name={['insurance_amount']}>
                             <InputNumber className="w-full" />
                         </Form.Item>
                     </Col>
@@ -59,12 +74,12 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                         <Form.Item label="Remark" name={['remark']}>
                             <Input.TextArea autoSize={{ minRows: 6 }} />
                         </Form.Item>
-                        {/* TODO: debitNoteIds */}
-                        <Form.Item label="Debit Notes" name={['debitNoteIds']}>
+                        {/* TODO: debit_note_ids */}
+                        <Form.Item label="Debit Notes" name={['debit_note_ids']}>
                             <Input disabled />
                         </Form.Item>
 
-                        <Form.Item label="Insurer Id" name={['insurerId']}>
+                        <Form.Item label="Insurer Id" name={['insurer_id']}>
                             <Select {...insurerSelectProps} allowClear />
                         </Form.Item>
                     </Col>

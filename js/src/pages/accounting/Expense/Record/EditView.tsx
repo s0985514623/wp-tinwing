@@ -15,18 +15,28 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
     //terms 資料
     const { data: termsData, isLoading: termsIsLoading } = useOne<TTerms>({
         resource: 'terms',
-        id: expenseData?.termId || 0,
+        id: expenseData?.term_id || 0,
     });
     const { selectProps: termsProps } = useSelect<TTerms>({
         resource: 'terms',
         optionLabel: 'name',
         optionValue: 'id',
         filters: [
-            {
-                field: 'taxonomy',
-                operator: 'eq',
-                value: 'expense_class',
-            },
+					{
+						field: 'meta_query[0][key]',
+						operator: 'eq',
+						value: 'taxonomy',
+					},
+					{
+						field: 'meta_query[0][value]',
+						operator: 'eq',
+						value: 'expense_class',
+					},
+					{
+						field: 'meta_query[0][compare]',
+						operator: 'eq',
+						value: '=',
+					},
         ],
     });
 
@@ -50,7 +60,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">Category</div>
                                     <div className="td">
-                                        <Form.Item noStyle name={['termId']} initialValue={category}>
+                                        <Form.Item noStyle name={['term_id']} initialValue={category}>
                                             <Select className="w-1/2" {...termsProps} allowClear />
                                         </Form.Item>
                                     </div>

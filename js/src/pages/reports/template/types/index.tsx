@@ -9,8 +9,8 @@ export type TTemplateProps = {
 };
 
 export type TRequiredProps = {
-    noteNo: string;
+    note_no: string;
     date: number;
-    paymentDate: number;
+    payment_date: number;
     premium: number;
 };

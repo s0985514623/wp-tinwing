@@ -24,30 +24,70 @@ export const ListView: React.FC = () => {
         },
         filters: {
             initial: [
-                {
-                    field: 'date',
-                    operator: 'gt',
-                    value: dateRange ? dateRange[0]?.unix() : undefined,
-                },
-                {
-                    field: 'date',
-                    operator: 'lt',
-                    value: dateRange ? dateRange[1]?.unix() : undefined,
-                },
+                // {
+                //     field: 'date',
+                //     operator: 'gt',
+                //     value: dateRange ? dateRange[0]?.unix() : undefined,
+                // },
+                // {
+                //     field: 'date',
+                //     operator: 'lt',
+                //     value: dateRange ? dateRange[1]?.unix() : undefined,
+                // },
+								{
+									field: 'meta_query[0][key]',
+									operator: 'eq',
+									value: 'date',
+								},
+								{
+									field: 'meta_query[0][value][0]',
+									operator: 'eq',
+									value: dateRange ? dateRange[0]?.unix() : undefined,
+								},
+								{
+									field: 'meta_query[0][value][1]',
+									operator: 'eq',
+									value: dateRange ? dateRange[1]?.unix() : undefined,
+								},
+								{
+									field: 'meta_query[0][compare]',
+									operator: 'eq',
+									value: 'BETWEEN',
+								},
             ],
         },
         onSearch: (values: any) => {
             const filters = [
-                {
-                    field: 'date',
-                    operator: 'gt',
-                    value: values?.dateRange ? dayjs(values?.dateRange[0]?.startOf('day')).unix() : undefined,
-                },
-                {
-                    field: 'date',
-                    operator: 'lt',
-                    value: values?.dateRange ? dayjs(values?.dateRange[1]?.startOf('day')).unix() : undefined,
-                },
+                // {
+                //     field: 'date',
+                //     operator: 'gt',
+                //     value: values?.dateRange ? dayjs(values?.dateRange[0]?.startOf('day')).unix() : undefined,
+                // },
+                // {
+                //     field: 'date',
+                //     operator: 'lt',
+                //     value: values?.dateRange ? dayjs(values?.dateRange[1]?.startOf('day')).unix() : undefined,
+                // },
+								{
+									field: 'meta_query[0][key]',
+									operator: 'eq',
+									value: 'date',
+								},
+								{
+									field: 'meta_query[0][value][0]',
+									operator: 'eq',
+									value: values?.dateRange ? dayjs(values?.dateRange[0]?.startOf('day')).unix() : undefined,
+								},
+								{
+									field: 'meta_query[0][value][1]',
+									operator: 'eq',
+									value: values?.dateRange ? dayjs(values?.dateRange[1]?.startOf('day')).unix() : undefined,
+								},
+								{
+									field: 'meta_query[0][compare]',
+									operator: 'eq',
+									value: 'BETWEEN',
+								},
             ];
             return filters as CrudFilters;
         },
@@ -60,7 +100,7 @@ export const ListView: React.FC = () => {
 
     const { data: debitNoteData } = useMany<TDebitNote>({
         resource: 'debit_notes',
-        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.debitNoteId || '0') ?? [],
+        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.debit_note_id || '0') ?? [],
         queryOptions: {
             enabled: !!parsedTableProps?.dataSource,
         },
@@ -69,7 +109,7 @@ export const ListView: React.FC = () => {
     // console.log('🚀 ~ debitNoteData:', debitNoteData);
     const { data: insurersData } = useMany<TInsurer>({
         resource: 'insurers',
-        ids: debitNoteData?.data?.map((theRecord) => theRecord?.insurerId || '0') ?? [],
+        ids: debitNoteData?.data?.map((theRecord) => theRecord?.insurer_id || '0') ?? [],
         queryOptions: {
             enabled: !!parsedTableProps?.dataSource,
         },
@@ -82,35 +122,55 @@ export const ListView: React.FC = () => {
     const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
         filters: dateRange
             ? [
-                  {
-                      field: 'date',
-                      operator: 'gt',
-                      value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
-                  },
-                  {
-                      field: 'date',
-                      operator: 'lt',
-                      value: dateRange ? dateRange[1].startOf('day').unix() : undefined,
-                  },
+                  // {
+                  //     field: 'date',
+                  //     operator: 'gt',
+                  //     value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
+                  // },
+                  // {
+                  //     field: 'date',
+                  //     operator: 'lt',
+                  //     value: dateRange ? dateRange[1].startOf('day').unix() : undefined,
+                  // },
+									{
+										field: 'meta_query[0][key]',
+										operator: 'eq',
+										value: 'date',
+									},
+									{
+										field: 'meta_query[0][value][0]',
+										operator: 'eq',
+										value: dateRange[0].startOf('day').unix(),
+									},
+									{
+										field: 'meta_query[0][value][1]',
+										operator: 'eq',
+										value: dateRange[1].startOf('day').unix(),
+									},
+									{
+										field: 'meta_query[0][compare]',
+										operator: 'eq',
+										value: 'BETWEEN',
+									},
               ]
             : undefined,
         mapData: (item) => {
             if (!item) return;
-            const noteNo = parsedTableProps?.dataSource?.find((r) => r.id === item.id)?.receiptNo ?? item.id;
+            const note_no = parsedTableProps?.dataSource?.find((r) => r.id === item.id)?.receipt_no ?? item.id;
             const noteDate = dayjs.unix(item?.date as number).format('YYYY-MM-DD');
-            const debitNote = debitNotes.find((dn) => dn.id === item.debitNoteId);
-            const insurerData = insurersData?.data?.find((insurer) => insurer.id === debitNote?.insurerId);
+            const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id);
+            const insurerData = insurersData?.data?.find((insurer) => insurer.id === debitNote?.insurer_id);
             const insurerName = debitNote ? insurerData?.name : '';
             const receipt = parsedTableProps?.dataSource?.find((r) => r.id === item.id);
-            const premium = receipt?.premium ?? getTotalPremiumByDebitNote((debitNotes?.filter((dn) => dn?.id === receipt?.debitNoteId) as TDebitNote[])[0] ?? {});
+            const premium = receipt?.premium ?? getTotalPremiumByDebitNote((debitNotes?.filter((dn) => dn?.id === receipt?.debit_note_id) as TDebitNote[])[0] ?? {});
             const paymentToInsurer = debitNote ? getInsurerPayment(item, debitNote as TDebitNote, insurerData as TInsurer) : 0;
             return {
-                'Note No': `'${noteNo}'`, //加上單引號才不會被省略前導0
+                'Note No': `'${note_no}'`, //加上單引號才不會被省略前導0
                 'Note Date': noteDate,
                 Insurer: insurerName,
                 Premium: Number(premium).toLocaleString(),
                 'Payment to Insurer': Number(paymentToInsurer).toLocaleString(),
-                Paid: item.isPaid ? 'Yes' : 'No',
+                Paid: item.is_paid ? 'Yes' : 'No',
                 Bank: item.payment_receiver_account,
                 Remark: item.remark,
             };
@@ -131,20 +191,20 @@ export const ListView: React.FC = () => {
                     dataIndex="id"
                     title="Note No."
                     render={(renderId: number) => {
-                        //取得receiptNo, 如果沒有則顯示id
-                        const receiptNo = parsedTableProps?.dataSource?.find((r) => r.id === renderId)?.receiptNo;
-                        return <Link to={`/receipts/show/${renderId}`}>{receiptNo ?? renderId}</Link>;
+                        //取得receipt_no, 如果沒有則顯示id
+                        const receipt_no = parsedTableProps?.dataSource?.find((r) => r.id === renderId)?.receipt_no;
+                        return <Link to={`/receipts/show/${renderId}`}>{receipt_no ?? renderId}</Link>;
                     }}
                 />
 
                 <Table.Column width={120} dataIndex="date" title="Note Date" render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')} />
                 <Table.Column
                     width={120}
-                    dataIndex="debitNoteId"
+                    dataIndex="debit_note_id"
                     title="Insurer"
-                    render={(debitNoteId: number) => {
-                        const debitNote = debitNotes.find((dn) => dn.id === debitNoteId);
-                        const insurerData = insurersData?.data?.find((insurer) => insurer.id === debitNote?.insurerId);
+                    render={(debit_note_id: number) => {
+                        const debitNote = debitNotes.find((dn) => dn.id === debit_note_id);
+                        const insurerData = insurersData?.data?.find((insurer) => insurer.id === debitNote?.insurer_id);
                         return debitNote ? <>{insurerData?.name}</> : '';
                     }}
                 />
@@ -154,7 +214,7 @@ export const ListView: React.FC = () => {
                     title="Premium"
                     render={(id: number) => {
                         const receipt = parsedTableProps?.dataSource?.find((r) => r.id === id);
-                        const premium = receipt?.premium ?? getTotalPremiumByDebitNote((debitNotes?.filter((debitNote) => debitNote?.id === receipt?.debitNoteId) as TDebitNote[])[0] ?? {});
+                        const premium = receipt?.premium ?? getTotalPremiumByDebitNote((debitNotes?.filter((debitNote) => debitNote?.id === receipt?.debit_note_id) as TDebitNote[])[0] ?? {});
                         return Number(premium).toLocaleString();
                     }}
                 />
@@ -163,18 +223,18 @@ export const ListView: React.FC = () => {
                     dataIndex="id"
                     title="Payment to Insurer"
                     render={(id: number, record: DataType) => {
-                        const debitNote = debitNotes.find((dn) => dn.id === record.debitNoteId);
-                        const insurer = insurersData?.data?.find((ins) => ins.id === debitNote?.insurerId);
+                        const debitNote = debitNotes.find((dn) => dn.id === record.debit_note_id);
+                        const insurer = insurersData?.data?.find((ins) => ins.id === debitNote?.insurer_id);
                         const premium = debitNote ? getInsurerPayment(record, debitNote as TDebitNote, insurer as TInsurer) : 0;
                         return Number(premium).toLocaleString();
                     }}
                 />
                 <Table.Column
                     width={120}
-                    dataIndex="isPaid"
+                    dataIndex="is_paid"
                     title="Paid"
-                    render={(isPaid: boolean) => {
-                        return isPaid ? <CheckCircleTwoTone twoToneColor="#52c41a" /> : <CloseCircleTwoTone twoToneColor="red" />;
+                    render={(is_paid: boolean) => {
+                        return is_paid ? <CheckCircleTwoTone twoToneColor="#52c41a" /> : <CloseCircleTwoTone twoToneColor="red" />;
                     }}
                 />
                 <Table.Column width={120} dataIndex="payment_receiver_account" title="Bank" />

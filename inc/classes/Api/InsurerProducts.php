@@ -1,6 +1,6 @@
 <?php
 /**
- * Insurers Api Register
+ * InsurerProducts Api Register
  */
 
 declare(strict_types=1);
@@ -9,11 +9,12 @@ namespace J7\WpTinwing\Api;
 
 use J7\WpTinwing\Plugin;
 use J7\WpUtils\Classes\WP;
+use J7\WpTinwing\Admin\PostType;
 
 /**
  * Class Entry
  */
-final class Insurers {
+final class InsurerProducts {
 	use \J7\WpUtils\Traits\SingletonTrait;
 	use \J7\WpUtils\Traits\ApiRegisterTrait;
 
@@ -21,7 +22,7 @@ final class Insurers {
 	 * Constructor.
 	 */
 	public function __construct() {
-		\add_action( 'rest_api_init', [ $this, 'register_api_insurers' ] );
+		\add_action( 'rest_api_init', [ $this, 'register_api_insurer_products' ] );
 	}
 
 	/**
@@ -35,27 +36,27 @@ final class Insurers {
 	protected function get_apis() {
 		return [
 			[
-				'endpoint'            => 'insurers',
+				'endpoint'            => 'insurer_products',
 				'method'              => 'get',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'insurers',
+				'endpoint'            => 'insurer_products',
 				'method'              => 'post',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'insurers/(?P<id>\d+)',
+				'endpoint'            => 'insurer_products/(?P<id>\d+)',
 				'method'              => 'post',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'insurers/(?P<id>\d+)',
+				'endpoint'            => 'insurer_products/(?P<id>\d+)',
 				'method'              => 'get',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
 			[
-				'endpoint'            => 'insurers/(?P<id>\d+)',
+				'endpoint'            => 'insurer_products/(?P<id>\d+)',
 				'method'              => 'delete',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
@@ -67,7 +68,7 @@ final class Insurers {
 	 *
 	 * @return void
 	 */
-	public function register_api_insurers(): void {
+	public function register_api_insurer_products(): void {
 		$this->register_apis(
 			apis: $this->get_apis(),
 			namespace: Plugin::$kebab,
@@ -75,17 +76,17 @@ final class Insurers {
 		);
 	}
 	/**
-	 * Get insurers callback
+	 * Get insurer_products callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function get_insurers_callback( $request ) { // phpcs:ignore
+	public function get_insurer_products_callback( $request ) { // phpcs:ignore
 		$params = $request->get_query_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
 		// 查詢 Custom Post Type 'book' 的文章
 		$args       = [
-			'post_type'      => 'insurers',   // 自定義文章類型名稱
+			'post_type'      => 'insurer_products',   // 自定義文章類型名稱
 			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
 			'orderby'        => $params['orderby'],   // 排序方式
 			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
@@ -98,13 +99,18 @@ final class Insurers {
 				$query->the_post();
 
 				// 獲取文章的所有 meta 資料
-				$all_meta     = get_post_meta(get_the_ID());
+				$all_meta = get_post_meta(get_the_ID());
+				// TODO 還有優化空間如以下POST 方法
 				$posts_data[] = [
-					'id'            => get_the_ID(),
-					'created_at'    => strtotime(get_the_date('Y-m-d')),
-					'name'          => get_the_title(),
-					'insurerNumber' => $all_meta['insurer_number'][0]??\null,
-					'paymentRate'   => $all_meta['payment_rate'][0]??\null,
+					'id'                      => get_the_ID(),
+					'created_at'              => strtotime(get_the_date('Y-m-d')),
+					'name'                    => get_the_title(),
+					'term_id'                 => intval($all_meta['term_id'][0])??\null,
+					'insurance_amount'        => intval($all_meta['insurance_amount'][0])??\null,
+					'policy_no'               => $all_meta['policy_no'][0]??\null,
+					'insurer_products_number' => $all_meta['insurer_products_number'][0]??\null,
+					'remark'                  => $all_meta['remark'][0]??\null,
+					'insurer_id'              => intval($all_meta['insurer_id'][0])??\null,
 				];
 			}
 			wp_reset_postdata();
@@ -118,19 +124,19 @@ final class Insurers {
 		return $response;
 	}
 	/**
-	 * Create insurers callback
+	 * Create insurer_products callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function post_insurers_callback( $request ) { // phpcs:ignore
+	public function post_insurer_products_callback( $request ) { // phpcs:ignore
 		$params = $request->get_json_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
 		// 創建文章
 		$post_id = wp_insert_post(
 			[
-				'post_type'    => 'insurers', // 自定義文章類型名稱
-				'post_title'   => $params['name'], // 文章標題
+				'post_type'    => 'insurer_products', // 自定義文章類型名稱
+				'post_title'   => $params['note_no'], // 文章標題
 				'post_content' => '', // 文章內容
 				'post_status'  => 'publish', // 文章狀態
 			]
@@ -139,26 +145,30 @@ final class Insurers {
 			return new \WP_Error( 'error_creating_post', 'Unable to create post', [ 'status' => 500 ] );
 		}
 		// 更新文章的 meta 資料
-		update_post_meta($post_id, 'payment_rate', $params['paymentRate']);
-		update_post_meta($post_id, 'insurer_number', $params['insurerNumber']);
+		foreach (PostType\InsurerProducts::instance()->get_meta() as $key => $value) {
+			if (isset($params[ $key ])) {
+				update_post_meta($post_id, $key, $params[ $key ]);
+			}
+		}
 		$response = new \WP_REST_Response(  $post_id  );
 		return $response;
 	}
 	/**
-	 * Update insurers callback
+	 * Update insurer_products callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function post_insurers_with_id_callback( $request ) { // phpcs:ignore
-		$params  = $request->get_json_params() ?? [];
-		$params  = WP::sanitize_text_field_deep( $params, false );
-		$post_id = $request->get_param('id');
+	public function post_insurer_products_with_id_callback( $request ) { // phpcs:ignore
+		$params     = $request->get_json_params() ?? [];
+		$params     = WP::sanitize_text_field_deep( $params, false );
+		$post_id    = $request->get_param('id');
+		$post_title = isset($params['note_no'])?$params['note_no']:\get_the_title($post_id);
 		// 更新文章
 		$post_id = wp_update_post(
 			[
 				'ID'           => $post_id,
-				'post_title'   => $params['name'], // 文章標題
+				'post_title'   => $post_title, // 文章標題
 				'post_content' => '', // 文章內容
 				'post_status'  => 'publish', // 文章狀態
 			]
@@ -167,18 +177,21 @@ final class Insurers {
 			return new \WP_Error( 'error_creating_post', 'Unable to create post', [ 'status' => 500 ] );
 		}
 		// 更新文章的 meta 資料
-		update_post_meta($post_id, 'payment_rate', $params['paymentRate']);
-		update_post_meta($post_id, 'insurer_number', $params['insurerNumber']);
+		foreach (PostType\InsurerProducts::instance()->get_meta() as $key => $value) {
+			if (isset($params[ $key ])) {
+				update_post_meta($post_id, $key, $params[ $key ]);
+			}
+		}
 		$response = new \WP_REST_Response(  $post_id  );
 		return $response;
 	}
 	/**
-	 * Get insurers by id callback
+	 * Get insurer_products by id callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function get_insurers_with_id_callback( $request ) { // phpcs:ignore
+	public function get_insurer_products_with_id_callback( $request ) { // phpcs:ignore
 		$post_id = $request->get_param('id');
 		$post    = get_post($post_id);
 		if ( ! $post ) {
@@ -186,25 +199,29 @@ final class Insurers {
 		}
 		// 獲取文章的所有 meta 資料
 		$all_meta = get_post_meta($post_id);
-
+		// TODO 還有優化空間如以上POST 方法
 		$response = new \WP_REST_Response(
 			[
-				'id'            => $post_id,
-				'created_at'    => strtotime(get_the_date('Y-m-d', $post_id)),
-				'name'          => get_the_title($post_id),
-				'insurerNumber' => $all_meta['insurer_number'][0]??\null,
-				'paymentRate'   => $all_meta['payment_rate'][0]??\null,
+				'id'                      => get_the_ID(),
+				'created_at'              => strtotime(get_the_date('Y-m-d')),
+				'name'                    => get_the_title(),
+				'term_id'                 => intval($all_meta['term_id'][0])??\null,
+				'insurance_amount'        => intval($all_meta['insurance_amount'][0])??\null,
+				'policy_no'               => $all_meta['policy_no'][0]??\null,
+				'insurer_products_number' => $all_meta['insurer_products_number'][0]??\null,
+				'remark'                  => $all_meta['remark'][0]??\null,
+				'insurer_id'              => intval($all_meta['insurer_id'][0])??\null,
 			]
 		);
 		return $response;
 	}
 	/**
-	 * Delete insurers by id callback
+	 * Delete insurer_products by id callback
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
 	 */
-	public function delete_insurers_with_id_callback( $request ) { // phpcs:ignore
+	public function delete_insurer_products_with_id_callback( $request ) { // phpcs:ignore
 		$post_id = $request->get_param('id');
 		// 刪除文章
 		$result = wp_delete_post($post_id, true);
