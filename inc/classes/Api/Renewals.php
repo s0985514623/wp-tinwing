@@ -92,10 +92,19 @@ final class Renewals {
 			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 			'meta_query'     => $params['meta_query'],
 		];
-		// 如果有meta_query參數，則加入查詢條件
-		// if (isset($params['meta_query'])) {
-		// $args['meta_query'] = $params['meta_query'];
-		// }
+		ob_start();
+		var_dump($args);
+		\J7\WpUtils\Classes\log::info('' . ob_get_clean());
+		// 如果有date參數，則加入查詢條件
+		if (isset($params['date'])) {
+			$args['date_query'] = [
+				[
+					'after'     => date( 'Y-m-d', \intval($params['date'][0])),
+					'before'    => date( 'Y-m-d', \intval($params['date'][1])),
+					'inclusive' => true,
+				],
+			];
+		}
 
 		$query      = new \WP_Query($args);
 		$posts_data = [];
@@ -110,7 +119,7 @@ final class Renewals {
 					'id'                       => get_the_ID(),
 					'created_at'               => strtotime(get_the_date('Y-m-d')),
 					'date'                     => strtotime(get_the_date('Y-m-d')),
-					'note_no'                   => get_the_title(),
+					'note_no'                  => get_the_title(),
 					'template'                 => $all_meta['template'][0]??\null,
 					'term_id'                  => intval($all_meta['term_id'][0])??\null,
 					'agent_id'                 => intval($all_meta['agent_id'][0])??\null,
@@ -137,6 +146,8 @@ final class Renewals {
 					'extra_field2'             => $all_meta['extra_field2'][0]?json_decode($all_meta['extra_field2'][0]):\null,
 					'is_archived'              => filter_var($all_meta['is_archived'][0], FILTER_VALIDATE_BOOLEAN)??\false,
 					'package_content'          => $all_meta['package_content'][0]??\null,
+					'debit_note_id'            => $all_meta['debit_note_id'][0]??\null,
+					'created_from_renewal_id'  => $all_meta['created_from_renewal_id'][0]??\null,
 				];
 			}
 			wp_reset_postdata();
@@ -171,7 +182,7 @@ final class Renewals {
 			return new \WP_Error( 'error_creating_post', 'Unable to create post', [ 'status' => 500 ] );
 		}
 		// 更新文章的 meta 資料
-		foreach (PostType\Quotations::instance()->get_meta() as $key => $value) {
+		foreach (PostType\Renewals::instance()->get_meta() as $key => $value) {
 			if (isset($params[ $key ])) {
 				update_post_meta($post_id, $key, $params[ $key ]);
 			}
@@ -203,7 +214,7 @@ final class Renewals {
 			return new \WP_Error( 'error_creating_post', 'Unable to create post', [ 'status' => 500 ] );
 		}
 		// 更新文章的 meta 資料
-		foreach (PostType\Quotations::instance()->get_meta() as $key => $value) {
+		foreach (PostType\Renewals::instance()->get_meta() as $key => $value) {
 			if (isset($params[ $key ])) {
 				update_post_meta($post_id, $key, $params[ $key ]);
 			}
@@ -219,48 +230,98 @@ final class Renewals {
 	 */
 	public function get_renewals_with_id_callback( $request ) { // phpcs:ignore
 		$post_id = $request->get_param('id');
-		$post    = get_post($post_id);
-		if ( ! $post ) {
+		// $post = get_post($post_id);
+		$args  = [
+			'post_type' => 'renewals',  // 指定自定义文章类型
+			'p'         => $post_id,               // 文章 ID
+		];
+		$query = new \WP_Query( $args );
+		if ( $query->have_posts() ) {
+			while ( $query->have_posts() ) {
+				$query->the_post();
+				$all_meta = get_post_meta($post_id);
+				$response = new \WP_REST_Response(
+					[
+						'id'                       => $post_id,
+						'created_at'               => strtotime(get_the_date('Y-m-d', $post_id)),
+						'date'                     => strtotime(get_the_date('Y-m-d', $post_id)),
+						'note_no'                  => get_the_title($post_id),
+						'template'                 => $all_meta['template'][0]??\null,
+						'term_id'                  => intval($all_meta['term_id'][0])??\null,
+						'agent_id'                 => intval($all_meta['agent_id'][0])??\null,
+						'client_id'                => intval($all_meta['client_id'][0])??\null,
+						'insurer_id'               => intval($all_meta['insurer_id'][0])??\null,
+						'policy_no'                => $all_meta['policy_no'][0]??\null,
+						'name_of_insured'          => $all_meta['name_of_insured'][0]??\null,
+						'sum_insured'              => $all_meta['sum_insured'][0]??\null,
+						'period_of_insurance_from' => $all_meta['period_of_insurance_from'][0]??\null,
+						'period_of_insurance_to'   => $all_meta['period_of_insurance_to'][0]??\null,
+						'insured_premises'         => $all_meta['insured_premises'][0]??\null,
+						'motor_attr'               => $all_meta['motor_attr'][0]?json_decode($all_meta['motor_attr'][0]):\null,
+						'premium'                  => intval($all_meta['premium'][0])??\null,
+						'less'                     => floatval($all_meta['less'][0])??\null,
+						'levy'                     => floatval($all_meta['levy'][0])??\null,
+						'agent_fee'                => $all_meta['agent_fee'][0]??\null,
+						'insurer_fee_percent'      => $all_meta['insurer_fee_percent'][0]??\null,
+						'short_terms_content'      => $all_meta['short_terms_content'][0]??\null,
+						'particulars'              => $all_meta['particulars'][0]??\null,
+						'motor_engine_no'          => $all_meta['motor_engine_no'][0]??\null,
+						'chassi'                   => $all_meta['chassi'][0]??\null,
+						'remark'                   => $all_meta['remark'][0]??\null,
+						'extra_field'              => $all_meta['extra_field'][0]?json_decode($all_meta['extra_field'][0]):\null,
+						'extra_field2'             => $all_meta['extra_field2'][0]?json_decode($all_meta['extra_field2'][0]):\null,
+						'is_archived'              => filter_var($all_meta['is_archived'][0], FILTER_VALIDATE_BOOLEAN)??\false,
+						'package_content'          => $all_meta['package_content'][0]??\null,
+						'debit_note_id'            => $all_meta['debit_note_id'][0]??\null,
+						'created_from_renewal_id'  => $all_meta['created_from_renewal_id'][0]??\null,
+					]
+				);
+				return $response;
+			}
+			wp_reset_postdata();
+		} else {
 			return new \WP_Error( 'error_post_not_found', 'Post not found', [ 'status' => 404 ] );
 		}
-		// 獲取文章的所有 meta 資料
-		$all_meta = get_post_meta($post_id);
-		// TODO 還有優化空間如以上POST 方法
-		$response = new \WP_REST_Response(
-			[
-				'id'                       => $post_id,
-				'created_at'               => strtotime(get_the_date('Y-m-d', $post_id)),
-				'date'                     => strtotime(get_the_date('Y-m-d', $post_id)),
-				'note_no'                   => get_the_title($post_id),
-				'template'                 => $all_meta['template'][0]??\null,
-				'term_id'                  => intval($all_meta['term_id'][0])??\null,
-				'agent_id'                 => intval($all_meta['agent_id'][0])??\null,
-				'client_id'                => intval($all_meta['client_id'][0])??\null,
-				'insurer_id'               => intval($all_meta['insurer_id'][0])??\null,
-				'policy_no'                => $all_meta['policy_no'][0]??\null,
-				'name_of_insured'          => $all_meta['name_of_insured'][0]??\null,
-				'sum_insured'              => $all_meta['sum_insured'][0]??\null,
-				'period_of_insurance_from' => $all_meta['period_of_insurance_from'][0]??\null,
-				'period_of_insurance_to'   => $all_meta['period_of_insurance_to'][0]??\null,
-				'insured_premises'         => $all_meta['insured_premises'][0]??\null,
-				'motor_attr'               => $all_meta['motor_attr'][0]?json_decode($all_meta['motor_attr'][0]):\null,
-				'premium'                  => intval($all_meta['premium'][0])??\null,
-				'less'                     => floatval($all_meta['less'][0])??\null,
-				'levy'                     => floatval($all_meta['levy'][0])??\null,
-				'agent_fee'                => $all_meta['agent_fee'][0]??\null,
-				'insurer_fee_percent'      => $all_meta['insurer_fee_percent'][0]??\null,
-				'short_terms_content'      => $all_meta['short_terms_content'][0]??\null,
-				'particulars'              => $all_meta['particulars'][0]??\null,
-				'motor_engine_no'          => $all_meta['motor_engine_no'][0]??\null,
-				'chassi'                   => $all_meta['chassi'][0]??\null,
-				'remark'                   => $all_meta['remark'][0]??\null,
-				'extra_field'              => $all_meta['extra_field'][0]?json_decode($all_meta['extra_field'][0]):\null,
-				'extra_field2'             => $all_meta['extra_field2'][0]?json_decode($all_meta['extra_field2'][0]):\null,
-				'is_archived'              => filter_var($all_meta['is_archived'][0], FILTER_VALIDATE_BOOLEAN)??\false,
-				'package_content'          => $all_meta['package_content'][0]??\null,
-			]
-		);
-		return $response;
+		// // 獲取文章的所有 meta 資料
+		// $all_meta = get_post_meta($post_id);
+		// // TODO 還有優化空間如以上POST 方法
+		// $response = new \WP_REST_Response(
+		// [
+		// 'id'                       => $post_id,
+		// 'created_at'               => strtotime(get_the_date('Y-m-d', $post_id)),
+		// 'date'                     => strtotime(get_the_date('Y-m-d', $post_id)),
+		// 'note_no'                  => get_the_title($post_id),
+		// 'template'                 => $all_meta['template'][0]??\null,
+		// 'term_id'                  => intval($all_meta['term_id'][0])??\null,
+		// 'agent_id'                 => intval($all_meta['agent_id'][0])??\null,
+		// 'client_id'                => intval($all_meta['client_id'][0])??\null,
+		// 'insurer_id'               => intval($all_meta['insurer_id'][0])??\null,
+		// 'policy_no'                => $all_meta['policy_no'][0]??\null,
+		// 'name_of_insured'          => $all_meta['name_of_insured'][0]??\null,
+		// 'sum_insured'              => $all_meta['sum_insured'][0]??\null,
+		// 'period_of_insurance_from' => $all_meta['period_of_insurance_from'][0]??\null,
+		// 'period_of_insurance_to'   => $all_meta['period_of_insurance_to'][0]??\null,
+		// 'insured_premises'         => $all_meta['insured_premises'][0]??\null,
+		// 'motor_attr'               => $all_meta['motor_attr'][0]?json_decode($all_meta['motor_attr'][0]):\null,
+		// 'premium'                  => intval($all_meta['premium'][0])??\null,
+		// 'less'                     => floatval($all_meta['less'][0])??\null,
+		// 'levy'                     => floatval($all_meta['levy'][0])??\null,
+		// 'agent_fee'                => $all_meta['agent_fee'][0]??\null,
+		// 'insurer_fee_percent'      => $all_meta['insurer_fee_percent'][0]??\null,
+		// 'short_terms_content'      => $all_meta['short_terms_content'][0]??\null,
+		// 'particulars'              => $all_meta['particulars'][0]??\null,
+		// 'motor_engine_no'          => $all_meta['motor_engine_no'][0]??\null,
+		// 'chassi'                   => $all_meta['chassi'][0]??\null,
+		// 'remark'                   => $all_meta['remark'][0]??\null,
+		// 'extra_field'              => $all_meta['extra_field'][0]?json_decode($all_meta['extra_field'][0]):\null,
+		// 'extra_field2'             => $all_meta['extra_field2'][0]?json_decode($all_meta['extra_field2'][0]):\null,
+		// 'is_archived'              => filter_var($all_meta['is_archived'][0], FILTER_VALIDATE_BOOLEAN)??\false,
+		// 'package_content'          => $all_meta['package_content'][0]??\null,
+		// 'debit_note_id'            => $all_meta['debit_note_id'][0]??\null,
+		// 'created_from_renewal_id'  => $all_meta['created_from_renewal_id'][0]??\null,
+		// ]
+		// );
+		// return $response;
 	}
 	/**
 	 * Delete renewals by id callback

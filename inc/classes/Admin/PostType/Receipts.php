@@ -55,6 +55,12 @@ final class Receipts {
 			'meta_type'         => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
 		],
+		'payment_receiver_account' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
 		'is_archived' =>[
 			'display_function'  => 'render_meta_checkbox',
 			'input_type'        => 'checkbox',

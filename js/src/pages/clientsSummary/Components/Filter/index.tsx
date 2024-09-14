@@ -6,7 +6,7 @@ const { RangePicker } = DatePicker;
 
 const Filter: React.FC<{ formProps: FormProps }> = ({ formProps }) => {
     const IsArchivedFormItem = () => {
-        if (window.location.hash === '#/clientsSummary')
+        // if (window.location.hash === '#/clientsSummary')
 
             return (
                 <div className="col-span-full place-items-center z-0">
@@ -18,7 +18,7 @@ const Filter: React.FC<{ formProps: FormProps }> = ({ formProps }) => {
                     </Form.Item>
                 </div>
             );
-        return <></>;
+        // return <></>;
     };
     return (
         <Form {...formProps} layout="vertical">

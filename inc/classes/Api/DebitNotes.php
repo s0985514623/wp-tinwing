@@ -98,15 +98,16 @@ final class DebitNotes {
 		if (isset($params['date'])) {
 			$args['date_query'] = [
 				[
-					'after'     => date( 'Y-m-d H:i:s', \intval($params['date'][0])),
-					'before'    => date( 'Y-m-d H:i:s', \intval($params['date'][1])),
+					'after'     => date( 'Y-m-d', \intval($params['date'][0])),
+					'before'    => date( 'Y-m-d', \intval($params['date'][1])),
 					'inclusive' => true,
 				],
 			];
 		}
-		ob_start();
-		var_dump($args);
-		\J7\WpUtils\Classes\log::info('' . ob_get_clean());
+
+		// ob_start();
+		// var_dump($args);
+		// \J7\WpUtils\Classes\log::info('' . ob_get_clean());
 
 		$query      = new \WP_Query($args);
 		$posts_data = [];

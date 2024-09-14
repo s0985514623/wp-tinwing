@@ -19,6 +19,14 @@ import {
 } from './pages/debitNotes'
 
 import {
+  ListView as CreditNoteList,
+  EditView as CreditNoteEdit,
+  CreateView as CreditNoteCreate,
+  ShowView as CreditNoteShow,
+} from './pages/creditNotes'
+
+
+import {
   ListView as QuotationList,
   EditView as QuotationEdit,
   CreateView as QuotationCreate,
@@ -114,6 +122,13 @@ const AppRoutes = () => {
           <Route path="show/:id" element={<DebitNoteShow />} />
         </Route>
 
+				<Route path="/creditNotes">
+          <Route index element={<CreditNoteList />} />
+          <Route path="create" element={<CreditNoteCreate />} />
+          <Route path="edit/:id" element={<CreditNoteEdit />} />
+          <Route path="show/:id" element={<CreditNoteShow />} />
+        </Route>
+
         <Route path="/receipts">
           <Route index element={<ReceiptList />} />
           <Route path="create" element={<ReceiptCreate />} />
@@ -179,6 +194,9 @@ const AppRoutes = () => {
         </Route>
         <Route path="/archived_renewals">
           <Route index element={<RenewalList />} />
+        </Route>
+				<Route path="/archived_credit_notes">
+          <Route index element={<CreditNoteList />} />
         </Route>
         <Route path="/dashboard">
           <Route index element={<DashboardList />} />

@@ -96,8 +96,8 @@ final class Quotations {
 		if (isset($params['date'])) {
 			$args['date_query'] = [
 				[
-					'after'     => date( 'Y-m-d H:i:s', \intval($params['date'][0])),
-					'before'    => date( 'Y-m-d H:i:s', \intval($params['date'][1])),
+					'after'     => date( 'Y-m-d', \intval($params['date'][0])),
+					'before'    => date( 'Y-m-d', \intval($params['date'][1])),
 					'inclusive' => true,
 				],
 			];

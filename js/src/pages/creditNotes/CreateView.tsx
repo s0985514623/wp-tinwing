@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { IResourceComponentsProps } from '@refinedev/core';
 import { Create, useForm, useSelect } from '@refinedev/antd';
-import { Form, Select, DatePicker, Input, Alert, Col, Row } from 'antd';
-import dayjs from 'dayjs';
+import { Form, Select, DatePicker, InputNumber, Input, Alert, Col, Row } from 'antd';
+import { Dayjs } from 'dayjs';
 import EditTemplateGeneral from './components/EditTemplateGeneral';
 import EditTemplateMotor from './components/EditTemplateMotor';
 import EditTemplateShortTerms from './components/EditTemplateShortTerms';
@@ -19,19 +19,16 @@ import logo from 'assets/images/logo.jpg';
 import { getTemplateText } from 'utils';
 import { RemarkTextArea } from 'components/RemarkTextArea';
 import { useNavigate } from 'react-router-dom';
-import { useDebitNoteData, useRenewalData } from 'hooks';
-import { isNumber } from 'lodash-es';
 
 export const CreateView: React.FC<IResourceComponentsProps> = () => {
     const navigate = useNavigate();
-    const { formProps, saveButtonProps, form, onFinish } = useForm({
+    const { formProps, saveButtonProps, form } = useForm({
         //使新增後跳轉到clientsSummary
         redirect: false,
         onMutationSuccess: () => {
             navigate('/clientsSummary');
         },
     });
-
     const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
 
     const [selectedTemplate, setSelectedTemplate] = useState<TTemplate>('general');
@@ -75,6 +72,12 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         optionValue: 'id',
     });
 
+    const handleDateChange = (value: Dayjs | null) => {
+        if (!!value) {
+            form.setFieldValue(['date'], value.unix());
+        }
+    };
+
     const templateText = getTemplateText(selectedTemplate);
 
     const { selectProps: termSelectProps } = useSelect<TTerm>({
@@ -105,77 +108,9 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         ],
     });
 
-    //取得debitNoteData，如果有資料則將資料帶入
-    const debitNoteData = useDebitNoteData();
-    // console.log("🚀 ~ debitNoteData:", debitNoteData)
-    const renewalsData = useRenewalData();
-    // console.log('🚀 ~ renewalsData:', renewalsData);
-
-    useEffect(() => {
-        //優先取得renewalsData，如果沒有再取得debitNoteData
-        const data = renewalsData ?? debitNoteData;
-        //created_from_renewal_id
-        if (renewalsData) form.setFieldValue(['created_from_renewal_id'], renewalsData?.data?.id || null);
-        if (data) {
-            //基本資料
-            setSelectedClientId(data.data.client_id as number);
-            setSelectedTemplate(data.data.template as 'general' | 'motor' | 'shortTerms' | 'package');
-            form.setFieldValue(['template'], data.data.template);
-            form.setFieldValue(['client_id'], data.data.client_id);
-            if (data.data.date && isNumber(data.data.date)) {
-                form.setFieldValue(['date'], dayjs.unix(data.data.date));
-            }
-            form.setFieldValue(['note_no'], data.data.note_no);
-            form.setFieldValue(['term_id'], data.data.term_id);
-            form.setFieldValue(['agent_id'], data.data.agent_id);
-            //General
-            form.setFieldValue(['particulars'], data.data.particulars);
-            form.setFieldValue(['levy'], data.data.levy);
-            //Motor
-            form.setFieldValue(['insurer_id'], data.data.insurer_id);
-            form.setFieldValue(['policy_no'], data.data.policy_no);
-            form.setFieldValue(['name_of_insured'], data.data.name_of_insured);
-            form.setFieldValue(['sum_insured'], data.data.sum_insured);
-            form.setFieldValue(['motor_attr', 'manufacturingYear'], data.data.motor_attr?.manufacturingYear);
-            form.setFieldValue(['motor_attr', 'registrationNo'], data.data.motor_attr?.registrationNo);
-            form.setFieldValue(['motor_attr', 'model'], data.data.motor_attr?.model);
-            form.setFieldValue(['motor_attr', 'tonnes'], data.data.motor_attr?.tonnes);
-            form.setFieldValue(['motor_attr', 'body'], data.data.motor_attr?.body);
-            form.setFieldValue(['motor_attr', 'chassi'], data.data.motor_attr?.chassi);
-            form.setFieldValue(['motor_engine_no'], data.data.motor_engine_no);
-            form.setFieldValue(['motor_attr', 'additionalValues'], data.data.motor_attr?.additionalValues);
-            form.setFieldValue(['motor_attr', 'namedDriver'], data.data.motor_attr?.namedDriver);
-            form.setFieldValue(['period_of_insurance_from'], data.data.period_of_insurance_from);
-            form.setFieldValue(['period_of_insurance_to'], data.data.period_of_insurance_to);
-            form.setFieldValue(['premium'], data.data.premium);
-            form.setFieldValue(['motor_attr', 'ls'], data.data.motor_attr?.ls);
-            form.setFieldValue(['motor_attr', 'ncb'], data.data.motor_attr?.ncb);
-            form.setFieldValue(['motor_attr', 'mib'], data.data.motor_attr?.mib);
-            form.setFieldValue(['extra_field', 'label'], data.data.extra_field?.label);
-            form.setFieldValue(['extra_field', 'value'], data.data.extra_field?.value);
-            form.setFieldValue(['less'], data.data.less);
-            form.setFieldValue(['insurer_fee_percent'], data.data.insurer_fee_percent);
-            form.setFieldValue(['agent_fee'], data.data.agent_fee);
-            //shortTerms
-            form.setFieldValue(['short_terms_content'], data.data.short_terms_content);
-            //package
-            form.setFieldValue(['package_content'], data.data?.package_content);
-            //備註
-            form.setFieldValue(['remark'], data.data.remark);
-        }
-    }, [debitNoteData, renewalsData]);
-    //覆寫onFinish改變date的格式
-    const handleFinish = (values: any) => {
-        onFinish({
-            ...values,
-            date: values.date.unix(),
-        });
-    };
     return (
         <Create saveButtonProps={saveButtonProps}>
-            <Form {...formProps} layout="vertical" onFinish={handleFinish}>
-								<Form.Item hidden name={['is_archived']} initialValue={0} />
-                <Form.Item hidden name={['created_from_renewal_id']} initialValue={renewalsData?.data?.id} />
+            <Form {...formProps} layout="vertical">
                 <DebitNoteHeader setSelectedTemplate={setSelectedTemplate} />
                 <div className="table table_td-flex-1 w-full">
                     <div className="w-full mb-4 flex justify-between border-b-2 border-solid border-black pb-6 px-4">
@@ -225,8 +160,9 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                                 <div className="tr">
                                     <div className="th">日期 Date</div>
                                     <div className="td">
-                                        <Form.Item name={['date']}>
-                                            <DatePicker className="w-full" size="small" />
+                                        <DatePicker className="w-full" size="small" onChange={handleDateChange} />
+                                        <Form.Item hidden name={['date']}>
+                                            <InputNumber />
                                         </Form.Item>
                                     </div>
                                 </div>

@@ -145,6 +145,8 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
     return (
         <Create saveButtonProps={saveButtonProps}>
             <Form {...formProps} layout="vertical" onFinish={handleFinish}>
+						<Form.Item hidden name={['is_archived']} initialValue={0} />
+						<Form.Item hidden name={['is_paid']} initialValue={0} />
                 <div className="table table_td-flex-1 w-full">
                     <div className="tr">
                         <div className="th">Connected To</div>

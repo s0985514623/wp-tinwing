@@ -10,7 +10,6 @@ import dayjs from 'dayjs'
 import DetailTable from './Components/DetailTable'
 import { useColumnSearch } from 'hooks'
 import Filter from './Components/Filter'
-import { boolean } from 'yargs'
 
 //設定排序與篩選初始化與搜尋條件
 const termOptions = {
@@ -118,22 +117,22 @@ const termOptions = {
         operator: 'eq',
         value: values?.dateRange?'BETWEEN':'>',
       },
-      {
-        field: 'meta_query[2][key]',
-        operator: 'eq',
-        value: 'motor_engine_no',
-      },
-      {
-        field: 'meta_query[2][value]',
-        operator: 'eq',
-        value:
-          values?.motor_engine_no === '' ? undefined : values?.motor_engine_no,
-      },
-      {
-        field: 'meta_query[2][compare]',
-        operator: 'eq',
-        value: '=',
-      },
+      // {
+      //   field: 'meta_query[2][key]',
+      //   operator: 'eq',
+      //   value: 'motor_engine_no',
+      // },
+      // {
+      //   field: 'meta_query[2][value]',
+      //   operator: 'eq',
+      //   value:
+      //     values?.motor_engine_no === '' ? undefined : values?.motor_engine_no,
+      // },
+      // {
+      //   field: 'meta_query[2][compare]',
+      //   operator: 'eq',
+      //   value: '=',
+      // },
     ]
     return filters as CrudFilters
   },
@@ -158,7 +157,7 @@ export const ListView: React.FC = () => {
     ...(renewalData?.dataSource ?? []),
     ...(tableProps?.dataSource ?? []),
   ]
-  // console.log('🚀 ~ formatTableData:', formatTableData);
+  console.log('🚀 ~ formatTableData:', formatTableData);
   const formatSearchFormProps = {
     ...renewalSearchForm,
     ...searchFormProps,

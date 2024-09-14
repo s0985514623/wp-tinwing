@@ -87,24 +87,14 @@ export const ListView: React.FC = () => {
 							value: 'AND',
 						},
 						{
-							field: 'meta_query[0][key]',
-							operator: 'eq',
-							value: 'date',
-						},
-						{
-							field: 'meta_query[0][value][0]',
+							field: 'date[0]',
 							operator: 'eq',
 							value: dateRange[0]?.unix(),
 						},
 						{
-							field: 'meta_query[0][value][1]',
+							field: 'date[1]',
 							operator: 'eq',
 							value: dateRange[1]?.unix(),
-						},
-						{
-							field: 'meta_query[0][compare]',
-							operator: 'eq',
-							value: 'BETWEEN',
 						},
           ]
         : [],
@@ -122,7 +112,7 @@ export const ListView: React.FC = () => {
 						{
 							field: 'meta_query[0][key]',
 							operator: 'eq',
-							value: 'created_at',
+							value: 'date',
 						},
 						{
 							field: 'meta_query[0][value][0]',

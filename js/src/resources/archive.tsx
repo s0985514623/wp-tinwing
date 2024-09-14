@@ -40,4 +40,12 @@ export const archive = [
             label: 'Renewals',
         },
     },
+		{
+			name: 'credit_notes',
+			list: '/archived_credit_notes',
+			meta: {
+					parent: 'recordDropdown',
+					label: 'Credit Notes',
+			},
+	},
 ];

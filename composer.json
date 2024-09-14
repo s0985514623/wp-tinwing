@@ -19,7 +19,8 @@
   ],
   "config": {
     "allow-plugins": {
-      "dealerdirect/phpcodesniffer-composer-installer": true
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "phpstan/extension-installer": true
     }
   },
 	"autoload": {
@@ -33,8 +34,13 @@
   },
   "require-dev": {
     "squizlabs/php_codesniffer": "@stable",
-    "wp-coding-standards/wpcs": "@stable",
-    "dealerdirect/phpcodesniffer-composer-installer": "@stable"
+		"wp-coding-standards/wpcs": "@stable",
+		"dealerdirect/phpcodesniffer-composer-installer": "@stable",
+		"phpcompatibility/php-compatibility": "@stable",
+		"phpstan/phpstan": "^1.11",
+		"php-stubs/woocommerce-stubs": "^9.0",
+		"php-stubs/wordpress-stubs": "^6.5",
+		"phpstan/extension-installer": "^1.4"
   },
   "scripts": {
     "lint": "phpcs"

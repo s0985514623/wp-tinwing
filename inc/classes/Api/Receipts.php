@@ -85,7 +85,7 @@ final class Receipts {
 		$params = $request->get_query_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
 		// 查詢 Custom Post Type 'book' 的文章
-		$args       = [
+		$args = [
 			'post_type'      => 'receipts',   // 自定義文章類型名稱
 			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
 			'orderby'        => $params['orderby'],   // 排序方式
@@ -96,12 +96,15 @@ final class Receipts {
 		if (isset($params['date'])) {
 			$args['date_query'] = [
 				[
-					'after'     => date( 'Y-m-d H:i:s', \intval($params['date'][0])),
-					'before'    => date( 'Y-m-d H:i:s', \intval($params['date'][1])),
+					'after'     => date( 'Y-m-d', \intval($params['date'][0])),
+					'before'    => date( 'Y-m-d', \intval($params['date'][1])),
 					'inclusive' => true,
 				],
 			];
 		}
+		ob_start();
+		var_dump($args);
+		\J7\WpUtils\Classes\log::info('' . ob_get_clean());
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
@@ -153,7 +156,7 @@ final class Receipts {
 		$post_id = wp_insert_post(
 			[
 				'post_type'    => 'receipts', // 自定義文章類型名稱
-				'post_title'   => $params['note_no'], // 文章標題
+				'post_title'   => $params['receipt_no'], // 文章標題
 				'post_content' => '', // 文章內容
 				'post_status'  => 'publish', // 文章狀態
 			]
@@ -219,35 +222,21 @@ final class Receipts {
 		// TODO 還有優化空間如以上POST 方法
 		$response = new \WP_REST_Response(
 			[
-				'id'                       => $post_id,
+				'id'                       => get_the_ID(),
 				'created_at'               => strtotime(get_the_date('Y-m-d', $post_id)),
 				'date'                     => strtotime(get_the_date('Y-m-d', $post_id)),
-				'note_no'                  => get_the_title($post_id),
-				'template'                 => $all_meta['template'][0]??\null,
-				'term_id'                  => intval($all_meta['term_id'][0])??\null,
-				'agent_id'                 => intval($all_meta['agent_id'][0])??\null,
-				'client_id'                => intval($all_meta['client_id'][0])??\null,
-				'insurer_id'               => intval($all_meta['insurer_id'][0])??\null,
-				'policy_no'                => $all_meta['policy_no'][0]??\null,
-				'name_of_insured'          => $all_meta['name_of_insured'][0]??\null,
-				'sum_insured'              => $all_meta['sum_insured'][0]??\null,
-				'period_of_insurance_from' => $all_meta['period_of_insurance_from'][0]??\null,
-				'period_of_insurance_to'   => $all_meta['period_of_insurance_to'][0]??\null,
-				'insured_premises'         => $all_meta['insured_premises'][0]??\null,
-				'motor_attr'               => $all_meta['motor_attr'][0]?json_decode($all_meta['motor_attr'][0]):\null,
-				'premium'                  => intval($all_meta['premium'][0])??\null,
-				'less'                     => floatval($all_meta['less'][0])??\null,
-				'levy'                     => floatval($all_meta['levy'][0])??\null,
-				'agent_fee'                => $all_meta['agent_fee'][0]??\null,
-				'insurer_fee_percent'      => $all_meta['insurer_fee_percent'][0]??\null,
-				'short_terms_content'      => $all_meta['short_terms_content'][0]??\null,
-				'particulars'              => $all_meta['particulars'][0]??\null,
-				'motor_engine_no'          => $all_meta['motor_engine_no'][0]??\null,
-				'chassi'                   => $all_meta['chassi'][0]??\null,
-				'remark'                   => $all_meta['remark'][0]??\null,
-				'extra_field'              => $all_meta['extra_field'][0]?json_decode($all_meta['extra_field'][0]):\null,
-				'extra_field2'             => $all_meta['extra_field2'][0]?json_decode($all_meta['extra_field2'][0]):\null,
+				'receipt_no'               => get_the_title($post_id),
+				'debit_note_id'            => intval($all_meta['debit_note_id'][0])??\null,
+				'payment_date'             => intval($all_meta['payment_date'][0])??\null,
+				'payment_method'           => $all_meta['payment_method'][0]??\null,
+				'cheque_no'                => $all_meta['cheque_no'][0]??\null,
+				'code_no'                  =>$all_meta['code_no'][0]??\null,
+				'premium'                  => $all_meta['premium'][0]??\null,
+				'payment_receiver_account' => $all_meta['payment_receiver_account'][0]??\null,
 				'is_archived'              => filter_var($all_meta['is_archived'][0], FILTER_VALIDATE_BOOLEAN)??\false,
+				'is_paid'                  => filter_var($all_meta['is_paid'][0], FILTER_VALIDATE_BOOLEAN)??\false,
+				'remark'                   => $all_meta['remark'][0]??\null,
+				'created_from_renewal_id'  => intval($all_meta['created_from_renewal_id'][0])??\null,
 				'package_content'          => $all_meta['package_content'][0]??\null,
 			]
 		);
