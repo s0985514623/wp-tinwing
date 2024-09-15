@@ -20,6 +20,7 @@ final class Bootstrap {
 	 */
 	public function __construct() {
 		// FrontEnd\Entry::instance();
+		FrontEnd\MyAccount::instance();
 		Admin\Entry::instance();
 		Admin\CPT::instance();
 		Api\CreditNotes::instance();
