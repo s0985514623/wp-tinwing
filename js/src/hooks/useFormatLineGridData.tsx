@@ -35,7 +35,7 @@ export const useFormatLineGridData = ({ data, type, debitNotesData, insurerData 
     if (type === 'totalExpense') {
         return (data as TExpenses[])?.reduce((acc, receipt) => {
             //取得date
-            const date = dayjs(receipt.created_at)?.format('YYYY-MM-DD');
+            const date = dayjs.unix(Number(receipt.date))?.format('YYYY-MM-DD');
             //取得value
             const premium = receipt?.amount;
 
