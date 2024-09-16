@@ -16,7 +16,7 @@ final class Clients {
 	/**
 	 * 收據 post meta
 	 *
-	 * @var array
+	 * @var array<string, array{display_function:string, input_type:string, meta_type:string, sanitize_callback:string }>
 	 */
 	public $clients_meta = [
 		'name_zh' =>[
@@ -118,7 +118,7 @@ final class Clients {
 	/**
 	 * 取得收據 post meta
 	 *
-	 * @return array
+	 * @return array<string, array{display_function:string, input_type:string, meta_type:string, sanitize_callback:string }>
 	 */
 	public function get_meta() {
 		return $this->clients_meta;

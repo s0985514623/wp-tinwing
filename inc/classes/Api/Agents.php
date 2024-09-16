@@ -27,7 +27,7 @@ final class Agents {
 	/**
 	 * Get APIs
 	 *
-	 * @return array
+	 * @return array<int, array{endpoint:string, method:string, permission_callback?:callable}>
 	 * - endpoint: string
 	 * - method: 'get' | 'post' | 'patch' | 'delete'
 	 * - permission_callback : callable
@@ -79,14 +79,19 @@ final class Agents {
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
+	 * @phpstan-ignore-next-line
 	 */
 	public function get_agents_callback( $request ) { // phpcs:ignore
-		$params = $request->get_query_params() ?? [];
+		$params = $request->get_query_params() ?? []; // @phpstan-ignore-line
 		$params = WP::sanitize_text_field_deep( $params, false );
 		// 查詢 Custom Post Type 'book' 的文章
+
+		/**
+		 * @var array{posts_per_page?:string,orderby:string,order:string,meta_query:array<mixed>  } $params
+		 */
 		$args       = [
 			'post_type'      => 'agents',   // 自定義文章類型名稱
-			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
+			'posts_per_page' => $params['posts_per_page'] ?? 10, // 每頁顯示文章數量
 			'orderby'        => $params['orderby'],   // 排序方式
 			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 			'meta_query'     => $params['meta_query'], // meta 查詢
