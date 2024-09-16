@@ -36,7 +36,7 @@ export const Title: React.FC<TitleProps> = ({ collapsed }) => {
                     />
                 </div>
             ) : (
-                <img src={logo} alt="logo" className="w-60 m-4" />
+                <img src={logo} alt="logo" className="w-96 m-4" />
             )}
         </ActiveLink>
     )

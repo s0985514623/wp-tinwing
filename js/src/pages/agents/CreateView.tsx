@@ -16,7 +16,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                             formItemProps={{
                                 label: 'Agent No.',
                             }}
-                            name={['agentNumber']}
+                            name={['agent_number']}
                         />
                         <Form.Item label="Name" name={['name']}>
                             <Input />

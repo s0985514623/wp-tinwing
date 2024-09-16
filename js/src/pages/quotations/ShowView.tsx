@@ -157,7 +157,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                                 </div>
                                 <div className="tr">
                                     <div className="th">代理 Agent</div>
-                                    <div className="td">{agent?.agentNumber}</div>
+                                    <div className="td">{agent?.agent_number}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th">客戶編號 Client No</div>

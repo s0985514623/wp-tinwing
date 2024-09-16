@@ -58,7 +58,7 @@ export const ListView: React.FC = () => {
 				{
 					field: 'meta_query[1][value]',
 					operator: 'eq',
-					value: 1,
+					value: 0,
 				},
 				{
 					field: 'meta_query[1][type]',
@@ -136,6 +136,26 @@ export const ListView: React.FC = () => {
           operator: 'eq',
           value: '=',
         },
+				{
+					field: 'meta_query[2][key]',
+					operator: 'eq',
+					value: 'is_archived',
+				},
+				{
+					field: 'meta_query[2][value]',
+					operator: 'eq',
+					value: values?.is_archived.toLowerCase() === "true"? 1 : 0,
+				},
+				{
+					field: 'meta_query[2][type]',
+					operator: 'eq',
+					value: 'NUMERIC',
+				},
+				{
+					field: 'meta_query[2][compare]',
+					operator: 'eq',
+					value: '=',
+				},
       ]
       return filters as CrudFilters
     },

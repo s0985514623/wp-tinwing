@@ -34,4 +34,19 @@ abstract class Base {
 		}
 		return array_values($meta_query);
 	}
+	/**
+	 * 將post meta返回的陣列轉成key string
+	 *
+	 * @param array $meta_query 陣列
+	 * @return array
+	 */
+	public static function sanitize_post_meta_array( $meta_query ) {
+		foreach ($meta_query as $key => $array) {
+			if (!is_array($array)) {
+				continue;
+			}
+			$meta_query[ $key ] = $array[0];
+		}
+		return $meta_query;
+	}
 }

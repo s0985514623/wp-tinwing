@@ -15,11 +15,11 @@ export const ListView: React.FC = () => {
     return (
         <List createButtonProps={{ type: 'primary' }}>
             <Table {...parsedTableProps} rowKey="id" size="middle">
-                <Table.Column width={120} dataIndex="insurerNumber" title="Insurer No." />
+                <Table.Column width={120} dataIndex="insurer_number" title="Insurer No." />
 
                 <Table.Column dataIndex="name" title="Name" />
 
-                <Table.Column dataIndex="paymentRate" title="Payment Rate" render={(p: number) => `${p}%`} />
+                <Table.Column dataIndex="payment_rate" title="Payment Rate" render={(p: number) => `${p}%`} />
 
                 <Table.Column
                     width={120}

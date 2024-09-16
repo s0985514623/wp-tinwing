@@ -72,7 +72,7 @@ export const getInsurerPayment = (receipt:TReceipt, debitNote:TDebitNote, insure
 	// 其他保險(一般保險/短期保險)的算法都是
 	//const insurerTotalFee = levyValue + round(grossPremium * (insurerPaymentRate / 100), 2);
 
-	const insurerPaymentRate = insurer?.paymentRate;
+	const insurerPaymentRate = insurer?.payment_rate;
 	const premium = receipt?.premium ? Number(receipt?.premium) : getTotalPremiumByDebitNote(debitNote) ;
 	const template=debitNote?.template;
 

@@ -9,6 +9,8 @@ namespace J7\WpTinwing\Api;
 
 use J7\WpTinwing\Plugin;
 use J7\WpUtils\Classes\WP;
+use J7\WpTinwing\Admin\PostType;
+use J7\WpTinwing\Utils\Base;
 
 /**
  * Class Entry
@@ -27,7 +29,7 @@ final class Clients {
 	/**
 	 * Get APIs
 	 *
-	 * @return array
+	 * @return array<int, array{endpoint:string, method:string, permission_callback?:callable}>
 	 * - endpoint: string
 	 * - method: 'get' | 'post' | 'patch' | 'delete'
 	 * - permission_callback : callable
@@ -69,9 +71,9 @@ final class Clients {
 	 */
 	public function register_api_clients(): void {
 		$this->register_apis(
-			apis: $this->get_apis(),
-			namespace: Plugin::$kebab,
-			default_permission_callback: fn() => \current_user_can( 'manage_options' ),
+		apis: $this->get_apis(),
+		namespace: Plugin::$kebab,
+		default_permission_callback: fn() => \current_user_can( 'manage_options' ),
 		);
 	}
 	/**
@@ -79,22 +81,39 @@ final class Clients {
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
+	 * @phpstan-ignore-next-line
 	 */
 	public function get_clients_callback( $request ) { // phpcs:ignore
 		$params = $request->get_query_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
-		// 查詢 Custom Post Type 'book' 的文章
+		// 查詢 Custom Post Type 'clients' 的文章
+		/**
+		 * @var array{posts_per_page?:string,orderby:string,order:string,meta_query:array<mixed>  } $params
+		 */
 		$args = [
 			'post_type'      => 'clients',   // 自定義文章類型名稱
-			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
-			'orderby'        => $params['orderby'],   // 排序方式
-			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
-			'meta_query'     => $params['meta_query'], // meta 查詢
+			'posts_per_page' => isset($params['posts_per_page'])?$params['posts_per_page']:10,       // 每頁顯示文章數量
+			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
+			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 		];
 		if (isset($params['s']) && $params['s']) {
 			$args['s'] = $params['s'];
 		}
-
+		// 如果有meta_query 參數，則加入查詢條件
+		if (isset($params['meta_query'])) {
+			$meta_query         = Base::sanitize_meta_query($params['meta_query']);
+			$args['meta_query'] = $meta_query;
+		}
+		// 如果有date參數，則加入查詢條件
+		if (isset($params['date'])) {
+			$args['date_query'] = [
+				[
+					'after'     => date( 'Y-m-d', \intval($params['date'][0])),
+					'before'    => date( 'Y-m-d', \intval($params['date'][1])),
+					'inclusive' => true,
+				],
+			];
+		}
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
@@ -102,27 +121,32 @@ final class Clients {
 				$query->the_post();
 
 				// 獲取文章的所有 meta 資料
-				$all_meta     = get_post_meta(get_the_ID());
+				$all_meta = get_post_meta(get_the_ID(), '', true);
+				$all_meta = Base::sanitize_post_meta_array($all_meta);
+
 				$posts_data[] = [
-					'id'              => get_the_ID(),
-					'created_at'      => strtotime(get_the_date('Y-m-d')),
-					'client_number'   => get_the_title(),
-					'name_zh'         => $all_meta['name_zh'][0]??\null,
-					'name_en'         => $all_meta['name_en'][0]??\null,
-					'company'         => $all_meta['company'][0]??\null,
-					'office_gen_line' => $all_meta['office_gen_line'][0]??\null,
-					'direct_line'     => $all_meta['direct_line'][0]??\null,
-					'mobile1'         => $all_meta['mobile1'][0]??\null,
-					'mobile2'         => $all_meta['mobile2'][0]??\null,
-					'contact2'        => $all_meta['contact2'][0]??\null,
-					'tel2'            => $all_meta['tel2'][0]??\null,
-					'contact3'        => $all_meta['contact3'][0]??\null,
-					'tel3'            => $all_meta['tel3'][0]??\null,
-					'remark'          => $all_meta['remark'][0]??\null,
-					'agent_id'        => $all_meta['agent_id'][0]??\null,
-					'display_name'    => $all_meta['display_name'][0]??\null,
-					'address_arr'     => $all_meta['address_arr'][0]?maybe_unserialize($all_meta['address_arr'][0]):\null,
+					'id'            => get_the_ID(),
+					'created_at'    => strtotime(get_the_date('Y-m-d')),
+					'client_number' => get_the_title(),
 				];
+				// 取得最後一個索引 (即剛剛推入的那個項目)
+				$last_index = count($posts_data) - 1;
+				// 整理 meta 資料
+				foreach (PostType\Clients::instance()->get_meta() as $key => $value) {
+					if (isset($all_meta[ $key ])) {
+						if ('integer'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = intval($all_meta[ $key ]);
+
+						} elseif ('boolean'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = filter_var($all_meta[ $key ], FILTER_VALIDATE_BOOLEAN);
+
+						} elseif ('object'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = \maybe_unserialize($all_meta[ $key ]);
+						} else {
+							$posts_data[ $last_index ][ $key ] = $all_meta[ $key ];
+						}
+					}
+				}
 			}
 			wp_reset_postdata();
 		}
@@ -156,21 +180,11 @@ final class Clients {
 			return new \WP_Error( 'error_creating_post', 'Unable to create post', [ 'status' => 500 ] );
 		}
 		// 更新文章的 meta 資料
-		update_post_meta($post_id, 'name_zh', $params['name_zh']);
-		update_post_meta($post_id, 'name_en', $params['name_en']);
-		update_post_meta($post_id, 'company', $params['company']);
-		update_post_meta($post_id, 'office_gen_line', $params['office_gen_line']);
-		update_post_meta($post_id, 'direct_line', $params['direct_line']);
-		update_post_meta($post_id, 'mobile1', $params['mobile1']);
-		update_post_meta($post_id, 'mobile2', $params['mobile2']);
-		update_post_meta($post_id, 'contact2', $params['contact2']);
-		update_post_meta($post_id, 'tel2', $params['tel2']);
-		update_post_meta($post_id, 'contact3', $params['contact3']);
-		update_post_meta($post_id, 'tel3', $params['tel3']);
-		update_post_meta($post_id, 'remark', $params['remark']);
-		update_post_meta($post_id, 'agent_id', $params['agent_id']);
-		update_post_meta($post_id, 'display_name', $params['display_name']);
-		update_post_meta($post_id, 'address_arr', $params['address_arr']);
+		foreach (PostType\Clients::instance()->get_meta() as $key => $value) {
+			if (isset($params[ $key ])) {
+				update_post_meta($post_id, $key, $params[ $key ]);
+			}
+		}
 		$response = new \WP_REST_Response(  $post_id  );
 		return $response;
 	}
@@ -181,15 +195,15 @@ final class Clients {
 	 * @return \WP_REST_Response
 	 */
 	public function post_clients_with_id_callback( $request ) { // phpcs:ignore
-		$params  = $request->get_json_params() ?? [];
-		$params  = WP::sanitize_text_field_deep( $params, false );
-		$post_id = $request->get_param('id');
-
+		$params     = $request->get_json_params() ?? [];
+		$params     = WP::sanitize_text_field_deep( $params, false );
+		$post_id    = $request->get_param('id');
+		$post_title = isset($params['client_number'])?$params['client_number']:\get_the_title($post_id);
 		// 更新文章
 		$post_id = wp_update_post(
 			[
 				'ID'           => $post_id,
-				'post_title'   => $params['client_number'], // 文章標題
+				'post_title'   => $post_title, // 文章標題
 				'post_content' => '', // 文章內容
 				'post_status'  => 'publish', // 文章狀態
 			]
@@ -198,21 +212,11 @@ final class Clients {
 			return new \WP_Error( 'error_creating_post', 'Unable to create post', [ 'status' => 500 ] );
 		}
 		// 更新文章的 meta 資料
-		update_post_meta($post_id, 'name_zh', $params['name_zh']);
-		update_post_meta($post_id, 'name_en', $params['name_en']);
-		update_post_meta($post_id, 'company', $params['company']);
-		update_post_meta($post_id, 'office_gen_line', $params['office_gen_line']);
-		update_post_meta($post_id, 'direct_line', $params['direct_line']);
-		update_post_meta($post_id, 'mobile1', $params['mobile1']);
-		update_post_meta($post_id, 'mobile2', $params['mobile2']);
-		update_post_meta($post_id, 'contact2', $params['contact2']);
-		update_post_meta($post_id, 'tel2', $params['tel2']);
-		update_post_meta($post_id, 'contact3', $params['contact3']);
-		update_post_meta($post_id, 'tel3', $params['tel3']);
-		update_post_meta($post_id, 'remark', $params['remark']);
-		update_post_meta($post_id, 'agent_id', $params['agent_id']);
-		update_post_meta($post_id, 'display_name', $params['display_name']);
-		update_post_meta($post_id, 'address_arr', $params['address_arr']);
+		foreach (PostType\Clients::instance()->get_meta() as $key => $value) {
+			if (isset($params[ $key ])) {
+				update_post_meta($post_id, $key, $params[ $key ]);
+			}
+		}
 		$response = new \WP_REST_Response(  $post_id  );
 		return $response;
 	}
@@ -224,36 +228,49 @@ final class Clients {
 	 */
 	public function get_clients_with_id_callback( $request ) { // phpcs:ignore
 		$post_id = $request->get_param('id');
-		$post    = get_post($post_id);
-		if ( ! $post ) {
+		// $post    = get_post($post_id);
+		$args  = [
+			'post_type' => 'clients',  // 指定自定义文章类型
+			// 'p'         => $post_id, // 文章 ID
+			'post__in'  => [ $post_id ], // 文章 ID
+		];
+		$query = new \WP_Query( $args );
+		if ( $query->have_posts() ) {
+			while ( $query->have_posts() ) {
+				$query->the_post();
+				// 獲取文章的所有 meta 資料
+				$all_meta      = get_post_meta($post_id, '', true);
+				$all_meta      = Base::sanitize_post_meta_array($all_meta);
+				$response_data = [
+					'id'            => get_the_ID(),
+					'created_at'    => strtotime(get_the_date('Y-m-d')),
+					'client_number' => get_the_title(),
+				];
+				// 整理 meta 資料
+				foreach (PostType\Clients::instance()->get_meta() as $key => $value) {
+					if (isset($all_meta[ $key ])) {
+						if ('integer'==$value['meta_type']) {
+							$response_data[ $key ] = intval($all_meta[ $key ]);
+
+						} elseif ('boolean'==$value['meta_type']) {
+							$response_data[ $key ] = filter_var($all_meta[ $key ], FILTER_VALIDATE_BOOLEAN);
+
+						} elseif ('object'==$value['meta_type']) {
+							$response_data[ $key ] = \maybe_unserialize($all_meta[ $key ]);
+						} else {
+							$response_data[ $key ] = $all_meta[ $key ];
+						}
+					}
+				}
+				$response = new \WP_REST_Response(
+					$response_data
+				);
+				return $response;
+			}
+			wp_reset_postdata();
+		} else {
 			return new \WP_Error( 'error_post_not_found', 'Post not found', [ 'status' => 404 ] );
 		}
-		// 獲取文章的所有 meta 資料
-		$all_meta = get_post_meta($post_id);
-
-		$response = new \WP_REST_Response(
-			[
-				'id'              => $post_id,
-				'created_at'      => strtotime(get_the_date('Y-m-d', $post_id)),
-				'client_number'   => get_the_title($post_id),
-				'name_zh'         => $all_meta['name_zh'][0]??\null,
-				'name_en'         => $all_meta['name_en'][0]??\null,
-				'company'         => $all_meta['company'][0]??\null,
-				'office_gen_line' => $all_meta['office_gen_line'][0]??\null,
-				'direct_line'     => $all_meta['direct_line'][0]??\null,
-				'mobile1'         => $all_meta['mobile1'][0]??\null,
-				'mobile2'         => $all_meta['mobile2'][0]??\null,
-				'contact2'        => $all_meta['contact2'][0]??\null,
-				'tel2'            => $all_meta['tel2'][0]??\null,
-				'contact3'        => $all_meta['contact3'][0]??\null,
-				'tel3'            => $all_meta['tel3'][0]??\null,
-				'remark'          => $all_meta['remark'][0]??\null,
-				'agent_id'        => $all_meta['agent_id'][0]??\null,
-				'display_name'    => $all_meta['display_name'][0]??\null,
-				'address_arr'     => $all_meta['address_arr'][0]?\maybe_unserialize($all_meta['address_arr'][0]):\null,
-			]
-		);
-		return $response;
 	}
 	/**
 	 * Delete clients by id callback

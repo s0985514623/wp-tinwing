@@ -27,7 +27,7 @@ const ShowMetaMotor = () => {
     });
     const insurer = insurerData?.data;
 
-    const insurerPaymentRate = insurer_fee_percent ?? insurer?.paymentRate;
+    const insurerPaymentRate = insurer_fee_percent ?? insurer?.payment_rate;
     const agent_fee = debitNoteData?.agent_fee || 0;
     const extra_fieldValue = round(premium * (Number(extra_fieldField) / 100), 2);
     const grossPremium = getGrossPremium({

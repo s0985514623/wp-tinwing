@@ -9,6 +9,8 @@ namespace J7\WpTinwing\Api;
 
 use J7\WpTinwing\Plugin;
 use J7\WpUtils\Classes\WP;
+use J7\WpTinwing\Admin\PostType;
+use J7\WpTinwing\Utils\Base;
 
 /**
  * Class Entry
@@ -27,7 +29,7 @@ final class Expenses {
 	/**
 	 * Get APIs
 	 *
-	 * @return array
+	 * @return array<int, array{endpoint:string, method:string, permission_callback?:callable}>
 	 * - endpoint: string
 	 * - method: 'get' | 'post' | 'patch' | 'delete'
 	 * - permission_callback : callable
@@ -69,9 +71,9 @@ final class Expenses {
 	 */
 	public function register_api_expenses(): void {
 		$this->register_apis(
-			apis: $this->get_apis(),
-			namespace: Plugin::$kebab,
-			default_permission_callback: fn() => \current_user_can( 'manage_options' ),
+		apis: $this->get_apis(),
+		namespace: Plugin::$kebab,
+		default_permission_callback: fn() => \current_user_can( 'manage_options' ),
 		);
 	}
 	/**
@@ -79,21 +81,36 @@ final class Expenses {
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response
+	 * @phpstan-ignore-next-line
 	 */
 	public function get_expenses_callback( $request ) { // phpcs:ignore
 		$params = $request->get_query_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
-		// 查詢 Custom Post Type 'book' 的文章
-		$args       = [
+		// 查詢 Custom Post Type 'expenses' 的文章
+		/**
+		 * @var array{posts_per_page?:string,orderby:string,order:string,meta_query:array<mixed>  } $params
+		 */
+		$args = [
 			'post_type'      => 'expenses',   // 自定義文章類型名稱
-			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
-			'orderby'        => $params['orderby'],   // 排序方式
-			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
-			'meta_query'     => $params['meta_query'], // meta 查詢
+			'posts_per_page' => isset($params['posts_per_page'])?$params['posts_per_page']:10,       // 每頁顯示文章數量
+			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
+			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 		];
-		ob_start();
-		var_dump($args);
-		\J7\WpUtils\Classes\log::info('' . ob_get_clean());
+		// 如果有meta_query 參數，則加入查詢條件
+		if (isset($params['meta_query'])) {
+			$meta_query         = Base::sanitize_meta_query($params['meta_query']);
+			$args['meta_query'] = $meta_query;
+		}
+		// 如果有date參數，則加入查詢條件
+		if (isset($params['date'])) {
+			$args['date_query'] = [
+				[
+					'after'     => date( 'Y-m-d', \intval($params['date'][0])),
+					'before'    => date( 'Y-m-d', \intval($params['date'][1])),
+					'inclusive' => true,
+				],
+			];
+		}
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
@@ -101,16 +118,32 @@ final class Expenses {
 				$query->the_post();
 
 				// 獲取文章的所有 meta 資料
-				$all_meta     = get_post_meta(get_the_ID());
+				$all_meta = get_post_meta(get_the_ID(), '', true);
+				$all_meta = Base::sanitize_post_meta_array($all_meta);
+
 				$posts_data[] = [
 					'id'            => get_the_ID(),
 					'created_at'    => strtotime(get_the_date('Y-m-d')),
-					'remark'        => get_the_title(),
-					'amount'        => $all_meta['amount'][0]??\null,
-					'term_id'        => $all_meta['term_id'][0]??\null,
-					'date'          => $all_meta['date'][0]??\null,
-					'cheque_number' => $all_meta['cheque_number'][0]??\null,
+					'remark' => get_the_title(),
 				];
+				// 取得最後一個索引 (即剛剛推入的那個項目)
+				$last_index = count($posts_data) - 1;
+				// 整理 meta 資料
+				foreach (PostType\Expenses::instance()->get_meta() as $key => $value) {
+					if (isset($all_meta[ $key ])) {
+						if ('integer'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = intval($all_meta[ $key ]);
+
+						} elseif ('boolean'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = filter_var($all_meta[ $key ], FILTER_VALIDATE_BOOLEAN);
+
+						} elseif ('object'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = \maybe_unserialize($all_meta[ $key ]);
+						} else {
+							$posts_data[ $last_index ][ $key ] = $all_meta[ $key ];
+						}
+					}
+				}
 			}
 			wp_reset_postdata();
 		}
@@ -144,10 +177,11 @@ final class Expenses {
 			return new \WP_Error( 'error_creating_post', 'Unable to create post', [ 'status' => 500 ] );
 		}
 		// 更新文章的 meta 資料
-		update_post_meta($post_id, 'amount', $params['amount']);
-		update_post_meta($post_id, 'term_id', $params['term_id']);
-		update_post_meta($post_id, 'date', $params['date']);
-		update_post_meta($post_id, 'cheque_number', $params['cheque_number']);
+		foreach (PostType\Expenses::instance()->get_meta() as $key => $value) {
+			if (isset($params[ $key ])) {
+				update_post_meta($post_id, $key, $params[ $key ]);
+			}
+		}
 		$response = new \WP_REST_Response(  $post_id  );
 		return $response;
 	}
@@ -158,14 +192,15 @@ final class Expenses {
 	 * @return \WP_REST_Response
 	 */
 	public function post_expenses_with_id_callback( $request ) { // phpcs:ignore
-		$params  = $request->get_json_params() ?? [];
-		$params  = WP::sanitize_text_field_deep( $params, false );
-		$post_id = $request->get_param('id');
+		$params     = $request->get_json_params() ?? [];
+		$params     = WP::sanitize_text_field_deep( $params, false );
+		$post_id    = $request->get_param('id');
+		$post_title = isset($params['remark'])?$params['remark']:\get_the_title($post_id);
 		// 更新文章
 		$post_id = wp_update_post(
 			[
 				'ID'           => $post_id,
-				'post_title'   => $params['remark'], // 文章標題
+				'post_title'   => $post_title, // 文章標題
 				'post_content' => '', // 文章內容
 				'post_status'  => 'publish', // 文章狀態
 			]
@@ -174,10 +209,11 @@ final class Expenses {
 			return new \WP_Error( 'error_creating_post', 'Unable to create post', [ 'status' => 500 ] );
 		}
 		// 更新文章的 meta 資料
-		update_post_meta($post_id, 'amount', $params['amount']);
-		update_post_meta($post_id, 'term_id', $params['term_id']);
-		update_post_meta($post_id, 'date', $params['date']);
-		update_post_meta($post_id, 'cheque_number', $params['cheque_number']);
+		foreach (PostType\Expenses::instance()->get_meta() as $key => $value) {
+			if (isset($params[ $key ])) {
+				update_post_meta($post_id, $key, $params[ $key ]);
+			}
+		}
 		$response = new \WP_REST_Response(  $post_id  );
 		return $response;
 	}
@@ -189,25 +225,49 @@ final class Expenses {
 	 */
 	public function get_expenses_with_id_callback( $request ) { // phpcs:ignore
 		$post_id = $request->get_param('id');
-		$post    = get_post($post_id);
-		if ( ! $post ) {
+		// $post    = get_post($post_id);
+		$args  = [
+			'post_type' => 'expenses',  // 指定自定义文章类型
+			// 'p'         => $post_id, // 文章 ID
+			'post__in'  => [ $post_id ], // 文章 ID
+		];
+		$query = new \WP_Query( $args );
+		if ( $query->have_posts() ) {
+			while ( $query->have_posts() ) {
+				$query->the_post();
+				// 獲取文章的所有 meta 資料
+				$all_meta      = get_post_meta($post_id, '', true);
+				$all_meta      = Base::sanitize_post_meta_array($all_meta);
+				$response_data = [
+					'id'            => get_the_ID(),
+					'created_at'    => strtotime(get_the_date('Y-m-d')),
+					'remark' => get_the_title(),
+				];
+				// 整理 meta 資料
+				foreach (PostType\Expenses::instance()->get_meta() as $key => $value) {
+					if (isset($all_meta[ $key ])) {
+						if ('integer'==$value['meta_type']) {
+							$response_data[ $key ] = intval($all_meta[ $key ]);
+
+						} elseif ('boolean'==$value['meta_type']) {
+							$response_data[ $key ] = filter_var($all_meta[ $key ], FILTER_VALIDATE_BOOLEAN);
+
+						} elseif ('object'==$value['meta_type']) {
+							$response_data[ $key ] = \maybe_unserialize($all_meta[ $key ]);
+						} else {
+							$response_data[ $key ] = $all_meta[ $key ];
+						}
+					}
+				}
+				$response = new \WP_REST_Response(
+					$response_data
+				);
+				return $response;
+			}
+			wp_reset_postdata();
+		} else {
 			return new \WP_Error( 'error_post_not_found', 'Post not found', [ 'status' => 404 ] );
 		}
-		// 獲取文章的所有 meta 資料
-		$all_meta = get_post_meta($post_id);
-
-		$response = new \WP_REST_Response(
-			[
-				'id'            => get_the_ID(),
-				'created_at'    => strtotime(get_the_date('Y-m-d', $post_id)),
-				'remark'        => get_the_title($post_id),
-				'amount'        => $all_meta['amount'][0]??\null,
-				'term_id'        => $all_meta['term_id'][0]??\null,
-				'date'          => $all_meta['date'][0]??\null,
-				'cheque_number' => $all_meta['cheque_number'][0]??\null,
-			]
-		);
-		return $response;
 	}
 	/**
 	 * Delete expenses by id callback

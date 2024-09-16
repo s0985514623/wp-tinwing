@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { useActiveAuthProvider, useGetIdentity, useLogout, useGetLocale, useSetLocale } from '@refinedev/core';
-import { Avatar, Layout as AntdLayout, Space, Dropdown, MenuProps } from 'antd';
+import { Avatar, Layout as AntdLayout, Space, Dropdown, MenuProps,Button } from 'antd';
 import type { RefineLayoutHeaderProps } from '@refinedev/antd';
 import { LoginOutlined, UserOutlined, TranslationOutlined, CheckOutlined } from '@ant-design/icons';
 import { useColor } from 'hooks';
@@ -31,7 +31,10 @@ export const Header: React.FC<RefineLayoutHeaderProps> = () => {
         logout();
         queryClient.clear();
     };
-
+		const handleGoBackWp = () => {
+			// TODO: 本地會加上port號，確認線上是否會有port號
+			window.location.href = '/wp-admin';
+		}
     const userEmail: string = user?.user_metadata?.email || '';
     // if (!ALLOW_EMAILS.includes(userEmail) && needAuth && userEmail) {
     //     setTimeout(() => handleLogout(), 300);
@@ -98,15 +101,16 @@ export const Header: React.FC<RefineLayoutHeaderProps> = () => {
                 justifyContent: 'end',
                 alignItems: 'center',
                 padding: '0px 24px',
-                height: '64px',
+                height: '105px',
                 backgroundColor: colorPrimary,
             }}>
             <Space style={{ marginLeft: '8px' }}>
-                <Dropdown menu={{ items: userOptions }}>
+							<Button type="primary" onClick={handleGoBackWp}>返回WP後台</Button>
+                {/* <Dropdown menu={{ items: userOptions }}>
                     <Avatar className="cursor-pointer" style={{ backgroundColor: '#fde3cf', color: '#f56a00' }}>
                         {(user?.name || 'Test')?.charAt(0).toUpperCase()}
                     </Avatar>
-                </Dropdown>
+                </Dropdown> */}
             </Space>
         </AntdLayout.Header>
     );

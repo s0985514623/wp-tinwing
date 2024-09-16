@@ -15,7 +15,7 @@ export const ListView: React.FC = () => {
     return (
         <List createButtonProps={{ type: 'primary' }}>
             <Table {...parsedTableProps} rowKey="id" size="middle">
-                <Table.Column width={120} dataIndex="agentNumber" title="Agent No." />
+                <Table.Column width={120} dataIndex="agent_number" title="Agent No." />
 
                 <Table.Column dataIndex="name" title="Name" />
 

@@ -83,17 +83,20 @@ final class Receipts {
 	 * @return \WP_REST_Response
 	 */
 	public function get_receipts_callback( $request ) { // phpcs:ignore
-		$params     = $request->get_query_params() ?? [];
-		$params     = WP::sanitize_text_field_deep( $params, false );
-		$meta_query = Base::sanitize_meta_query($params['meta_query']??[]);
-		// 查詢 Custom Post Type 'book' 的文章
+		$params = $request->get_query_params() ?? [];
+		$params = WP::sanitize_text_field_deep( $params, false );
+		// 查詢 Custom Post Type 'receipts' 的文章
 		$args = [
 			'post_type'      => 'receipts',   // 自定義文章類型名稱
-			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
-			'orderby'        => $params['orderby'],   // 排序方式
-			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
-			'meta_query'     => $meta_query, // meta 查詢
+			'posts_per_page' => isset($params['posts_per_page'])?$params['posts_per_page']:10,       // 每頁顯示文章數量
+			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
+			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 		];
+		// 如果有meta_query 參數，則加入查詢條件
+		if (isset($params['meta_query'])) {
+			$meta_query         = Base::sanitize_meta_query($params['meta_query']);
+			$args['meta_query'] = $meta_query;
+		}
 		// 如果有date參數，則加入查詢條件
 		if (isset($params['date'])) {
 			$args['date_query'] = [
@@ -104,9 +107,6 @@ final class Receipts {
 				],
 			];
 		}
-		ob_start();
-		var_dump($args);
-		\J7\WpUtils\Classes\log::info('' . ob_get_clean());
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
@@ -114,26 +114,33 @@ final class Receipts {
 				$query->the_post();
 
 				// 獲取文章的所有 meta 資料
-				$all_meta = get_post_meta(get_the_ID());
-				// TODO 還有優化空間如以下POST 方法
+				$all_meta = get_post_meta(get_the_ID(), '', true);
+				$all_meta = Base::sanitize_post_meta_array($all_meta);
+
 				$posts_data[] = [
-					'id'                       => get_the_ID(),
-					'created_at'               => strtotime(get_the_date('Y-m-d')),
-					'date'                     => strtotime(get_the_date('Y-m-d')),
-					'receipt_no'               => get_the_title(),
-					'debit_note_id'            => intval($all_meta['debit_note_id'][0])??\null,
-					'payment_date'             => intval($all_meta['payment_date'][0])??\null,
-					'payment_method'           => $all_meta['payment_method'][0]??\null,
-					'cheque_no'                => $all_meta['cheque_no'][0]??\null,
-					'code_no'                  =>$all_meta['code_no'][0]??\null,
-					'premium'                  => $all_meta['premium'][0]??\null,
-					'payment_receiver_account' => $all_meta['payment_receiver_account'][0]??\null,
-					'is_archived'              => filter_var($all_meta['is_archived'][0], FILTER_VALIDATE_BOOLEAN)??\false,
-					'is_paid'                  => filter_var($all_meta['is_paid'][0], FILTER_VALIDATE_BOOLEAN)??\false,
-					'remark'                   => $all_meta['remark'][0]??\null,
-					'created_from_renewal_id'  => intval($all_meta['created_from_renewal_id'][0])??\null,
-					'package_content'          => $all_meta['package_content'][0]??\null,
+					'id'         => get_the_ID(),
+					'created_at' => strtotime(get_the_date('Y-m-d')),
+					'date'       => strtotime(get_the_date('Y-m-d')),
+					'receipt_no'    => get_the_title(),
 				];
+				// 取得最後一個索引 (即剛剛推入的那個項目)
+				$last_index = count($posts_data) - 1;
+				// 整理 meta 資料
+				foreach (PostType\Receipts::instance()->get_meta() as $key => $value) {
+					if (isset($all_meta[ $key ])) {
+						if ('integer'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = intval($all_meta[ $key ]);
+
+						} elseif ('boolean'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = filter_var($all_meta[ $key ], FILTER_VALIDATE_BOOLEAN);
+
+						} elseif ('object'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = \maybe_unserialize($all_meta[ $key ]);
+						} else {
+							$posts_data[ $last_index ][ $key ] = $all_meta[ $key ];
+						}
+					}
+				}
 			}
 			wp_reset_postdata();
 		}
@@ -249,27 +256,32 @@ final class Receipts {
 			while ( $query->have_posts() ) {
 				$query->the_post();
 				// 獲取文章的所有 meta 資料
-				$all_meta = get_post_meta($post_id);
-				// TODO 還有優化空間如以上POST 方法
+				$all_meta      = get_post_meta($post_id, '', true);
+				$all_meta      = Base::sanitize_post_meta_array($all_meta);
+				$response_data = [
+					'id'         => get_the_ID(),
+					'created_at' => strtotime(get_the_date('Y-m-d')),
+					'date'       => strtotime(get_the_date('Y-m-d')),
+					'receipt_no'    => get_the_title(),
+				];
+				// 整理 meta 資料
+				foreach (PostType\Receipts::instance()->get_meta() as $key => $value) {
+					if (isset($all_meta[ $key ])) {
+						if ('integer'==$value['meta_type']) {
+							$response_data[ $key ] = intval($all_meta[ $key ]);
+
+						} elseif ('boolean'==$value['meta_type']) {
+							$response_data[ $key ] = filter_var($all_meta[ $key ], FILTER_VALIDATE_BOOLEAN);
+
+						} elseif ('object'==$value['meta_type']) {
+							$response_data[ $key ] = \maybe_unserialize($all_meta[ $key ]);
+						} else {
+							$response_data[ $key ] = $all_meta[ $key ];
+						}
+					}
+				}
 				$response = new \WP_REST_Response(
-				[
-					'id'                       => $post_id,
-					'created_at'               => strtotime(get_the_date('Y-m-d', $post_id)),
-					'date'                     => strtotime(get_the_date('Y-m-d', $post_id)),
-					'receipt_no'               => get_the_title($post_id),
-					'debit_note_id'            => intval($all_meta['debit_note_id'][0])??\null,
-					'payment_date'             => intval($all_meta['payment_date'][0])??\null,
-					'payment_method'           => $all_meta['payment_method'][0]??\null,
-					'cheque_no'                => $all_meta['cheque_no'][0]??\null,
-					'code_no'                  =>$all_meta['code_no'][0]??\null,
-					'premium'                  => $all_meta['premium'][0]??\null,
-					'payment_receiver_account' => $all_meta['payment_receiver_account'][0]??\null,
-					'is_archived'              => filter_var($all_meta['is_archived'][0], FILTER_VALIDATE_BOOLEAN)??\false,
-					'is_paid'                  => filter_var($all_meta['is_paid'][0], FILTER_VALIDATE_BOOLEAN)??\false,
-					'remark'                   => $all_meta['remark'][0]??\null,
-					'created_from_renewal_id'  => intval($all_meta['created_from_renewal_id'][0])??\null,
-					'package_content'          => $all_meta['package_content'][0]??\null,
-				]
+					$response_data
 				);
 				return $response;
 			}

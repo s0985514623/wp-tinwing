@@ -281,13 +281,6 @@ export const ListView: React.FC = () => {
         }}
         rowKey="id"
         size="middle"
-				//TODO 這邊要加上expandable
-				// expandable = {{
-				// 	expandedRowRender: (record: any) => {
-        //       const theTerm = terms.find((term) => term.id === record.term_id)
-        //       return <DetailTable record={record} term={theTerm} />
-        //     },
-				// }}
       >
         <Table.Column
           width={100}

@@ -16,12 +16,12 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                             formItemProps={{
                                 label: 'Insurer No.',
                             }}
-                            name={['insurerNumber']}
+                            name={['insurer_number']}
                         />
                         <Form.Item label="Name" name={['name']}>
                             <Input />
                         </Form.Item>
-                        <Form.Item label="Payment Rate" name={['paymentRate']}>
+                        <Form.Item label="Payment Rate" name={['payment_rate']}>
                             <InputNumber addonAfter="%" />
                         </Form.Item>
                     </Col>

@@ -10,6 +10,7 @@ namespace J7\WpTinwing\Api;
 use J7\WpTinwing\Plugin;
 use J7\WpUtils\Classes\WP;
 use J7\WpTinwing\Admin\PostType;
+use J7\WpTinwing\Utils\Base;
 
 /**
  * Class Entry
@@ -84,14 +85,28 @@ final class InsurerProducts {
 	public function get_insurer_products_callback( $request ) { // phpcs:ignore
 		$params = $request->get_query_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
-		// 查詢 Custom Post Type 'book' 的文章
-		$args       = [
+		// 查詢 Custom Post Type 'insurer_products' 的文章
+		$args = [
 			'post_type'      => 'insurer_products',   // 自定義文章類型名稱
-			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
-			'orderby'        => $params['orderby'],   // 排序方式
-			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
-			'meta_query'     => $params['meta_query'], // meta 查詢
+			'posts_per_page' => isset($params['posts_per_page'])?$params['posts_per_page']:10,       // 每頁顯示文章數量
+			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
+			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 		];
+		// 如果有meta_query 參數，則加入查詢條件
+		if (isset($params['meta_query'])) {
+			$meta_query         = Base::sanitize_meta_query($params['meta_query']);
+			$args['meta_query'] = $meta_query;
+		}
+		// 如果有date參數，則加入查詢條件
+		if (isset($params['date'])) {
+			$args['date_query'] = [
+				[
+					'after'     => date( 'Y-m-d', \intval($params['date'][0])),
+					'before'    => date( 'Y-m-d', \intval($params['date'][1])),
+					'inclusive' => true,
+				],
+			];
+		}
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
@@ -99,19 +114,32 @@ final class InsurerProducts {
 				$query->the_post();
 
 				// 獲取文章的所有 meta 資料
-				$all_meta = get_post_meta(get_the_ID());
-				// TODO 還有優化空間如以下POST 方法
+				$all_meta = get_post_meta(get_the_ID(), '', true);
+				$all_meta = Base::sanitize_post_meta_array($all_meta);
+
 				$posts_data[] = [
-					'id'                      => get_the_ID(),
-					'created_at'              => strtotime(get_the_date('Y-m-d')),
-					'name'                    => get_the_title(),
-					'term_id'                 => intval($all_meta['term_id'][0])??\null,
-					'insurance_amount'        => intval($all_meta['insurance_amount'][0])??\null,
-					'policy_no'               => $all_meta['policy_no'][0]??\null,
-					'insurer_products_number' => $all_meta['insurer_products_number'][0]??\null,
-					'remark'                  => $all_meta['remark'][0]??\null,
-					'insurer_id'              => intval($all_meta['insurer_id'][0])??\null,
+					'id'         => get_the_ID(),
+					'created_at' => strtotime(get_the_date('Y-m-d')),
+					'name'       => get_the_title(),
 				];
+				// 取得最後一個索引 (即剛剛推入的那個項目)
+				$last_index = count($posts_data) - 1;
+				// 整理 meta 資料
+				foreach (PostType\InsurerProducts::instance()->get_meta() as $key => $value) {
+					if (isset($all_meta[ $key ])) {
+						if ('integer'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = intval($all_meta[ $key ]);
+
+						} elseif ('boolean'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = filter_var($all_meta[ $key ], FILTER_VALIDATE_BOOLEAN);
+
+						} elseif ('object'==$value['meta_type']) {
+							$posts_data[ $last_index ][ $key ] = \maybe_unserialize($all_meta[ $key ]);
+						} else {
+							$posts_data[ $last_index ][ $key ] = $all_meta[ $key ];
+						}
+					}
+				}
 			}
 			wp_reset_postdata();
 		}
@@ -136,7 +164,7 @@ final class InsurerProducts {
 		$post_id = wp_insert_post(
 			[
 				'post_type'    => 'insurer_products', // 自定義文章類型名稱
-				'post_title'   => $params['note_no'], // 文章標題
+				'post_title'   => $params['name'], // 文章標題
 				'post_content' => '', // 文章內容
 				'post_status'  => 'publish', // 文章狀態
 			]
@@ -163,7 +191,7 @@ final class InsurerProducts {
 		$params     = $request->get_json_params() ?? [];
 		$params     = WP::sanitize_text_field_deep( $params, false );
 		$post_id    = $request->get_param('id');
-		$post_title = isset($params['note_no'])?$params['note_no']:\get_the_title($post_id);
+		$post_title = isset($params['name'])?$params['name']:\get_the_title($post_id);
 		// 更新文章
 		$post_id = wp_update_post(
 			[
@@ -193,27 +221,49 @@ final class InsurerProducts {
 	 */
 	public function get_insurer_products_with_id_callback( $request ) { // phpcs:ignore
 		$post_id = $request->get_param('id');
-		$post    = get_post($post_id);
-		if ( ! $post ) {
+		// $post    = get_post($post_id);
+		$args  = [
+			'post_type' => 'insurer_products',  // 指定自定义文章类型
+			// 'p'         => $post_id, // 文章 ID
+			'post__in'  => [ $post_id ], // 文章 ID
+		];
+		$query = new \WP_Query( $args );
+		if ( $query->have_posts() ) {
+			while ( $query->have_posts() ) {
+				$query->the_post();
+				// 獲取文章的所有 meta 資料
+				$all_meta      = get_post_meta($post_id, '', true);
+				$all_meta      = Base::sanitize_post_meta_array($all_meta);
+				$response_data = [
+					'id'         => get_the_ID(),
+					'created_at' => strtotime(get_the_date('Y-m-d')),
+					'name'       => get_the_title(),
+				];
+				// 整理 meta 資料
+				foreach (PostType\InsurerProducts::instance()->get_meta() as $key => $value) {
+					if (isset($all_meta[ $key ])) {
+						if ('integer'==$value['meta_type']) {
+							$response_data[ $key ] = intval($all_meta[ $key ]);
+
+						} elseif ('boolean'==$value['meta_type']) {
+							$response_data[ $key ] = filter_var($all_meta[ $key ], FILTER_VALIDATE_BOOLEAN);
+
+						} elseif ('object'==$value['meta_type']) {
+							$response_data[ $key ] = \maybe_unserialize($all_meta[ $key ]);
+						} else {
+							$response_data[ $key ] = $all_meta[ $key ];
+						}
+					}
+				}
+				$response = new \WP_REST_Response(
+					$response_data
+				);
+				return $response;
+			}
+			wp_reset_postdata();
+		} else {
 			return new \WP_Error( 'error_post_not_found', 'Post not found', [ 'status' => 404 ] );
 		}
-		// 獲取文章的所有 meta 資料
-		$all_meta = get_post_meta($post_id);
-		// TODO 還有優化空間如以上POST 方法
-		$response = new \WP_REST_Response(
-			[
-				'id'                      => get_the_ID(),
-				'created_at'              => strtotime(get_the_date('Y-m-d')),
-				'name'                    => get_the_title(),
-				'term_id'                 => intval($all_meta['term_id'][0])??\null,
-				'insurance_amount'        => intval($all_meta['insurance_amount'][0])??\null,
-				'policy_no'               => $all_meta['policy_no'][0]??\null,
-				'insurer_products_number' => $all_meta['insurer_products_number'][0]??\null,
-				'remark'                  => $all_meta['remark'][0]??\null,
-				'insurer_id'              => intval($all_meta['insurer_id'][0])??\null,
-			]
-		);
-		return $response;
 	}
 	/**
 	 * Delete insurer_products by id callback

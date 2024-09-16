@@ -61,7 +61,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
 
     const { selectProps: agentSelectProps } = useSelect<TAgent>({
         resource: 'agents',
-        optionLabel: 'agentNumber',
+        optionLabel: 'agent_number',
         optionValue: 'id',
     });
 

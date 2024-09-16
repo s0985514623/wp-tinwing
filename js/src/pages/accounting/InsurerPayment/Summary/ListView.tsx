@@ -45,7 +45,7 @@ export const ListView: React.FC = () => {
             const unpaidReceipts = receiptsData?.data?.filter((receipt) => receipt.is_paid !== true);
             const upPaidAmount = getAmount(unpaidReceipts, debitNotesData?.data, item);
             return {
-                'Insurer No': item?.insurerNumber,
+                'Insurer No': item?.insurer_number,
                 Name: item?.name,
                 'Total Amount': totalAmount?.toLocaleString(),
                 Paid: paidAmount?.toLocaleString(),
@@ -56,7 +56,7 @@ export const ListView: React.FC = () => {
     return (
         <List headerButtons={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
             <Table {...parsedTableProps} rowKey="id" size="middle">
-                <Table.Column width={120} dataIndex="insurerNumber" title="Insurer No." />
+                <Table.Column width={120} dataIndex="insurer_number" title="Insurer No." />
                 <Table.Column dataIndex="name" title="Name" />
                 <Table.Column
                     dataIndex="id"

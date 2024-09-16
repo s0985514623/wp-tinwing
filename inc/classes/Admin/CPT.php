@@ -321,7 +321,7 @@ final class CPT {
 	public function render_meta_box_json_extra_field( $post, $args ): void {
 		$meta_value_data = \get_post_meta( $post->ID, $args['title'], true);
 		if (!is_array($meta_value_data)) {
-			$meta_value_data = json_decode($meta_value_data, true);
+			$meta_value_data = \maybe_unserialize($meta_value_data);
 		}
 		// $meta_value_data = json_decode($meta_value_data, true);
 
