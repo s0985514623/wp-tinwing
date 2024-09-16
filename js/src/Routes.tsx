@@ -92,11 +92,11 @@ const AppRoutes = () => {
     <Routes>
       <Route
         element={
-          <Authenticated fallback={<CatchAllNavigate to="/login" />}>
+          // <Authenticated fallback={<CatchAllNavigate to="/login" />}>
             <Layout>
               <Outlet />
             </Layout>
-          </Authenticated>
+          // </Authenticated>
         }
       >
         <Route
@@ -223,9 +223,9 @@ const AppRoutes = () => {
       </Route>
       <Route
         element={
-          <Authenticated fallback={<Outlet />}>
+          // <Authenticated fallback={<Outlet />}>
             <NavigateToResource />
-          </Authenticated>
+          // </Authenticated>
         }
       >
         <Route
@@ -255,11 +255,11 @@ const AppRoutes = () => {
       </Route>
       <Route
         element={
-          <Authenticated>
+          // <Authenticated>
             <Layout>
               <Outlet />
             </Layout>
-          </Authenticated>
+          // </Authenticated>
         }
       >
         <Route path="*" element={<ErrorComponent />} />
