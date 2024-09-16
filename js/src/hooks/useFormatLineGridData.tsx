@@ -68,5 +68,24 @@ export const useFormatLineGridData = ({ data, type, debitNotesData, insurerData 
             return acc;
         }, [] as TLineGridData);
     }
+		if (type === 'totalCreditNotes') {
+			return (data as TDebitNote[])?.reduce((acc, credit_notes) => {
+				//取得date
+				const date = dayjs.unix(credit_notes?.date as number).format('YYYY-MM-DD');
+
+				//取得value
+				const premium = credit_notes?.premium ?? 0;
+
+				// 尋找是否已經有該日期的紀錄
+				const existingDate = acc.find((item) => item.date === date);
+				if (existingDate) {
+						existingDate.value += premium;
+				} else {
+						acc.push({ date, value: premium, category: 'Credit Notes' });
+				}
+				return acc;
+		}, [] as TLineGridData);
+		}
+
     return [];
 };

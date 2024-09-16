@@ -4,7 +4,7 @@ import { Empty } from 'antd';
 const index: React.FC<{ incomeByBankReceipt: { bank: string; income: number }[] }> = ({ incomeByBankReceipt = [] }) => {
     if (incomeByBankReceipt.length === 0) return <Empty className=" my-4" />;
     return (
-        <div className="grid grid-cols-3 gap-5 my-4">
+        <div className="grid grid-cols-4 gap-5 my-4">
             {incomeByBankReceipt.map((item) => {
                 return (
                     <div key={nanoid()} className="flex flex-col w-full shadow-md bg-white rounded-lg p-5">
