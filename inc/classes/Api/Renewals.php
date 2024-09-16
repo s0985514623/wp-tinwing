@@ -10,6 +10,7 @@ namespace J7\WpTinwing\Api;
 use J7\WpTinwing\Plugin;
 use J7\WpUtils\Classes\WP;
 use J7\WpTinwing\Admin\PostType;
+use J7\WpTinwing\Utils\Base;
 
 /**
  * Class Entry
@@ -84,17 +85,16 @@ final class Renewals {
 	public function get_renewals_callback( $request ) { // phpcs:ignore
 		$params = $request->get_query_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
+		$meta_query = Base::sanitize_meta_query($params['meta_query']??[]);
 		// 查詢 Custom Post Type 'book' 的文章
 		$args = [
 			'post_type'      => 'renewals',   // 自定義文章類型名稱
 			'posts_per_page' => $params['posts_per_page'],       // 每頁顯示文章數量
 			'orderby'        => $params['orderby'],   // 排序方式
 			'order'          => $params['order'],    // 排序順序（DESC: 新到舊，ASC: 舊到新）
-			'meta_query'     => $params['meta_query'],
+			'meta_query'     => $meta_query,
 		];
-		ob_start();
-		var_dump($args);
-		\J7\WpUtils\Classes\log::info('' . ob_get_clean());
+
 		// 如果有date參數，則加入查詢條件
 		if (isset($params['date'])) {
 			$args['date_query'] = [
@@ -233,7 +233,8 @@ final class Renewals {
 		// $post = get_post($post_id);
 		$args  = [
 			'post_type' => 'renewals',  // 指定自定义文章类型
-			'p'         => $post_id,               // 文章 ID
+			// 'p'         => $post_id, // 文章 ID
+			'post__in'  => [ $post_id ], // 文章 ID
 		];
 		$query = new \WP_Query( $args );
 		if ( $query->have_posts() ) {
