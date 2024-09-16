@@ -79,13 +79,17 @@ const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
   const handleDelete = async () => {
     // console.log('click delete');
     deleteRecord({
-      resource: isCreatedFromDebitNote||isCreatedFromDebitNote ? 'renewals' : 'debit_notes',
+      resource: isCreatedFromDebitNote||isCreatedFromRenewal ? 'renewals' : 'debit_notes',
       id: rawRecordId,
-    })
-		//TODO 不會刷新畫面
-		invalidate({
-			resource: isCreatedFromDebitNote||isCreatedFromRenewal ? 'renewals' : 'debit_notes',
-			invalidates: ['list'],
+    },
+		{
+			onSuccess: (data, variables, context) => {
+				// invalidate
+				invalidate({
+					resource: isCreatedFromDebitNote||isCreatedFromRenewal ? 'renewals' : 'debit_notes',
+					invalidates: ['list'],
+				})
+			},
 		})
   }
 
