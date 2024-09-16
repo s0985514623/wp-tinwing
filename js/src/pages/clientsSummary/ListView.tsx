@@ -38,7 +38,7 @@ const termOptions = {
         operator: 'eq',
         value: 0,
       },
-			{
+      {
         field: 'meta_query[0][type]',
         operator: 'eq',
         value: 'NUMERIC',
@@ -81,9 +81,9 @@ const termOptions = {
       {
         field: 'meta_query[0][value]',
         operator: 'eq',
-        value: values?.is_archived.toLowerCase() === "true"? 1 : 0,
+        value: values?.is_archived.toLowerCase() === 'true' ? 1 : 0,
       },
-			{
+      {
         field: 'meta_query[0][type]',
         operator: 'eq',
         value: 'NUMERIC',
@@ -115,24 +115,24 @@ const termOptions = {
       {
         field: 'meta_query[1][compare]',
         operator: 'eq',
-        value: values?.dateRange?'BETWEEN':'>',
+        value: values?.dateRange ? 'BETWEEN' : '>',
       },
-      // {
-      //   field: 'meta_query[2][key]',
-      //   operator: 'eq',
-      //   value: 'motor_engine_no',
-      // },
-      // {
-      //   field: 'meta_query[2][value]',
-      //   operator: 'eq',
-      //   value:
-      //     values?.motor_engine_no === '' ? undefined : values?.motor_engine_no,
-      // },
-      // {
-      //   field: 'meta_query[2][compare]',
-      //   operator: 'eq',
-      //   value: '=',
-      // },
+      {
+        field: 'meta_query[2][key]',
+        operator: 'eq',
+        value: 'motor_engine_no',
+      },
+      {
+        field: 'meta_query[2][value]',
+        operator: 'eq',
+        value:
+          values?.motor_engine_no === '' ? undefined : values?.motor_engine_no,
+      },
+      {
+        field: 'meta_query[2][compare]',
+        operator: 'eq',
+        value: '=',
+      },
     ]
     return filters as CrudFilters
   },
@@ -157,7 +157,7 @@ export const ListView: React.FC = () => {
     ...(renewalData?.dataSource ?? []),
     ...(tableProps?.dataSource ?? []),
   ]
-  console.log('🚀 ~ formatTableData:', formatTableData);
+  // console.log('🚀 ~ formatTableData:', formatTableData)
   const formatSearchFormProps = {
     ...renewalSearchForm,
     ...searchFormProps,

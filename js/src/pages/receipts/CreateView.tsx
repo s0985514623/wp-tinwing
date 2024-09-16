@@ -84,10 +84,12 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
     const selectedDebitNoteId = Form.useWatch(['debit_note_id'], form);
     const debitNotes = debitNoteQueryResult?.data?.data || [];
     const selectedDebitNote = debitNotes?.find((theDebitNote) => theDebitNote?.id === selectedDebitNoteId) || defaultDebitNote;
+    // console.log("🚀 ~ selectedDebitNote:", selectedDebitNote)
     //取得選擇的RenewalId
     const selectedRenewalId = Form.useWatch(['created_from_renewal_id'], form);
     const Renewals = renewalsQueryResult?.data?.data || [];
     const selectedRenewal = Renewals?.find((theRenewal) => theRenewal?.id === selectedRenewalId) || defaultDebitNote;
+    // console.log("🚀 ~ selectedRenewal:", selectedRenewal)
     //定義選擇的data資料是哪一組
     const selectedData = selectOptions == 'renewal' ? selectedRenewal : selectOptions == 'debitNote' ? selectedDebitNote : undefined;
     //當selectedDebitNoteId改變時，更新premium的值
