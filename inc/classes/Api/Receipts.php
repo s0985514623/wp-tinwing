@@ -83,8 +83,8 @@ final class Receipts {
 	 * @return \WP_REST_Response
 	 */
 	public function get_receipts_callback( $request ) { // phpcs:ignore
-		$params = $request->get_query_params() ?? [];
-		$params = WP::sanitize_text_field_deep( $params, false );
+		$params     = $request->get_query_params() ?? [];
+		$params     = WP::sanitize_text_field_deep( $params, false );
 		$meta_query = Base::sanitize_meta_query($params['meta_query']??[]);
 		// 查詢 Custom Post Type 'book' 的文章
 		$args = [
@@ -154,6 +154,29 @@ final class Receipts {
 	public function post_receipts_callback( $request ) { // phpcs:ignore
 		$params = $request->get_json_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
+		// 檢查是否為空的receipts
+		$is_empty = empty($params['debit_note_id'])&&empty($params['created_from_renewal_id']);
+		// 如果為空，則同步創建一個新的debit_note
+		if ($is_empty) {
+			$debit_note_id = wp_insert_post(
+				[
+					'post_type'    => 'debit_notes', // 自定義文章類型名稱
+					'post_title'   => $params['receipt_no'], // 文章標題
+					'post_content' => '', // 文章內容
+					'post_status'  => 'publish', // 文章狀態
+				]
+			);
+			if ( is_wp_error( $debit_note_id ) ) {
+				return new \WP_Error( 'error_creating_post_debit_notes', 'Unable to create post', [ 'status' => 500 ] );
+			}
+			update_post_meta($debit_note_id, 'is_archived', $params['is_archived']);
+			update_post_meta($debit_note_id, 'premium', $params['premium']);
+			// 預設時間範圍為創建當下+1年
+			update_post_meta($debit_note_id, 'period_of_insurance_from', strtotime('now'));
+			update_post_meta($debit_note_id, 'period_of_insurance_to', strtotime('+1 year'));
+
+			$params['debit_note_id'] = $debit_note_id;
+		}
 		// 創建文章
 		$post_id = wp_insert_post(
 			[

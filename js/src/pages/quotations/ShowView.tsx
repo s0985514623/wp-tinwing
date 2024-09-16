@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { IResourceComponentsProps, useShow, useOne } from '@refinedev/core';
+import { IResourceComponentsProps, useShow, useOne,useCreate } from '@refinedev/core';
 import { Show } from '@refinedev/antd';
 import { Button, Alert, Row, Col } from 'antd';
 import dayjs from 'dayjs';
@@ -20,8 +20,20 @@ import ReactToPrint from 'react-to-print';
 import logo from 'assets/images/logo.jpg';
 import ShowDebitNoteHeader from './components/ShowDebitNoteHeader';
 import { RemarkTextArea } from 'components/RemarkTextArea';
+import { useNavigate } from 'react-router-dom';
 
 export const ShowView: React.FC<IResourceComponentsProps> = () => {
+	const navigate = useNavigate()
+  const { mutate: createDebitNote } = useCreate({
+    resource: 'debit_notes',
+    mutationOptions: {
+      onSuccess: (data, variables, context) => {
+				navigate(`/debitNotes/show/${data?.data}`)
+				// console.log('🚀 ~ data:', data);
+        // Let's celebrate!
+      },
+    },
+  })
     const { queryResult } = useShow<DataType>();
     // console.log('🚀 ~ queryResult:', queryResult);
     const debitNoteData = queryResult?.data?.data as DataType;
@@ -69,10 +81,22 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
             console.log('🚀 ~ error:', error);
         }
     }
+		const handleCreateDebitNote =  () => {
+			// console.log('click handle');
+			 createDebitNote({
+				values: debitNoteData,
+			})
+		}
     return (
         <Show
             title="Preview Print"
             isLoading={isLoading}
+						headerButtons={({ defaultButtons }) => (
+							<>
+								{defaultButtons}
+								<Button type="primary" onClick={handleCreateDebitNote}>Create Debit Note</Button>
+							</>
+						)}
             footerButtons={({ defaultButtons }) => (
                 <>
                     {defaultButtons}
