@@ -17,6 +17,8 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
     const toWords = new ToWords();
     const { formProps, saveButtonProps, form, queryResult } = useForm();
     const receiptData = queryResult?.data?.data as DataType;
+		const isFromDebitNote = Boolean(receiptData?.debit_note_id)
+		const isFromRenewal = Boolean(receiptData?.created_from_renewal_id)
     const watchDate = Form.useWatch(['date'], form);
     const watchPaymentDate = Form.useWatch(['payment_date'], form);
     const watchPremium = Form.useWatch(['premium'], form) ?? 0;
@@ -33,8 +35,8 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
         }
     };
 
-    const { selectProps: debitNoteSelectProps, queryResult: debitNoteQueryResult } = useSelect<TDebitNote>({
-        resource: 'debit_notes',
+    const { selectProps, queryResult: connectedQueryResult } = useSelect<TDebitNote>({
+        resource: isFromDebitNote?'debit_notes':'renewals',
         optionLabel: 'note_no',
         optionValue: 'id',
     });
@@ -42,36 +44,42 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
     const { data: receiptsData } = useList<DataType>({
         resource: 'receipts',
     });
-    //取得receipts的debit_note_id
+    //取得receipts的debit_note_id or created_from_renewal_id
     const receiptsIds =
         receiptsData?.data?.map((item) => {
+					if(isFromDebitNote){
             return item?.debit_note_id;
+					}
+					else{
+						return item?.created_from_renewal_id;
+					}
         }) || [];
-    //過濾掉已經沒有receipts的debitNote
-    const newData = debitNoteSelectProps.options?.filter((item) => receiptsIds.includes(item?.value as number));
+
+    //過濾掉已經有receipts的debitNote or renewal
+    const newData = selectProps.options?.filter((item) => !receiptsIds.includes(item?.value as number));
     const fxnDebitNoteSelectProps = {
-        ...debitNoteSelectProps,
+        ...selectProps,
         options: newData || [],
     };
-    const selectedDebitNoteId = Form.useWatch(['debit_note_id'], form);
-    const debitNotes = debitNoteQueryResult?.data?.data || [];
-    const selectedDebitNote = debitNotes?.find((theDebitNote) => theDebitNote?.id === selectedDebitNoteId) || defaultDebitNote;
+    const selectedId = Form.useWatch([isFromDebitNote?'debit_note_id':'created_from_renewal_id'], form);
+    const connectedQuery = connectedQueryResult?.data?.data || [];
+    const selectedConnected = connectedQuery?.find((theConnected) => theConnected?.id === selectedId) || defaultDebitNote;
 
-    // 當selectedDebitNoteId改變時，更新premium的值
+    // 當selectedId改變時，更新premium的值
     useEffect(() => {
-        if (!!selectedDebitNoteId) {
-            const setPremium = receiptsData?.data.find((item) => item?.debit_note_id === selectedDebitNoteId)?.premium || getTotalPremiumByDebitNote(selectedDebitNote);
+        if (!!selectedId) {
+            const setPremium = receiptsData?.data.find((item) => item?.debit_note_id === selectedId)?.premium || getTotalPremiumByDebitNote(selectedConnected);
             form.setFieldValue(['premium'], setPremium);
         }
-    }, [selectedDebitNoteId]);
+    }, [selectedId]);
 
-    const templateText = getTemplateText(selectedDebitNote?.template || 'general');
+    const templateText = getTemplateText(selectedConnected?.template || 'general');
 
     const { data: clientResult, isLoading: clientIsLoading } = useOne<TClient>({
         resource: 'clients',
-        id: selectedDebitNote?.client_id || 0,
+        id: selectedConnected?.client_id || 0,
         queryOptions: {
-            enabled: !!selectedDebitNote?.client_id,
+            enabled: !!selectedConnected?.client_id,
         },
     });
     const selectedClient = clientResult?.data || defaultClient;
@@ -115,10 +123,20 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
             )}>
             <Form {...formProps} layout="vertical">
                 <div className="table table_td-flex-1 w-full">
-                    <div className="tr">
+                    <div className={`tr ${isFromDebitNote?'':'tw-hidden'}`}>
                         <div className="th">Connected Debit Note</div>
                         <div className="td">
                             <Form.Item noStyle name={['debit_note_id']}>
+                                <Select {...fxnDebitNoteSelectProps} size="small" className="w-full" allowClear />
+                            </Form.Item>
+                        </div>
+                        <div className="th"></div>
+                        <div className="td"></div>
+                    </div>
+										<div className={`tr ${isFromRenewal?'':'tw-hidden'}`}>
+                        <div className="th">Connected Renewal</div>
+                        <div className="td">
+                            <Form.Item noStyle name={['created_from_renewal_id']}>
                                 <Select {...fxnDebitNoteSelectProps} size="small" className="w-full" allowClear />
                             </Form.Item>
                         </div>
@@ -129,7 +147,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
 
                 <Alert className="my-24" message="The following content will be printed out" type="warning" showIcon />
 
-                <Spin indicator={<LoadingOutlined className="text-2xl" spin />} tip="fetching data..." spinning={!!clientIsLoading && !!selectedDebitNoteId}>
+                <Spin indicator={<LoadingOutlined className="text-2xl" spin />} tip="fetching data..." spinning={!!clientIsLoading && !!selectedId}>
                     <div className="table table_td-flex-1 w-full">
                         <div className="w-full mb-4 flex justify-between border-b-2 border-solid border-black pb-6 px-4">
                             <div className="w-full">
@@ -187,11 +205,11 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                                 </div>
                                 <div className="tr">
                                     <div className="th w-60">POLICY 保單號碼</div>
-                                    <div className="td">{selectedDebitNote?.policy_no}</div>
+                                    <div className="td">{selectedConnected?.policy_no}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th w-60">DEBIT NOTE NO. 保費單號碼</div>
-                                    <div className="td">{selectedDebitNote?.note_no || ''}</div>
+                                    <div className="td">{selectedConnected?.note_no || ''}</div>
                                 </div>
                             </div>
                         </Col>
