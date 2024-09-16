@@ -309,10 +309,7 @@ export const ListView: React.FC = () => {
                     shape="circle"
                     size="small"
                     recordItemId={id}
-										//TODO 這裡有BUG 這個按鈕應該要導向到insurerPayment/record/edit/:id但是導不過去，暫時先用onClick方式代替
-                    onClick={() => {
-                      navigate(`/insurerPayment/record/edit/${id}`)
-                    }}
+										resource='receipts_record'
                   />
                 </Space>
               </>

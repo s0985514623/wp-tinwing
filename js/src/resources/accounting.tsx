@@ -37,6 +37,7 @@ export const accounting = [
     },
     {
         name: 'receipts',
+				identifier: 'receipts_record',
         list: '/insurerPayment/record',
         edit: '/insurerPayment/record/edit/:id',
         meta: {
