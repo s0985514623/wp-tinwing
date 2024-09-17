@@ -1,49 +1,29 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { app1Selector, app2Selector } from '@/utils'
-import { StyleProvider } from '@ant-design/cssinjs'
+import { createRoot } from 'react-dom/client'
 
-const App1 = React.lazy(() => import('./App1'))
-const App2 = React.lazy(() => import('./App2'))
+import App from './App'
+import './i18n'
+import reportWebVitals from './reportWebVitals'
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 0,
-    },
-  },
-})
+// if (process.env.REACT_APP_MOCK_API === 'true') {
+//     const { worker } = require('./mocks/browser')
+//     worker.start()
+// }
 
-const app1Nodes = document.querySelectorAll(app1Selector)
-const app2Nodes = document.querySelectorAll(app2Selector)
+const container = document.getElementById('wp_tinwing') as HTMLElement
+const root = createRoot(container)
 
-const mapping = [
-  {
-    els: app1Nodes,
-    App: App1,
-  },
-  {
-    els: app2Nodes,
-    App: App2,
-  },
-]
+root.render(
+  <React.StrictMode>
+    <React.Suspense fallback="loading">
+      <App />
+    </React.Suspense>
+  </React.StrictMode>,
+)
 
-mapping.forEach(({ els, App }) => {
-  if (!!els) {
-    els.forEach((el) => {
-      ReactDOM.createRoot(el).render(
-        <React.StrictMode>
-          <QueryClientProvider client={queryClient}>
-            <StyleProvider hashPriority="high">
-              <App />
-            </StyleProvider>
-            <ReactQueryDevtools initialIsOpen={true} />
-          </QueryClientProvider>
-        </React.StrictMode>,
-      )
-    })
-  }
-})
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+
+reportWebVitals()
