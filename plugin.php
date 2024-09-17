@@ -2,12 +2,12 @@
 /**
  * Plugin Name:       Wp Tinwing
  * Plugin URI:        wp-tinwing
- * Description:       your description
+ * Description:       WP版本-天威保險系統
  * Version:           1.0.0
  * Requires at least: 5.7
  * Requires PHP:      8.0
- * Author:            Your Name
- * Author URI:        [YOUR GITHUB URL]
+ * Author:            Ren
+ * Author URI:        https://github.com/s0985514623/wp-tinwing
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       wp_tinwing
@@ -52,7 +52,7 @@ if ( ! \class_exists( 'J7\WpTinwing\Plugin' ) ) {
 			$this->init(
 				[
 					'app_name'    => 'Wp Tinwing',
-					'github_repo' => '[YOUR GITHUB URL]/wp-tinwing',
+					'github_repo' => 'https://github.com/s0985514623/wp-tinwing',
 					'callback'    => [ Bootstrap::class, 'instance' ],
 				]
 			);
