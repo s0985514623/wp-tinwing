@@ -1,6 +1,6 @@
 {
   "name": "wp-tinwing",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "scripts": {
     "bootstrap": "yarn install && composer install --no-interaction",
