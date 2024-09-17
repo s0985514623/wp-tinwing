@@ -107,6 +107,7 @@ final class Insurers {
 				],
 			];
 		}
+
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {

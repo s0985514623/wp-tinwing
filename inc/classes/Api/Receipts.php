@@ -61,6 +61,11 @@ final class Receipts {
 				'method'              => 'delete',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
+			[
+				'endpoint'            => 'receipts_bulk_edit',
+				'method'              => 'post',
+				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
+			],
 		];
 	}
 
@@ -92,6 +97,7 @@ final class Receipts {
 			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
 			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 		];
+
 		// 如果有meta_query 參數，則加入查詢條件
 		if (isset($params['meta_query'])) {
 			$meta_query         = Base::sanitize_meta_query($params['meta_query']);
@@ -121,7 +127,7 @@ final class Receipts {
 					'id'         => get_the_ID(),
 					'created_at' => strtotime(get_the_date('Y-m-d')),
 					'date'       => strtotime(get_the_date('Y-m-d')),
-					'receipt_no'    => get_the_title(),
+					'receipt_no' => get_the_title(),
 				];
 				// 取得最後一個索引 (即剛剛推入的那個項目)
 				$last_index = count($posts_data) - 1;
@@ -262,7 +268,7 @@ final class Receipts {
 					'id'         => get_the_ID(),
 					'created_at' => strtotime(get_the_date('Y-m-d')),
 					'date'       => strtotime(get_the_date('Y-m-d')),
-					'receipt_no'    => get_the_title(),
+					'receipt_no' => get_the_title(),
 				];
 				// 整理 meta 資料
 				foreach (PostType\Receipts::instance()->get_meta() as $key => $value) {
@@ -304,6 +310,34 @@ final class Receipts {
 			return new \WP_Error( 'error_post_not_found', 'Post not found', [ 'status' => 404 ] );
 		}
 		$response = new \WP_REST_Response(  $result  );
+		return $response;
+	}
+	/**
+	 * Receipts Bulk Edit callback
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return \WP_REST_Response
+	 */
+	public function post_receipts_bulk_edit_callback( $request ) { // phpcs:ignore
+		$params = $request->get_json_params() ?? [];
+		$params = WP::sanitize_text_field_deep( $params, false, [ 'is_paid' ] );
+
+		// 更新文章
+		$post_ids = $params['ids'];
+		foreach ($post_ids as $post_id) {
+			// 判斷是否具有該文章
+			if (!get_post($post_id)) {
+				return new \WP_Error( 'error_post_not_found', 'Post not found', [ 'status' => 404 ] );
+			}
+
+			// 更新文章的 meta 資料
+			foreach (PostType\Receipts::instance()->get_meta() as $key => $value) {
+				if (isset($params[ $key ])) {
+					update_post_meta($post_id, $key, $params[ $key ]);
+				}
+			}
+		}
+		$response = new \WP_REST_Response(  $post_ids  );
 		return $response;
 	}
 }

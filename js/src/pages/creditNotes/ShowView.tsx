@@ -32,7 +32,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
         resource: 'clients',
         id: debitNoteData?.client_id || 0,
         queryOptions: {
-            enabled: !!debitNoteData,
+            enabled: !!debitNoteData?.client_id,
         },
     });
 
@@ -42,7 +42,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
         resource: 'agents',
         id: debitNoteData?.agent_id || 0,
         queryOptions: {
-            enabled: !!debitNoteData,
+            enabled: !!debitNoteData?.agent_id,
         },
     });
     const agent = agentData?.data;
@@ -55,7 +55,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
         resource: 'terms',
         id: debitNoteData?.term_id || 0,
         queryOptions: {
-            enabled: !!debitNoteData,
+            enabled: !!debitNoteData?.term_id,
         },
     });
     const term = termData?.data;

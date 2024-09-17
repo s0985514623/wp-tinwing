@@ -16,15 +16,24 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
     //當前表單的props
     const { formProps, saveButtonProps, queryResult } = useForm();
     const receiptData = queryResult?.data?.data as DataType;
-    //debitNote 資料
+		//判斷是否從renewal取得資料
+		const isFromRenewal = !!receiptData?.created_from_renewal_id;
+		const searchId = isFromRenewal?receiptData?.created_from_renewal_id as number:receiptData?.debit_note_id as number;
+    //debitNote 資料=>根據searchId判斷是從renewal還是debit_notes取得資料
     const { data: debitNoteData, isLoading: debitNoteIsLoading } = useOne<TDebitNote>({
-        resource: 'debit_notes',
-        id: receiptData?.debit_note_id || 0,
+        resource: isFromRenewal?'renewals':'debit_notes',
+        id: searchId,
+				queryOptions:{
+					enabled: !!searchId,
+				}
     });
     //insurer 資料
     const { data: insurersData } = useOne<TInsurer>({
         resource: 'insurers',
         id: debitNoteData?.data?.insurer_id || 0,
+				queryOptions: {
+						enabled: !!debitNoteData?.data?.insurer_id,
+				},
     });
     //client 資料
     const { data: clientResult, isLoading: clientIsLoading } = useOne<TClient>({
@@ -53,11 +62,18 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
         <Edit saveButtonProps={saveButtonProps}>
             <Form {...formProps} layout="vertical">
                 <div className="table table_td-flex-1 w-full">
-                    <div className="tr">
+                    <div className={`tr ${isFromRenewal?'tw-hidden':''}`}>
                         <div className="th">Connected Debit Note</div>
                         <div className="td">
                             <Form.Item noStyle hidden name={['debit_note_id']}></Form.Item>
                             {debitNoteNo || debit_note_id}
+                        </div>
+                    </div>
+										<div className={`tr ${isFromRenewal?'':'tw-hidden'}`}>
+                        <div className="th">Connected Renewal</div>
+                        <div className="td">
+                            <Form.Item noStyle hidden name={['created_from_renewal_id']}></Form.Item>
+                            {debitNoteNo || searchId}
                         </div>
                     </div>
                 </div>
@@ -100,6 +116,21 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                         </Col>
                         <Col span={12}>
                             <div className="table table_td-flex-1 w-full">
+														<div className="tr mt-4">
+                                    <div className="th">Invoice No:</div>
+                                    <div className="td">
+                                        <Form.Item noStyle name={['invoice_no']} initialValue={receiptData?.invoice_no}>
+                                            <Input className="w-full" size="small"/>
+                                        </Form.Item>
+                                    </div>
+                                </div><div className="tr mt-4">
+                                    <div className="th">Cheque No:</div>
+                                    <div className="td">
+                                        <Form.Item noStyle name={['cheque_no']} initialValue={receiptData?.cheque_no}>
+																				<Input className="w-full" size="small"/>
+                                        </Form.Item>
+                                    </div>
+                                </div>
                                 <div className="tr mt-4">
                                     <div className="th">Remark:</div>
                                     <div className="td">

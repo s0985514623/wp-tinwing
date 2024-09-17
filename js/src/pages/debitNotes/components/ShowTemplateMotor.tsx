@@ -32,7 +32,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
         resource: 'insurers',
         id: debitNoteData?.insurer_id || 0,
         queryOptions: {
-            enabled: !!debitNoteData,
+            enabled: !!debitNoteData?.insurer_id,
         },
     });
     const insurer = insurerData?.data;

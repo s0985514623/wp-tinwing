@@ -28,7 +28,7 @@ abstract class Base {
 			if (!\is_array($array)) {
 				continue;
 			}
-			if (!isset($array['value'])||empty($array['value'])) {
+			if (!isset($array['value'])) {
 				unset($meta_query[ $key ]);
 			}
 		}

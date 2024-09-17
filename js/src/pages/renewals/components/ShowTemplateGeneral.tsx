@@ -12,7 +12,7 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
         resource: 'insurers',
         id: debitNoteData?.insurer_id || 0,
         queryOptions: {
-            enabled: !!debitNoteData,
+            enabled: !!debitNoteData?.insurer_id,
         },
     });
     const insurer = insurerData?.data;

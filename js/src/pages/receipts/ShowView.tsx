@@ -38,7 +38,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
         resource: 'clients',
         id: debitNote?.client_id || 0,
         queryOptions: {
-            enabled: !!debitNote,
+            enabled: !!debitNote?.client_id,
         },
     });
     const client = clientData?.data || defaultClient;

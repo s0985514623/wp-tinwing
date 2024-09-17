@@ -1,24 +1,41 @@
 import { useState } from 'react'
 import { useMany, CrudFilters, useExport, useLink } from '@refinedev/core'
-import { List, useTable, EditButton, ExportButton } from '@refinedev/antd'
-import { Space, Table } from 'antd'
+import {
+  List,
+  useTable,
+  EditButton,
+  ExportButton,
+  useModal,
+} from '@refinedev/antd'
+import { Space, Table, Button, Modal } from 'antd'
 import { DataType, ZDataType } from 'pages/receipts/types'
 import { DataType as TInsurer } from 'pages/insurers/types'
-import { safeParse, getTotalPremiumByDebitNote, getInsurerPayment } from 'utils'
+import { DataType as TRenewal } from 'pages/renewals/types'
+import {
+  safeParse,
+  getTotalPremiumByDebitNote,
+  getInsurerPayment,
+  getSortProps,
+} from 'utils'
 import dayjs, { Dayjs } from 'dayjs'
 import { DataType as TDebitNote } from 'pages/debitNotes/types'
 import Filter from '../../dashboard/Filter'
 import { CheckCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useColumnSearch } from 'hooks'
+import { useRowSelection } from 'antd-toolkit'
+import { ModalEdit } from './ModalEdit'
 
 export const ListView: React.FC = () => {
-  const navigate = useNavigate() // 獲取導航函數
+  const { show, close, modalProps } = useModal()
+  const { getColumnSearchProps } = useColumnSearch<DataType>()
   const Link = useLink()
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
     dayjs().add(-30, 'd'),
     dayjs(),
   ])
+  const { selectedRowKeys, rowSelection } = useRowSelection<DataType>()
 
+  // Receipt 資料
   const { tableProps, searchFormProps } = useTable<DataType>({
     sorters: {
       initial: [
@@ -30,16 +47,6 @@ export const ListView: React.FC = () => {
     },
     filters: {
       initial: [
-        // {
-        //     field: 'date',
-        //     operator: 'gt',
-        //     value: dateRange ? dateRange[0]?.unix() : undefined,
-        // },
-        // {
-        //     field: 'date',
-        //     operator: 'lt',
-        //     value: dateRange ? dateRange[1]?.unix() : undefined,
-        // },
         {
           field: 'date[0]',
           operator: 'eq',
@@ -50,20 +57,25 @@ export const ListView: React.FC = () => {
           operator: 'eq',
           value: dateRange ? dateRange[1]?.unix() : undefined,
         },
+        {
+          field: 'meta_query[0][key]',
+          operator: 'eq',
+          value: 'is_paid',
+        },
+        {
+          field: 'meta_query[0][value]',
+          operator: 'eq',
+          value: 0,
+        },
+        {
+          field: 'meta_query[0][compare]',
+          operator: 'eq',
+          value: '=',
+        },
       ],
     },
     onSearch: (values: any) => {
       const filters = [
-        // {
-        //     field: 'date',
-        //     operator: 'gt',
-        //     value: values?.dateRange ? dayjs(values?.dateRange[0]?.startOf('day')).unix() : undefined,
-        // },
-        // {
-        //     field: 'date',
-        //     operator: 'lt',
-        //     value: values?.dateRange ? dayjs(values?.dateRange[1]?.startOf('day')).unix() : undefined,
-        // },
         {
           field: 'date[0]',
           operator: 'eq',
@@ -78,17 +90,32 @@ export const ListView: React.FC = () => {
             ? dayjs(values?.dateRange[1])?.unix()
             : undefined,
         },
+        {
+          field: 'meta_query[0][key]',
+          operator: 'eq',
+          value: 'is_paid',
+        },
+        {
+          field: 'meta_query[0][value]',
+          operator: 'eq',
+          value: values?.is_paid === '' ? undefined : values?.is_paid,
+        },
+        {
+          field: 'meta_query[0][compare]',
+          operator: 'eq',
+          value: '=',
+        },
       ]
-      console.log('🚀 ~ filters:', filters)
+      // console.log('🚀 ~ filters:', filters)
       return filters as CrudFilters
     },
   })
-
   const parsedTableProps = safeParse<DataType>({
     tableProps,
     ZDataType: ZDataType,
   })
-
+	//TODO useMany 未來要改掉變成其他方式,這樣跟get all 一樣
+  // DebitNote 資料
   const { data: debitNoteData } = useMany<TDebitNote>({
     resource: 'debit_notes',
     ids:
@@ -99,18 +126,32 @@ export const ListView: React.FC = () => {
       enabled: !!parsedTableProps?.dataSource,
     },
   })
+  const debitNotes = debitNoteData?.data || []
 
-  // console.log('🚀 ~ debitNoteData:', debitNoteData);
-  const { data: insurersData } = useMany<TInsurer>({
-    resource: 'insurers',
+  // Renewal 資料
+  const { data: renewalsData } = useMany<TRenewal>({
+    resource: 'renewals',
     ids:
-      debitNoteData?.data?.map((theRecord) => theRecord?.insurer_id || '0') ??
-      [],
+      parsedTableProps?.dataSource?.map(
+        (theRecord) => theRecord?.created_from_renewal_id || '0',
+      ) ?? [],
     queryOptions: {
       enabled: !!parsedTableProps?.dataSource,
     },
   })
-  const debitNotes = debitNoteData?.data || []
+  const renewals = renewalsData?.data || []
+
+  //取得所有的insurer_id
+  const getInsurersIds = [...debitNotes, ...renewals]
+  // Insurer 資料
+  const { data: insurersData } = useMany<TInsurer>({
+    resource: 'insurers',
+    ids: getInsurersIds?.map((theRecord) => theRecord?.insurer_id || '0') ?? [],
+    queryOptions: {
+      enabled: !!parsedTableProps?.dataSource,
+    },
+  })
+  const insurers = insurersData?.data || []
 
   //如果没有数据，就禁用导出按钮
   const disabledBtn = parsedTableProps.dataSource?.length == 0 ? true : false
@@ -118,16 +159,6 @@ export const ListView: React.FC = () => {
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
     filters: dateRange
       ? [
-          // {
-          //     field: 'date',
-          //     operator: 'gt',
-          //     value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
-          // },
-          // {
-          //     field: 'date',
-          //     operator: 'lt',
-          //     value: dateRange ? dateRange[1].startOf('day').unix() : undefined,
-          // },
           {
             field: 'date[0]',
             operator: 'eq',
@@ -147,7 +178,7 @@ export const ListView: React.FC = () => {
           ?.receipt_no ?? item.id
       const noteDate = dayjs.unix(item?.date as number).format('YYYY-MM-DD')
       const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
-      const insurerData = insurersData?.data?.find(
+      const insurerData = insurers?.find(
         (insurer) => insurer.id === debitNote?.insurer_id,
       )
       const insurerName = debitNote ? insurerData?.name : ''
@@ -182,141 +213,258 @@ export const ListView: React.FC = () => {
       }
     },
   })
-  return (
-    <List
-      headerButtons={
-        <>
-          <Filter
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-            formProps={searchFormProps}
-          />
 
-          <ExportButton
-            onClick={triggerExport}
-            loading={exportLoading}
-            disabled={disabledBtn}
-          />
-        </>
+	// 計算已選單的 Payment to Insurer 總金額
+  const selectedInsurers = selectedRowKeys.map((id) => {
+    const receipt = parsedTableProps?.dataSource?.find((r) => r.id === id)
+    const debitNote = debitNotes.find((dn) => dn.id === receipt?.debit_note_id)
+    const renewal = renewals.find(
+      (r) => r.id === receipt?.created_from_renewal_id,
+    )
+    const insurerData = insurers?.find((insurer) => {
+      if (renewal) {
+        return insurer.id === renewal.insurer_id
+      } else {
+        return insurer.id === debitNote?.insurer_id
       }
-    >
-      <Table {...parsedTableProps} rowKey="id" size="middle">
-        <Table.Column
-          width={120}
-          dataIndex="id"
-          title="Note No."
-          render={(renderId: number) => {
-            //取得receipt_no, 如果沒有則顯示id
-            const receipt_no = parsedTableProps?.dataSource?.find(
-              (r) => r.id === renderId,
-            )?.receipt_no
-            return (
-              <Link to={`/receipts/show/${renderId}`}>
-                {receipt_no ?? renderId}
-              </Link>
-            )
-          }}
-        />
+    })
+    const paymentToInsurer = insurerData
+      ? getInsurerPayment(
+          receipt as DataType,
+          renewal ?? (debitNote as TDebitNote),
+          insurerData as TInsurer,
+        )
+      : 0
 
-        <Table.Column
-          width={120}
-          dataIndex="date"
-          title="Note Date"
-          render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
-        />
-        <Table.Column
-          width={120}
-          dataIndex="debit_note_id"
-          title="Insurer"
-          render={(debit_note_id: number) => {
-            const debitNote = debitNotes.find((dn) => dn.id === debit_note_id)
-            const insurerData = insurersData?.data?.find(
-              (insurer) => insurer.id === debitNote?.insurer_id,
-            )
-            return debitNote ? <>{insurerData?.name}</> : ''
-          }}
-        />
-        <Table.Column
-          width={120}
-          dataIndex="id"
-          title="Premium"
-          render={(id: number) => {
-            const receipt = parsedTableProps?.dataSource?.find(
-              (r) => r.id === id,
-            )
-            const premium =
-              receipt?.premium ??
-              getTotalPremiumByDebitNote(
-                (
-                  debitNotes?.filter(
-                    (debitNote) => debitNote?.id === receipt?.debit_note_id,
-                  ) as TDebitNote[]
-                )[0] ?? {},
+    return paymentToInsurer
+  })
+  console.log('🚀 ~ selectedInsurers ~ selectedInsurers:', selectedInsurers)
+  return (
+    <>
+      <ModalEdit
+        modalProps={modalProps}
+        selectedRowKeys={selectedRowKeys}
+        close={close}
+				paymentToInsurer={selectedInsurers}
+      />
+      <List
+        headerButtons={
+          <>
+            <Button
+              size="small"
+              type="primary"
+              onClick={show}
+              disabled={selectedRowKeys.length == 0}
+            >
+              Quick Edits
+            </Button>
+            <Filter
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+              formProps={searchFormProps}
+            />
+            <Button
+              size="small"
+              type="primary"
+              onClick={() => searchFormProps.onFinish?.({ is_paid: 1 })}
+            >
+              Paid
+            </Button>
+            <Button
+              size="small"
+              type="primary"
+              onClick={() => searchFormProps.onFinish?.({ is_paid: 0 })}
+            >
+              Unpaid
+            </Button>
+            <Button
+              size="small"
+              type="primary"
+              onClick={() => searchFormProps.onFinish?.({ is_paid: undefined })}
+            >
+              Show All
+            </Button>
+            <ExportButton
+              onClick={triggerExport}
+              loading={exportLoading}
+              disabled={disabledBtn}
+            />
+          </>
+        }
+      >
+        <Table
+          {...parsedTableProps}
+          rowKey="id"
+          size="middle"
+          rowSelection={rowSelection}
+        >
+          <Table.Column
+            width={120}
+            dataIndex="receipt_no"
+            title="Note No."
+            {...getColumnSearchProps({
+              dataIndex: 'receipt_no',
+            })}
+            {...getSortProps<DataType>('receipt_no')}
+            // 複寫render方法
+            render={(renderReceiptNo: number, record: DataType) => {
+              //取得receipt_no, 如果沒有則顯示id
+              const receipt_no = parsedTableProps?.dataSource?.find(
+                (r) => r.id === record?.id,
+              )?.receipt_no
+              return (
+                <Link to={`/receipts/show/${record?.id}`}>
+                  {receipt_no ?? record?.id}
+                </Link>
               )
-            return Number(premium).toLocaleString()
-          }}
-        />
-        <Table.Column
-          width={120}
-          dataIndex="id"
-          title="Payment to Insurer"
-          render={(id: number, record: DataType) => {
-            const debitNote = debitNotes.find(
-              (dn) => dn.id === record.debit_note_id,
-            )
-            const insurer = insurersData?.data?.find(
-              (ins) => ins.id === debitNote?.insurer_id,
-            )
-            const premium = debitNote
-              ? getInsurerPayment(
-                  record,
-                  debitNote as TDebitNote,
-                  insurer as TInsurer,
+            }}
+          />
+
+          <Table.Column
+            width={120}
+            dataIndex="date"
+            title="Note Date"
+            render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
+          />
+          <Table.Column
+            width={120}
+            dataIndex="id"
+            title="Insurer"
+            render={(id: number, record: DataType) => {
+              const renewal = renewals.find(
+                (r) => r.id === record.created_from_renewal_id,
+              )
+              const debitNote = debitNotes.find(
+                (dn) => dn.id === record.debit_note_id,
+              )
+              const haveData = Boolean(renewal) || Boolean(debitNote)
+              const insurerData = insurers?.find((insurer) => {
+                if (renewal) {
+                  return insurer.id === renewal.insurer_id
+                } else {
+                  return insurer.id === debitNote?.insurer_id
+                }
+              })
+              return haveData ? <>{insurerData?.name}</> : ''
+            }}
+            filters={insurers.map((insurer) => ({
+              text: insurer?.name,
+              value: insurer?.id,
+            }))}
+            onFilter={(value, record) => {
+              // value = insurer.id
+              const isFromRenewal = Boolean(record.created_from_renewal_id)
+              const isFromDebitNote = Boolean(record.debit_note_id)
+              // 如果兩個都沒有值，就不顯示
+              if (!isFromRenewal && !isFromRenewal) return false
+              // 如果是從renewal來的，就比對renewal的insurer_id
+              if (isFromRenewal) {
+                const renewal = renewals.find(
+                  (r) => r.id === record.created_from_renewal_id,
                 )
-              : 0
-            return Number(premium).toLocaleString()
-          }}
-        />
-        <Table.Column
-          width={120}
-          dataIndex="is_paid"
-          title="Paid"
-          render={(is_paid: boolean) => {
-            return is_paid ? (
-              <CheckCircleTwoTone twoToneColor="#52c41a" />
-            ) : (
-              <CloseCircleTwoTone twoToneColor="red" />
-            )
-          }}
-        />
-        <Table.Column
-          width={120}
-          dataIndex="payment_receiver_account"
-          title="Bank"
-        />
-        <Table.Column width={120} dataIndex="remark" title="Remark" />
-        <Table.Column
-          width={120}
-          dataIndex="id"
-          title=""
-          render={(id) => {
-            return (
-              <>
-                <Space>
-                  <EditButton
-                    type="primary"
-                    hideText
-                    shape="circle"
-                    size="small"
-                    recordItemId={id}
-										resource='receipts_record'
-                  />
-                </Space>
-              </>
-            )
-          }}
-        />
-      </Table>
-    </List>
+                return renewal?.insurer_id === value
+              }
+              // 如果是從debitNote來的，就比對debitNote的insurer_id
+              if (isFromDebitNote) {
+                const debitNote = debitNotes.find(
+                  (dn) => dn.id === record?.debit_note_id,
+                )
+                return debitNote?.insurer_id === value
+              }
+              return false
+            }}
+          />
+          <Table.Column
+            width={120}
+            dataIndex="id"
+            title="Premium"
+            render={(id: number) => {
+              const receipt = parsedTableProps?.dataSource?.find(
+                (r) => r.id === id,
+              )
+              const premium =
+                receipt?.premium ??
+                getTotalPremiumByDebitNote(
+                  (
+                    debitNotes?.filter(
+                      (debitNote) => debitNote?.id === receipt?.debit_note_id,
+                    ) as TDebitNote[]
+                  )[0] ?? {},
+                )
+              return Number(premium).toLocaleString()
+            }}
+          />
+          <Table.Column
+            width={120}
+            dataIndex="id"
+            title="Payment to Insurer"
+            render={(id: number, record: DataType) => {
+              const debitNote = debitNotes.find(
+                (dn) => dn.id === record.debit_note_id,
+              )
+              const renewal = renewals.find(
+                (r) => r.id === record.created_from_renewal_id,
+              )
+              const insurer = insurersData?.data?.find((insurer) => {
+                if (renewal) {
+                  return insurer.id === renewal.insurer_id
+                } else {
+                  return insurer.id === debitNote?.insurer_id
+                }
+              })
+              const premium = insurer
+                ? getInsurerPayment(
+                    record,
+                    renewal ?? (debitNote as TDebitNote),
+                    insurer as TInsurer,
+                  )
+                : 0
+              return Number(premium).toLocaleString()
+            }}
+          />
+          <Table.Column width={120} dataIndex="invoice_no" title="Invoice No" />
+          <Table.Column
+            width={120}
+            dataIndex="is_paid"
+            title="Paid"
+            render={(is_paid: boolean) => {
+              return is_paid ? (
+                <CheckCircleTwoTone twoToneColor="#52c41a" />
+              ) : (
+                <CloseCircleTwoTone twoToneColor="red" />
+              )
+            }}
+          />
+          <Table.Column
+            width={120}
+            dataIndex="payment_receiver_account"
+            title="Bank"
+          />
+          <Table.Column width={120} dataIndex="cheque_no" title="Cheque No" />
+          <Table.Column width={120} dataIndex="remark" title="Remark" />
+          <Table.Column
+            width={120}
+            dataIndex="id"
+            title=""
+            render={(id) => {
+              return (
+                <>
+                  <Space>
+                    <EditButton
+                      type="primary"
+                      hideText
+                      shape="circle"
+                      size="small"
+                      recordItemId={id}
+                      resource="receipts_record"
+                    />
+                  </Space>
+                </>
+              )
+            }}
+          />
+        </Table>
+      </List>
+    </>
   )
 }

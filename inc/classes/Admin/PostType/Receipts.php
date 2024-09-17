@@ -91,6 +91,12 @@ final class Receipts {
 			'meta_type'         => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
 		],
+		'invoice_no' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
 	];
 	/**
 	 * 建構子
