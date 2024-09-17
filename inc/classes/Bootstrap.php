@@ -72,14 +72,14 @@ final class Bootstrap {
 
 		Vite\enqueue_asset(
 			Plugin::$dir . '/js/dist',
-			'js/src/index.tsx',
+			'js/src/main.tsx',
 			[
 				'handle'    => Plugin::$kebab,
 				'in-footer' => true,
 			]
 		);
 
-		$post_id   = \get_the_ID();
+		$post_id = \get_the_ID();
 
 		$permalink = $post_id ? \get_permalink( $post_id ) : '';
 
