@@ -16,7 +16,7 @@ export default {
     // liveReload(__dirname + '/**/*.php'), // Optional, if you want to reload page on php changed
 
     v4wp({
-      input: 'js/src/main.tsx', // Optional, defaults to 'src/main.js'.
+      input: 'js/src/index.tsx', // Optional, defaults to 'src/main.js'.
       outDir: 'js/dist', // Optional, defaults to 'dist'.
     }),
   ],
