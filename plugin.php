@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Wp Tinwing
  * Plugin URI:        wp-tinwing
- * Description:       WP版本-天威保險系統
+ * Description:       WP版本-天永保險系統
  * Version:           1.0.6
  * Requires at least: 5.7
  * Requires PHP:      8.0
