@@ -420,7 +420,7 @@ export const ListView: React.FC = () => {
               <>
                 <Space>
                   <ShowButton
-                    resource="debit_notes"
+                    resource="credit_notes"
                     type="primary"
                     hideText
                     shape="circle"
@@ -428,7 +428,7 @@ export const ListView: React.FC = () => {
                     recordItemId={id}
                   />
                   <EditButton
-                    resource="debit_notes"
+                    resource="credit_notes"
                     type="primary"
                     hideText
                     shape="circle"
@@ -436,7 +436,7 @@ export const ListView: React.FC = () => {
                     recordItemId={id}
                   />
                   <DeleteButton
-                    resource="debit_notes"
+                    resource="credit_notes"
                     type="primary"
                     danger
                     hideText
