@@ -50,26 +50,27 @@ export const ListView: React.FC = () => {
           operator: 'eq',
           value: 'AND',
         },
-				{
-					field: 'meta_query[0][key]',
-					operator: 'eq',
-					value: 'is_archived',
-				},
-				{
-					field: 'meta_query[0][value]',
-					operator: 'eq',
-					value: 0,
-				},
-				{
-					field: 'meta_query[0][type]',
-					operator: 'eq',
-					value: 'NUMERIC',
-				},
-				{
-					field: 'meta_query[0][compare]',
-					operator: 'eq',
-					value: '=',
-				},
+				// 不搜尋is_archived欄位
+				// {
+				// 	field: 'meta_query[0][key]',
+				// 	operator: 'eq',
+				// 	value: 'is_archived',
+				// },
+				// {
+				// 	field: 'meta_query[0][value]',
+				// 	operator: 'eq',
+				// 	value: 0,
+				// },
+				// {
+				// 	field: 'meta_query[0][type]',
+				// 	operator: 'eq',
+				// 	value: 'NUMERIC',
+				// },
+				// {
+				// 	field: 'meta_query[0][compare]',
+				// 	operator: 'eq',
+				// 	value: '=',
+				// },
         {
           field: 'meta_query[1][key]',
           operator: 'eq',
@@ -90,26 +91,6 @@ export const ListView: React.FC = () => {
           operator: 'eq',
           value: 'NUMERIC',
         },
-				{
-					field: 'meta_query[2][key]',
-					operator: 'eq',
-					value: 'is_archived',
-				},
-				{
-					field: 'meta_query[2][value]',
-					operator: 'eq',
-					value: 0,
-				},
-				{
-					field: 'meta_query[2][type]',
-					operator: 'eq',
-					value: 'NUMERIC',
-				},
-				{
-					field: 'meta_query[2][compare]',
-					operator: 'eq',
-					value: '=',
-				},
       ] as CrudFilters,
     },
     onSearch: (values: any) => {
@@ -156,26 +137,27 @@ export const ListView: React.FC = () => {
           operator: 'eq',
           value: '=',
         },
-				{
-					field: 'meta_query[2][key]',
-					operator: 'eq',
-					value: 'is_archived',
-				},
-				{
-					field: 'meta_query[2][value]',
-					operator: 'eq',
-					value: values?.is_archived.toLowerCase() === "true"? 1 : 0,
-				},
-				{
-					field: 'meta_query[2][type]',
-					operator: 'eq',
-					value: 'NUMERIC',
-				},
-				{
-					field: 'meta_query[2][compare]',
-					operator: 'eq',
-					value: '=',
-				},
+				// 不搜尋is_archived欄位
+				// {
+				// 	field: 'meta_query[2][key]',
+				// 	operator: 'eq',
+				// 	value: 'is_archived',
+				// },
+				// {
+				// 	field: 'meta_query[2][value]',
+				// 	operator: 'eq',
+				// 	value: values?.is_archived.toLowerCase() === "true"? 1 : 0,
+				// },
+				// {
+				// 	field: 'meta_query[2][type]',
+				// 	operator: 'eq',
+				// 	value: 'NUMERIC',
+				// },
+				// {
+				// 	field: 'meta_query[2][compare]',
+				// 	operator: 'eq',
+				// 	value: '=',
+				// },
       ]
       return filters as CrudFilters
     },
