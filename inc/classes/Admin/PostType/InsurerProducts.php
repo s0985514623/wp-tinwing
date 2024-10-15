@@ -44,7 +44,7 @@ final class InsurerProducts {
 			'meta_type'         => 'string',
 			'sanitize_callback' => 'sanitize_textarea_field',
 		],
-		'insurer_d' =>[
+		'insurer_id' =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'number',
 			'meta_type'         => 'integer',
