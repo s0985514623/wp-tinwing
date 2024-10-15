@@ -121,7 +121,7 @@ final class Quotations {
 					'id'         => get_the_ID(),
 					'created_at' => strtotime(get_the_date('Y-m-d')),
 					'date'       => strtotime(get_the_date('Y-m-d')),
-					'note_no'    => get_the_title(),
+					'note_no'    => html_entity_decode(get_the_title()),
 				];
 				// 取得最後一個索引 (即剛剛推入的那個項目)
 				$last_index = count($posts_data) - 1;
@@ -239,7 +239,7 @@ final class Quotations {
 					'id'         => get_the_ID(),
 					'created_at' => strtotime(get_the_date('Y-m-d')),
 					'date'       => strtotime(get_the_date('Y-m-d')),
-					'note_no'    => get_the_title(),
+					'note_no'    => html_entity_decode(get_the_title()),
 				];
 				// 整理 meta 資料
 				foreach (PostType\Quotations::instance()->get_meta() as $key => $value) {

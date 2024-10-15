@@ -127,7 +127,7 @@ final class Clients {
 				$posts_data[] = [
 					'id'            => get_the_ID(),
 					'created_at'    => strtotime(get_the_date('Y-m-d')),
-					'client_number' => get_the_title(),
+					'client_number' => html_entity_decode(get_the_title()),
 				];
 				// 取得最後一個索引 (即剛剛推入的那個項目)
 				$last_index = count($posts_data) - 1;
@@ -198,7 +198,7 @@ final class Clients {
 		$params     = $request->get_json_params() ?? [];
 		$params     = WP::sanitize_text_field_deep( $params, false );
 		$post_id    = $request->get_param('id');
-		$post_title = isset($params['client_number'])?$params['client_number']:\get_the_title($post_id);
+		$post_title = isset($params['client_number'])?$params['client_number']:html_entity_decode(\get_the_title($post_id));
 		// 更新文章
 		$post_id = wp_update_post(
 			[
@@ -244,7 +244,7 @@ final class Clients {
 				$response_data = [
 					'id'            => get_the_ID(),
 					'created_at'    => strtotime(get_the_date('Y-m-d')),
-					'client_number' => get_the_title(),
+					'client_number' => html_entity_decode(get_the_title()),
 				];
 				// 整理 meta 資料
 				foreach (PostType\Clients::instance()->get_meta() as $key => $value) {

@@ -124,7 +124,7 @@ final class Expenses {
 				$posts_data[] = [
 					'id'            => get_the_ID(),
 					'created_at'    => strtotime(get_the_date('Y-m-d')),
-					'remark' => get_the_title(),
+					'remark' => html_entity_decode(get_the_title()),
 				];
 				// 取得最後一個索引 (即剛剛推入的那個項目)
 				$last_index = count($posts_data) - 1;
@@ -241,7 +241,7 @@ final class Expenses {
 				$response_data = [
 					'id'            => get_the_ID(),
 					'created_at'    => strtotime(get_the_date('Y-m-d')),
-					'remark' => get_the_title(),
+					'remark' => html_entity_decode(get_the_title()),
 				];
 				// 整理 meta 資料
 				foreach (PostType\Expenses::instance()->get_meta() as $key => $value) {

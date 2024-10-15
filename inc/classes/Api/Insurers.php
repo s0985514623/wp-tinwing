@@ -121,7 +121,7 @@ final class Insurers {
 				$posts_data[] = [
 					'id'         => get_the_ID(),
 					'created_at' => strtotime(get_the_date('Y-m-d')),
-					'name'       => get_the_title(),
+					'name'       => html_entity_decode(get_the_title()),
 				];
 				// 取得最後一個索引 (即剛剛推入的那個項目)
 				$last_index = count($posts_data) - 1;
@@ -144,6 +144,9 @@ final class Insurers {
 			}
 			wp_reset_postdata();
 		}
+		ob_start();
+		var_dump($posts_data);
+		\J7\WpUtils\Classes\log::info('' . ob_get_clean());
 		$response = new \WP_REST_Response(  $posts_data  );
 
 		// Set pagination in header.
@@ -192,7 +195,7 @@ final class Insurers {
 		$params     = $request->get_json_params() ?? [];
 		$params     = WP::sanitize_text_field_deep( $params, false );
 		$post_id    = $request->get_param('id');
-		$post_title = isset($params['name'])?$params['name']:\get_the_title($post_id);
+		$post_title = isset($params['name'])?$params['name']:html_entity_decode(\get_the_title($post_id));
 		// 更新文章
 		$post_id = wp_update_post(
 			[
@@ -238,7 +241,7 @@ final class Insurers {
 				$response_data = [
 					'id'         => get_the_ID(),
 					'created_at' => strtotime(get_the_date('Y-m-d')),
-					'name'       => get_the_title(),
+					'name'       => html_entity_decode(get_the_title()),
 				];
 				// 整理 meta 資料
 				foreach (PostType\Insurers::instance()->get_meta() as $key => $value) {
