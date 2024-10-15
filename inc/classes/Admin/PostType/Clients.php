@@ -106,7 +106,7 @@ final class Clients {
 		'address_arr' =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'textarea',
-			'meta_type'         => 'string',
+			'meta_type'         => 'object',
 			'sanitize_callback' => 'sanitize_textarea_field',
 		],
 	];
