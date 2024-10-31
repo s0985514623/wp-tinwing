@@ -144,9 +144,6 @@ final class Insurers {
 			}
 			wp_reset_postdata();
 		}
-		ob_start();
-		var_dump($posts_data);
-		\J7\WpUtils\Classes\log::info('' . ob_get_clean());
 		$response = new \WP_REST_Response(  $posts_data  );
 
 		// Set pagination in header.
