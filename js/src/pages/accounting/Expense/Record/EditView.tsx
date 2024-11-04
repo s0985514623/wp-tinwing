@@ -6,12 +6,14 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { DataType } from '../types';
 import { DataType as TTerms } from 'pages/terms/types';
 import dayjs from 'dayjs';
+import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
 
 const { TextArea } = Input;
 export const EditView: React.FC<IResourceComponentsProps> = () => {
     //當前表單的props
     const { formProps, saveButtonProps, queryResult } = useForm();
     const expenseData = queryResult?.data?.data as DataType;
+    console.log("🚀 ~ expenseData:", expenseData)
     //terms 資料
     const { data: termsData, isLoading: termsIsLoading } = useOne<TTerms>({
         resource: 'terms',
@@ -44,6 +46,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
     const category = termsData?.data?.name || '';
     const amount = expenseData?.amount || 0;
     const remark = expenseData?.remark || '';
+		const cheque_no = expenseData?.cheque_no || '';
 
     return (
         <Edit saveButtonProps={saveButtonProps}>
@@ -73,6 +76,15 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                                         </Form.Item>
                                     </div>
                                 </div>
+																<div className="tr">
+                                    <div className="th">Cheque No.</div>
+                                    <div className="td">
+                                        <Form.Item name={['cheque_no']} initialValue={cheque_no}>
+                                            <Input />
+                                        </Form.Item>
+                                    </div>
+                                </div>
+																<ReceiptBankSelect data={expenseData} className='table table_td-flex-1 w-full' />
                             </div>
                         </Col>
                         <Col span={12}>

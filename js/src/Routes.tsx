@@ -220,6 +220,17 @@ const AppRoutes = () => {
           <Route index element={<ExpenseSummaryList />} />
           <Route path="show/:year/:month" element={<ExpenseSummaryShow />} />
         </Route>
+				<Route path="/terms/expense_class">
+          <Route index element={<TermList taxonomy="expense_class" />} />
+          <Route
+            path="create"
+            element={<TermCreate taxonomy="expense_class" />}
+          />
+          <Route
+            path="edit/:id"
+            element={<TermEdit taxonomy="expense_class" />}
+          />
+        </Route>
       </Route>
       <Route
         element={

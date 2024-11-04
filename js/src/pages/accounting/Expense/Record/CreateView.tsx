@@ -4,6 +4,7 @@ import { Create, useForm, useSelect } from '@refinedev/antd'
 import { Form, Row, Col, Input, Select, DatePicker } from 'antd'
 import { DataType as TTerms } from 'pages/terms/types'
 import dayjs from 'dayjs'
+import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
 
 const { TextArea } = Input
 export const CreateView: React.FC<IResourceComponentsProps> = () => {
@@ -20,24 +21,24 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
       //   operator: 'eq',
       //   value: 'expense_class',
       // },
-			{
-				field: 'meta_query[0][key]',
-				operator: 'eq',
-				value: 'taxonomy',
-			},
-			{
-				field: 'meta_query[0][value]',
-				operator: 'eq',
-				value: 'expense_class',
-			},
-			{
-				field: 'meta_query[0][compare]',
-				operator: 'eq',
-				value: '=',
-			},
+      {
+        field: 'meta_query[0][key]',
+        operator: 'eq',
+        value: 'taxonomy',
+      },
+      {
+        field: 'meta_query[0][value]',
+        operator: 'eq',
+        value: 'expense_class',
+      },
+      {
+        field: 'meta_query[0][compare]',
+        operator: 'eq',
+        value: '=',
+      },
     ],
   })
-  console.log('🚀 ~ selectProps:', termsProps)
+  // console.log('🚀 ~ selectProps:', termsProps)
   //重新定義onFinish函數
   const newOnFinish = (values: any) => {
     formProps?.onFinish?.({
@@ -75,6 +76,15 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                   </Form.Item>
                 </div>
               </div>
+              <div className="tr">
+                <div className="th">Cheque No.</div>
+                <div className="td">
+                  <Form.Item name={['cheque_no']}>
+                    <Input />
+                  </Form.Item>
+                </div>
+              </div>
+              <ReceiptBankSelect className='table table_td-flex-1 w-full' />
             </div>
           </Col>
           <Col span={12}>

@@ -81,4 +81,15 @@ export const accounting = [
             label: 'Summary',
         },
     },
+    {
+        name: 'terms',
+        identifier: 'terms_expense_class',
+				list: '/terms/expense_class',
+        create: '/terms/expense_class/create',
+        edit: '/terms/expense_class/edit/:id',
+        meta: {
+            parent: 'expensesDropdown',
+            label: 'Category',
+        },
+    },
 ];

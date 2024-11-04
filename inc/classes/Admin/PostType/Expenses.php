@@ -37,11 +37,18 @@ final class Expenses {
 			'meta_type'         => 'integer',
 			'sanitize_callback' => 'absint',
 		],
-		'cheque_number' =>[
+		'cheque_no' =>[
 			'display_function'  => 'render_meta_box',
-			'input_type'        => 'number',
-			'meta_type'         => 'integer',
-			'sanitize_callback' => 'absint',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
+		// BANK
+		'payment_receiver_account' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
 		],
 	];
 	/**
