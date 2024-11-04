@@ -28,13 +28,13 @@ import { RemarkTextArea } from 'components/RemarkTextArea'
 import { useNavigate } from 'react-router-dom'
 
 export const ShowView: React.FC<IResourceComponentsProps> = () => {
-	const navigate = useNavigate()
+  const navigate = useNavigate()
   const { mutate: createDebitNote } = useCreate({
     resource: 'debit_notes',
     mutationOptions: {
       onSuccess: (data, variables, context) => {
-				navigate(`/debitNotes/show/${data?.data}`)
-				// console.log('🚀 ~ data:', data);
+        navigate(`/debitNotes/show/${data?.data}`)
+        // console.log('🚀 ~ data:', data);
         // Let's celebrate!
       },
     },
@@ -85,9 +85,9 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       console.log('🚀 ~ error:', error)
     }
   }
-  const handleCreateDebitNote =  () => {
-		// console.log('click handle');
-     createDebitNote({
+  const handleCreateDebitNote = () => {
+    // console.log('click handle');
+    createDebitNote({
       values: debitNoteData,
     })
   }
@@ -98,7 +98,9 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       headerButtons={({ defaultButtons }) => (
         <>
           {defaultButtons}
-          <Button type="primary" onClick={handleCreateDebitNote}>Create Debit Note</Button>
+          <Button type="primary" onClick={handleCreateDebitNote}>
+            Create Debit Note
+          </Button>
         </>
       )}
       footerButtons={({ defaultButtons }) => (
@@ -126,11 +128,11 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
         <div className="table table_td-flex-1 w-full">
           <div className="w-full mb-4 flex justify-between border-b-2 border-solid border-black pb-6 px-4">
             <div className="w-full">
-              <img src={logo} className="print:w-1/3 min-w-[400px]" />
+              <img src={logo} className=" min-w-[400px]" />
             </div>
-            <div className="text-right text-xl font-semibold w-full flex flex-col justify-end">
-              <p>{templateText.zh}</p>
-              <p>{templateText.en}</p>
+            <div className="print:text-3xl text-right text-xl font-semibold w-full flex flex-col justify-end">
+              <span>{templateText.zh}</span>
+              <span>{templateText.en}</span>
             </div>
           </div>
 

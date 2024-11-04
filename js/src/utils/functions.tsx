@@ -64,7 +64,7 @@ export const getPrice = (price: number, className = 'w-28', symbol = 'HKD') => {
 
     return (
         <div className={`flex justify-between ${className}`}>
-            <span>{symbol}</span>
+            <span className='pr-1'>{symbol}</span>
             <span>
                 {thePrice.toLocaleString('en-US', {
                     minimumFractionDigits: 2, // 最少小數點後兩位

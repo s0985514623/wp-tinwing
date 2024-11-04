@@ -140,7 +140,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                             <div className="td text-right">{getPrice(less)}</div>
                         </div>
                         <div className="tr absolute bottom-0 border-t-2 border-solid border-black flex-wrap">
-                            <div className="w-full p-2 font-bold text-xs">請繳付此金額 Please pay this amount</div>
+                            <div className="w-full p-2 font-bold text-xs print:text-lg">請繳付此金額 Please pay this amount</div>
                             <div className="th font-bold">總保險費 TOTAL PREMIUM</div>
                             <div className="td text-right mr-6">{getPrice(totalPremium)}</div>
                         </div>

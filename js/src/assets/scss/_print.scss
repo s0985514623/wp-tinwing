@@ -27,13 +27,18 @@
 		page-break-after: always;
 	}
 
-	.table {
+	.table,.detailFooter {
 		p {
 			margin-bottom: 0px;
 			line-height: 1.5rem;
+			font-size: 1.25rem;
 		}
 		.th {
 			width: 12rem;
+			font-size: 1.25rem;
+		}
+		.td{
+			font-size: 1.25rem;
 		}
 	}
 }
