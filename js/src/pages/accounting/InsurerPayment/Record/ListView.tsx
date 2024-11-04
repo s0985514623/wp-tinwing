@@ -114,7 +114,7 @@ export const ListView: React.FC = () => {
     tableProps,
     ZDataType: ZDataType,
   })
-	//TODO useMany 未來要改掉變成其他方式,這樣跟get all 一樣
+  //TODO useMany 未來要改掉變成其他方式,這樣跟get all 一樣
   // DebitNote 資料
   const { data: debitNoteData } = useMany<TDebitNote>({
     resource: 'debit_notes',
@@ -214,7 +214,7 @@ export const ListView: React.FC = () => {
     },
   })
 
-	// 計算已選單的 Payment to Insurer 總金額
+  // 計算已選單的 Payment to Insurer 總金額
   const selectedInsurers = selectedRowKeys.map((id) => {
     const receipt = parsedTableProps?.dataSource?.find((r) => r.id === id)
     const debitNote = debitNotes.find((dn) => dn.id === receipt?.debit_note_id)
@@ -238,14 +238,14 @@ export const ListView: React.FC = () => {
 
     return paymentToInsurer
   })
-  console.log('🚀 ~ selectedInsurers ~ selectedInsurers:', selectedInsurers)
+  // console.log('🚀 ~ selectedInsurers ~ selectedInsurers:', selectedInsurers)
   return (
     <>
       <ModalEdit
         modalProps={modalProps}
         selectedRowKeys={selectedRowKeys}
         close={close}
-				paymentToInsurer={selectedInsurers}
+        paymentToInsurer={selectedInsurers}
       />
       <List
         headerButtons={
@@ -297,6 +297,24 @@ export const ListView: React.FC = () => {
           rowKey="id"
           size="middle"
           rowSelection={rowSelection}
+          summary={(pageData) => {
+            const paymentToInsurer = selectedInsurers.reduce(
+              (accumulator, currentValue) => accumulator + currentValue,
+              0,
+            )
+            return (
+              <Table.Summary.Row>
+                <Table.Summary.Cell index={0}></Table.Summary.Cell>
+                <Table.Summary.Cell index={1}></Table.Summary.Cell>
+                <Table.Summary.Cell index={2}></Table.Summary.Cell>
+                <Table.Summary.Cell index={3}></Table.Summary.Cell>
+                <Table.Summary.Cell index={4}>總計</Table.Summary.Cell>
+                <Table.Summary.Cell index={5}>
+                  {paymentToInsurer}
+                </Table.Summary.Cell>
+              </Table.Summary.Row>
+            )
+          }}
         >
           <Table.Column
             width={120}
@@ -423,6 +441,20 @@ export const ListView: React.FC = () => {
             }}
           />
           <Table.Column width={120} dataIndex="invoice_no" title="Invoice No" />
+
+          <Table.Column width={120} dataIndex="cheque_no" title="Cheque No" />
+          <Table.Column
+            width={120}
+            dataIndex="payment_receiver_account"
+            title="Bank"
+          />
+          {/* <Table.Column width={120} dataIndex="remark" title="Remark" /> */}
+          <Table.Column
+            width={120}
+            dataIndex="payment_date"
+            title="Payment Date"
+            render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
+          />
           <Table.Column
             width={120}
             dataIndex="is_paid"
@@ -435,14 +467,8 @@ export const ListView: React.FC = () => {
               )
             }}
           />
-          <Table.Column
-            width={120}
-            dataIndex="payment_receiver_account"
-            title="Bank"
-          />
-          <Table.Column width={120} dataIndex="cheque_no" title="Cheque No" />
-          <Table.Column width={120} dataIndex="remark" title="Remark" />
-          <Table.Column
+          {/* 編輯按鈕 */}
+          {/* <Table.Column
             width={120}
             dataIndex="id"
             title=""
@@ -462,7 +488,7 @@ export const ListView: React.FC = () => {
                 </>
               )
             }}
-          />
+          /> */}
         </Table>
       </List>
     </>

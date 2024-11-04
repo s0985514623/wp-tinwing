@@ -1,4 +1,4 @@
-import { Modal, Form, Input, Switch } from 'antd'
+import { Modal, Form, Input, Switch,DatePicker } from 'antd'
 import { useForm } from '@refinedev/antd'
 import { ModalProps } from 'antd/lib/modal'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
@@ -41,6 +41,7 @@ export const ModalEdit: React.FC<ModalEditProps> = ({
       ids: selectedRowKeys,
       ...value,
       is_paid: (value as { is_paid?: boolean })?.is_paid ? 1 : 0,
+			payment_date: (value as { payment_date?: any })?.payment_date?.unix(),
     }
     // 重組資料並送出表單
     formProps?.onFinish?.(formatValues)
@@ -58,7 +59,6 @@ export const ModalEdit: React.FC<ModalEditProps> = ({
             </div>
           </div>
         </div>
-        <ReceiptBankSelect className={className} />
         <div className={className}>
           <div className="tr">
             <div className="th">Cheque Number</div>
@@ -69,6 +69,17 @@ export const ModalEdit: React.FC<ModalEditProps> = ({
             </div>
           </div>
         </div>
+				<div className={className}>
+          <div className="tr">
+            <div className="th">Payment Date</div>
+            <div className="td flex">
+              <Form.Item noStyle name={['payment_date']}>
+							<DatePicker size="small" className="w-full" />
+              </Form.Item>
+            </div>
+          </div>
+        </div>
+				<ReceiptBankSelect className={className} />
         <div className={className}>
           <div className="tr">
             <div className="th">Paid Status</div>
