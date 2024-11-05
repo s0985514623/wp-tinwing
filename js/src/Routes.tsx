@@ -231,6 +231,11 @@ const AppRoutes = () => {
             element={<TermEdit taxonomy="expense_class" />}
           />
         </Route>
+				<Route path="/adjust_balance">
+          <Route index element={<ExpenseRecordList is_adjust_balance />} />
+          <Route path="create" element={<ExpenseRecordCreate is_adjust_balance />} />
+          <Route path="edit/:id" element={<ExpenseRecordEdit is_adjust_balance/>} />
+        </Route>
       </Route>
       <Route
         element={

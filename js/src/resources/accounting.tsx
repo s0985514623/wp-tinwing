@@ -92,4 +92,15 @@ export const accounting = [
             label: 'Category',
         },
     },
+		{
+			name: 'expenses',
+			identifier: 'expenses_adjust_balance',
+			list: '/adjust_balance',
+			create: '/adjust_balance/create',
+			edit: '/adjust_balance/edit/:id',
+			meta: {
+					parent: 'accountingDropdown',
+					label: 'Adjust Balance',
+			},
+	},
 ];

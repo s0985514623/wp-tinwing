@@ -122,16 +122,12 @@ export const ListView: React.FC = () => {
           ]
         : [],
     })
+  //一般expenses 費用
   const { data: expensesData, isLoading: expensesIsLoading } =
     useList<TExpenses>({
       resource: 'expenses',
       filters: dateRange
         ? [
-            {
-              field: 'meta_query[relation]',
-              operator: 'eq',
-              value: 'AND',
-            },
             {
               field: 'meta_query[0][key]',
               operator: 'eq',
@@ -152,8 +148,98 @@ export const ListView: React.FC = () => {
               operator: 'eq',
               value: 'BETWEEN',
             },
+            {
+              field: 'meta_query[1][key]',
+              operator: 'eq',
+              value: 'is_adjust_balance',
+            },
+            {
+              field: 'meta_query[1][value]',
+              operator: 'eq',
+              value: 1,
+            },
+            {
+              field: 'meta_query[1][compare]',
+              operator: 'eq',
+              value: '!=',
+            },
           ]
-        : [],
+        : [
+            {
+              field: 'meta_query[1][key]',
+              operator: 'eq',
+              value: 'is_adjust_balance',
+            },
+            {
+              field: 'meta_query[1][value]',
+              operator: 'eq',
+              value: 1,
+            },
+            {
+              field: 'meta_query[1][compare]',
+              operator: 'eq',
+              value: '!=',
+            },
+          ],
+    })
+  //Adjust balances 費用
+  const { data: adjustBalancesData, isLoading: adjustBalancesIsLoading } =
+    useList<TExpenses>({
+      resource: 'expenses',
+      filters: dateRange
+        ? [
+            {
+              field: 'meta_query[0][key]',
+              operator: 'eq',
+              value: 'date',
+            },
+            {
+              field: 'meta_query[0][value][0]',
+              operator: 'eq',
+              value: dateRange[0]?.unix(),
+            },
+            {
+              field: 'meta_query[0][value][1]',
+              operator: 'eq',
+              value: dateRange[1]?.unix(),
+            },
+            {
+              field: 'meta_query[0][compare]',
+              operator: 'eq',
+              value: 'BETWEEN',
+            },
+
+            {
+              field: 'meta_query[1][key]',
+              operator: 'eq',
+              value: 'is_adjust_balance',
+            },
+            {
+              field: 'meta_query[1][value]',
+              operator: 'eq',
+              value: 1,
+            },
+            {
+              field: 'meta_query[1][compare]',
+              operator: 'eq',
+              value: '=',
+            },
+          ]
+        : [{
+					field: 'meta_query[1][key]',
+					operator: 'eq',
+					value: 'is_adjust_balance',
+				},
+				{
+					field: 'meta_query[1][value]',
+					operator: 'eq',
+					value: 1,
+				},
+				{
+					field: 'meta_query[1][compare]',
+					operator: 'eq',
+					value: '=',
+				},],
     })
   const { data: insurersData, isLoading: insurersIsLoading } =
     useList<TInsurers>({
@@ -164,12 +250,12 @@ export const ListView: React.FC = () => {
   const debitNotesNo = debitNotesData?.total
   const quotationsNo = quotationsData?.total
   const receiptsNo = receiptsData?.total
-	const creditNotesNo = creditNotesData?.total
+  const creditNotesNo = creditNotesData?.total
   const noDisplayData = [
     { noBy: 'No of Quotation', value: quotationsNo },
     { noBy: 'No of Debit Notes', value: debitNotesNo },
     { noBy: 'No of Receipt', value: receiptsNo },
-		{ noBy: 'No of Credit Notes', value: creditNotesNo },
+    { noBy: 'No of Credit Notes', value: creditNotesNo },
   ]
   //4.receipt amount[收入](total premium)
   const formatTotalIncome = useFormatLineGridData({
@@ -191,11 +277,16 @@ export const ListView: React.FC = () => {
     data: expensesData?.data as TExpenses[],
     type: 'totalExpense',
   })
-	// 追加creditNotesData data
-	const formatTotalCreditNotes = useFormatLineGridData({
-		data: creditNotesData?.data as TDebitNote[],
-		type: 'totalCreditNotes',
-	})
+  //6.Adjust balances 在Adjust balances輸入了各項Expense的總和[費用紀錄金額]
+  const formatTotalAdjustBalances = useFormatLineGridData({
+    data: adjustBalancesData?.data as TExpenses[],
+    type: 'totalAdjustBalances',
+  })
+  // 追加creditNotesData data
+  const formatTotalCreditNotes = useFormatLineGridData({
+    data: creditNotesData?.data as TDebitNote[],
+    type: 'totalCreditNotes',
+  })
   //7.Net Income [收入] 扣掉 [要給保險的錢] 扣掉 [費用紀錄金額](就是依照時間篩出來的第6項總和)
   const totalIncome = formatTotalIncome.reduce(
     (acc, item) => acc + item.value,
@@ -205,21 +296,31 @@ export const ListView: React.FC = () => {
     (acc, item) => acc + item.value,
     0,
   )
+  const totalAdjustBalances = formatTotalAdjustBalances.reduce(
+    (acc, item) => acc + item.value,
+    0,
+  )
   const totalInsurerPayment = formatInsurerPayment.reduce(
     (acc, item) => acc + item.value,
     0,
   )
-	const totalCreditNotes = formatTotalCreditNotes.reduce(
-		(acc, item) => acc + item.value,
-		0,
-	)
-  const netIncome = totalIncome - totalExpense - totalInsurerPayment - totalCreditNotes
+  const totalCreditNotes = formatTotalCreditNotes.reduce(
+    (acc, item) => acc + item.value,
+    0,
+  )
+  const netIncome =
+    totalIncome -
+    totalExpense -
+    totalInsurerPayment -
+    totalCreditNotes -
+    totalAdjustBalances
 
   //8.Income by Bank Receipt 有選入帳銀行 按銀行計算
   //將第一位塞入totalExpense , 第二位塞入CreditNotes
   const incomeByBankReceipt = [
     { bank: 'Expenses', income: totalExpense },
-		{ bank: 'Credit Notes', income: totalCreditNotes},
+    { bank: 'Credit Notes', income: totalCreditNotes },
+    { bank: 'Adjust Balances', income: totalAdjustBalances },
     ...(receiptsData?.data.reduce(
       (acc, receipt) => {
         //取得銀行名稱
@@ -250,7 +351,13 @@ export const ListView: React.FC = () => {
   ]
   //結合所有數據並排序
   const allData = _.sortBy(
-    [...formatTotalIncome, ...formatTotalExpense, ...formatInsurerPayment, ...formatTotalCreditNotes],
+    [
+      ...formatTotalIncome,
+      ...formatTotalExpense,
+      ...formatTotalAdjustBalances,
+      ...formatInsurerPayment,
+      ...formatTotalCreditNotes,
+    ],
     ['date', 'value'],
   )
 
@@ -260,6 +367,8 @@ export const ListView: React.FC = () => {
     quotationsIsLoading ||
     receiptsIsLoading ||
     expensesIsLoading ||
+    adjustBalancesIsLoading ||
+    creditNotesIsLoading ||
     insurersIsLoading
   //顯示數據
   const ShowData = () => {

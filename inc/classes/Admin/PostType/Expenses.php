@@ -50,6 +50,13 @@ final class Expenses {
 			'meta_type'         => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
 		],
+		// Is Adjust Balance
+		'is_adjust_balance' =>[
+			'display_function'  => 'render_meta_checkbox',
+			'input_type'        => 'checkbox',
+			'meta_type'         => 'boolean',
+			'sanitize_callback' => 'rest_sanitize_boolean',
+		],
 	];
 	/**
 	 * 建構子

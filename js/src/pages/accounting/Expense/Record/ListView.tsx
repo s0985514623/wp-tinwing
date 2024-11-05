@@ -14,7 +14,9 @@ import { DataType, ZDataType } from '../types'
 import { safeParse } from 'utils'
 import dayjs, { Dayjs } from 'dayjs'
 import Filter from '../../dashboard/Filter'
-export const ListView: React.FC = () => {
+export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
+  is_adjust_balance = false,
+}) => {
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
     dayjs().add(-30, 'd'),
     dayjs(),
@@ -30,17 +32,7 @@ export const ListView: React.FC = () => {
       ],
     },
     filters: {
-      initial: [
-        // {
-        //     field: 'date',
-        //     operator: 'gt',
-        //     value: dateRange ? dateRange[0].unix() : undefined,
-        // },
-        // {
-        //     field: 'date',
-        //     operator: 'lt',
-        //     value: dateRange ? dateRange[1].unix() : undefined,
-        // },
+      permanent: [
         {
           field: 'meta_query[0][key]',
           operator: 'eq',
@@ -61,25 +53,26 @@ export const ListView: React.FC = () => {
           operator: 'eq',
           value: 'BETWEEN',
         },
+        {
+          field: 'meta_query[1][key]',
+          operator: 'eq',
+          value: 'is_adjust_balance',
+        },
+        {
+          field: 'meta_query[1][value]',
+          operator: 'eq',
+          value: 1,
+        },
+        {
+          field: 'meta_query[1][compare]',
+          operator: 'eq',
+          value: is_adjust_balance?'=':'!=',
+        },
       ],
     },
     onSearch: (values: any) => {
       const filters = [
-        // {
-        //   field: 'date',
-        //   operator: 'gt',
-        //   value: values?.dateRange
-        //     ? dayjs(values?.dateRange[0]?.unix())
-        //     : undefined,
-        // },
-        // {
-        //   field: 'date',
-        //   operator: 'lt',
-        //   value: values?.dateRange
-        //     ? dayjs(values?.dateRange[1]?.unix())
-        //     : undefined,
-        // },
-				{
+        {
           field: 'meta_query[0][key]',
           operator: 'eq',
           value: 'date',
@@ -87,21 +80,32 @@ export const ListView: React.FC = () => {
         {
           field: 'meta_query[0][value][0]',
           operator: 'eq',
-          value: values?.dateRange
-					? values?.dateRange[0]?.unix()
-					: undefined,
+          value: values?.dateRange ? values?.dateRange[0]?.unix() : undefined,
         },
         {
           field: 'meta_query[0][value][1]',
           operator: 'eq',
-          value: values?.dateRange
-					? values?.dateRange[1]?.unix()
-					: undefined,
+          value: values?.dateRange ? values?.dateRange[1]?.unix() : undefined,
         },
         {
           field: 'meta_query[0][compare]',
           operator: 'eq',
           value: 'BETWEEN',
+        },
+        {
+          field: 'meta_query[1][key]',
+          operator: 'eq',
+          value: 'is_adjust_balance',
+        },
+        {
+          field: 'meta_query[1][value]',
+          operator: 'eq',
+          value: 1,
+        },
+        {
+          field: 'meta_query[1][compare]',
+          operator: 'eq',
+          value: is_adjust_balance?'=':'!=',
         },
       ]
       return filters as CrudFilters
@@ -120,7 +124,7 @@ export const ListView: React.FC = () => {
         (theRecord) => theRecord?.term_id || '0',
       ) ?? [],
     queryOptions: {
-      enabled: !!parsedTableProps?.dataSource,
+      enabled: !!parsedTableProps?.dataSource && !is_adjust_balance,
     },
   })
   //如果没有数据，就禁用导出按钮
@@ -176,24 +180,36 @@ export const ListView: React.FC = () => {
           title="Date"
           render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
         />
+        {!is_adjust_balance && (
+          <Table.Column
+            width={120}
+            dataIndex="term_id"
+            title="Category"
+            render={(term_id: number) => {
+              const termData = termsData?.data?.find(
+                (term) => term.id === term_id,
+              )
+              return termData?.name
+            }}
+          />
+        )}
 
-        <Table.Column
-          width={120}
-          dataIndex="term_id"
-          title="Category"
-          render={(term_id: number) => {
-            const termData = termsData?.data?.find(
-              (term) => term.id === term_id,
-            )
-            return termData?.name
-          }}
-        />
         <Table.Column
           width={120}
           dataIndex="amount"
           title="Amount"
           render={(amount) => amount.toLocaleString()}
         />
+        {!is_adjust_balance && (
+          <>
+            <Table.Column width={120} dataIndex="cheque_no" title="Cheque No" />
+            <Table.Column
+              width={120}
+              dataIndex="payment_receiver_account"
+              title="Bank"
+            />
+          </>
+        )}
         <Table.Column width={120} dataIndex="remark" title="Remark" />
         <Table.Column
           width={120}

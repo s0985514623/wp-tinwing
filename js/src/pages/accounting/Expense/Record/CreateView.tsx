@@ -1,13 +1,14 @@
 import React from 'react'
-import { IResourceComponentsProps } from '@refinedev/core'
 import { Create, useForm, useSelect } from '@refinedev/antd'
-import { Form, Row, Col, Input, Select, DatePicker } from 'antd'
+import { Form, Row, Col, Input, Select, DatePicker,Switch } from 'antd'
 import { DataType as TTerms } from 'pages/terms/types'
 import dayjs from 'dayjs'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
 
 const { TextArea } = Input
-export const CreateView: React.FC<IResourceComponentsProps> = () => {
+export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
+  is_adjust_balance = false,
+}) => {
   //當前表單的props
   const { formProps, saveButtonProps } = useForm()
   //terms 資料
@@ -37,6 +38,9 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         value: '=',
       },
     ],
+    queryOptions: {
+      enabled: !is_adjust_balance,
+    },
   })
   // console.log('🚀 ~ selectProps:', termsProps)
   //重新定義onFinish函數
@@ -52,6 +56,15 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         <Row gutter={0} className="mt-12">
           <Col span={12}>
             <div className="table table_td-flex-1 w-full">
+              <Form.Item
+                noStyle
+								hidden
+                name={['is_adjust_balance']}
+                initialValue={is_adjust_balance}
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
               <div className="tr">
                 <div className="th">Date</div>
                 <div className="td">
@@ -60,14 +73,16 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                   </Form.Item>
                 </div>
               </div>
-              <div className="tr">
-                <div className="th">Category</div>
-                <div className="td">
-                  <Form.Item noStyle name={['term_id']}>
-                    <Select className="w-1/2" {...termsProps} allowClear />
-                  </Form.Item>
+              {!is_adjust_balance && (
+                <div className="tr">
+                  <div className="th">Category</div>
+                  <div className="td">
+                    <Form.Item noStyle name={['term_id']}>
+                      <Select className="w-1/2" {...termsProps} allowClear />
+                    </Form.Item>
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="tr">
                 <div className="th">Amount</div>
                 <div className="td">
@@ -76,15 +91,19 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                   </Form.Item>
                 </div>
               </div>
-              <div className="tr">
-                <div className="th">Cheque No.</div>
-                <div className="td">
-                  <Form.Item name={['cheque_no']}>
-                    <Input />
-                  </Form.Item>
-                </div>
-              </div>
-              <ReceiptBankSelect className='table table_td-flex-1 w-full' />
+              {!is_adjust_balance && (
+                <>
+                  <div className="tr">
+                    <div className="th">Cheque No.</div>
+                    <div className="td">
+                      <Form.Item name={['cheque_no']}>
+                        <Input />
+                      </Form.Item>
+                    </div>
+                  </div>
+                  <ReceiptBankSelect className="table table_td-flex-1 w-full" />
+                </>
+              )}
             </div>
           </Col>
           <Col span={12}>

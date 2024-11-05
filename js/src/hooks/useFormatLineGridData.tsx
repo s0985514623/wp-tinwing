@@ -49,6 +49,23 @@ export const useFormatLineGridData = ({ data, type, debitNotesData, insurerData 
             return acc;
         }, [] as TLineGridData);
     }
+		if (type === 'totalAdjustBalances') {
+			return (data as TExpenses[])?.reduce((acc, receipt) => {
+					//取得date
+					const date = dayjs.unix(Number(receipt.date))?.format('YYYY-MM-DD');
+					//取得value
+					const premium = receipt?.amount;
+
+					// 尋找是否已經有該category的紀錄
+					const existingDate = acc.find((item) => item.date === date);
+					if (existingDate) {
+							existingDate.value += premium;
+					} else {
+							acc.push({ date, value: premium, category: 'Adjust Balances' });
+					}
+					return acc;
+			}, [] as TLineGridData);
+	}
     if (type === 'insurerPayment') {
         return (data as TReceipts[])?.reduce((acc, receipt) => {
             //取得date

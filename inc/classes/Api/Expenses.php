@@ -101,6 +101,24 @@ final class Expenses {
 			$meta_query         = Base::sanitize_meta_query($params['meta_query']);
 			$args['meta_query'] = $meta_query;
 		}
+
+		// 兼容舊版的查詢條件(當is_adjust_balance不存在時)，如果有 is_adjust_balance 且不等於的條件，則加入查詢條件
+		foreach ($args['meta_query'] as $key => $value) {
+			if (!is_array($value)) {
+				continue;
+			}
+			if ('is_adjust_balance'===$value['key']&&'!=' === $value['compare']) {
+				$args['meta_query'][ $key ] =[
+					'relation' => 'OR',
+					[
+						'key'     => 'is_adjust_balance',
+						'compare' => 'NOT EXISTS',
+					],
+					$value,
+				];
+			}
+		}
+
 		// 如果有date參數，則加入查詢條件
 		if (isset($params['date'])) {
 			$args['date_query'] = [
@@ -122,9 +140,9 @@ final class Expenses {
 				$all_meta = Base::sanitize_post_meta_array($all_meta);
 
 				$posts_data[] = [
-					'id'            => get_the_ID(),
-					'created_at'    => strtotime(get_the_date('Y-m-d')),
-					'remark' => html_entity_decode(get_the_title()),
+					'id'         => get_the_ID(),
+					'created_at' => strtotime(get_the_date('Y-m-d')),
+					'remark'     => html_entity_decode(get_the_title()),
 				];
 				// 取得最後一個索引 (即剛剛推入的那個項目)
 				$last_index = count($posts_data) - 1;
@@ -239,9 +257,9 @@ final class Expenses {
 				$all_meta      = get_post_meta($post_id, '', true);
 				$all_meta      = Base::sanitize_post_meta_array($all_meta);
 				$response_data = [
-					'id'            => get_the_ID(),
-					'created_at'    => strtotime(get_the_date('Y-m-d')),
-					'remark' => html_entity_decode(get_the_title()),
+					'id'         => get_the_ID(),
+					'created_at' => strtotime(get_the_date('Y-m-d')),
+					'remark'     => html_entity_decode(get_the_title()),
 				];
 				// 整理 meta 資料
 				foreach (PostType\Expenses::instance()->get_meta() as $key => $value) {
