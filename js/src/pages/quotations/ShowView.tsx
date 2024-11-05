@@ -61,8 +61,8 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       enabled: !!debitNoteData?.agent_id,
     },
   })
-  console.log('🚀 ~ debitNoteData:', debitNoteData)
-  console.log('debitNoteData?.date', debitNoteData?.date)
+  // console.log('🚀 ~ debitNoteData:', debitNoteData)
+  // console.log('debitNoteData?.date', debitNoteData?.date)
   const agent = agentData?.data
 
   const printRef = useRef<HTMLDivElement>(null)
@@ -125,7 +125,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       )}
     >
       <ShowDebitNoteHeader template={debitNoteData?.template || ''} />
-      <div ref={printRef} className="w-full">
+      <div ref={printRef} className={`${templateText.en=='Motor Insurance'?'Motor':''} w-full`}>
         <div className="table table_td-flex-1 w-full">
           <div className="w-full mb-4 flex justify-between border-b-2 border-solid border-black pb-6 px-4">
             <div className="w-full">
