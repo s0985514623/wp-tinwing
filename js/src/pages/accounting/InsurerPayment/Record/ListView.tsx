@@ -444,21 +444,34 @@ export const ListView: React.FC = () => {
               return Number(premium).toLocaleString()
             }}
           />
-          <Table.Column width={120} dataIndex="invoice_no" title="Invoice No"
-					{...getColumnSearchProps({
-						dataIndex: 'invoice_no',
-					})}
-					{...getSortProps<DataType>('invoice_no')} />
+          <Table.Column
+            width={120}
+            dataIndex="invoice_no"
+            title="Invoice No"
+            {...getColumnSearchProps({
+              dataIndex: 'invoice_no',
+            })}
+            {...getSortProps<DataType>('invoice_no')}
+          />
 
-          <Table.Column width={120} dataIndex="cheque_no" title="Cheque No"
-					{...getColumnSearchProps({
-						dataIndex: 'cheque_no',
-					})}
-					{...getSortProps<DataType>('cheque_no')}/>
+          <Table.Column
+            width={120}
+            dataIndex="cheque_no"
+            title="Cheque No"
+            {...getColumnSearchProps({
+              dataIndex: 'cheque_no',
+            })}
+            {...getSortProps<DataType>('cheque_no')}
+          />
           <Table.Column
             width={120}
             dataIndex="payment_receiver_account"
             title="Bank"
+            render={(payment_receiver_account: string, record: DataType) => {
+              if (record.is_paid) {
+                return payment_receiver_account
+              }
+            }}
           />
           {/* <Table.Column width={120} dataIndex="remark" title="Remark" /> */}
           <Table.Column
