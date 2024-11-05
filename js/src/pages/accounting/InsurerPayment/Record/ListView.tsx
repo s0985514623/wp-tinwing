@@ -1,13 +1,7 @@
 import { useState } from 'react'
 import { useMany, CrudFilters, useExport, useLink } from '@refinedev/core'
-import {
-  List,
-  useTable,
-  EditButton,
-  ExportButton,
-  useModal,
-} from '@refinedev/antd'
-import { Space, Table, Button, Modal } from 'antd'
+import { List, useTable, ExportButton, useModal } from '@refinedev/antd'
+import { Table, Button } from 'antd'
 import { DataType, ZDataType } from 'pages/receipts/types'
 import { DataType as TInsurer } from 'pages/insurers/types'
 import { DataType as TRenewal } from 'pages/renewals/types'
@@ -33,6 +27,7 @@ export const ListView: React.FC = () => {
     dayjs().add(-30, 'd'),
     dayjs(),
   ])
+
   const { selectedRowKeys, rowSelection } = useRowSelection<DataType>()
 
   // Receipt 資料
@@ -110,6 +105,7 @@ export const ListView: React.FC = () => {
       return filters as CrudFilters
     },
   })
+
   const parsedTableProps = safeParse<DataType>({
     tableProps,
     ZDataType: ZDataType,
@@ -283,6 +279,14 @@ export const ListView: React.FC = () => {
               onClick={() => searchFormProps.onFinish?.({ is_paid: undefined })}
             >
               Show All
+            </Button>
+            <Button
+              size="small"
+              type="primary"
+              // is_paid: 2 是永遠不會有的值，用來當作無資料查詢
+              onClick={() => searchFormProps.onFinish?.({ is_paid: 2 })}
+            >
+              Show None
             </Button>
             <ExportButton
               onClick={triggerExport}
