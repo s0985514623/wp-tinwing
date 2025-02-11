@@ -15,6 +15,7 @@ export const ZDataType = z.object({
 		is_paid: z.boolean().nullable(),
 		remark: z.string().nullable(),
 		created_from_renewal_id:z.number().nullable(),
+		created_from_credit_note_id:z.number().nullable(),
 		invoice_no: z.string().nullable(),
 });
 

@@ -85,6 +85,12 @@ final class Receipts {
 			'meta_type'         => 'integer',
 			'sanitize_callback' => 'absint',
 		],
+		'created_from_credit_note_id' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'number',
+			'meta_type'         => 'integer',
+			'sanitize_callback' => 'absint',
+		],
 		'package_content' =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'text',

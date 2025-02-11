@@ -107,12 +107,12 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
                         </Form.Item>
                       </div>
                     </div>
-                    <ReceiptBankSelect
-                      data={expenseData}
-                      className="table table_td-flex-1 w-full"
-                    />
                   </>
                 )}
+                <ReceiptBankSelect
+                  data={expenseData}
+                  className="table table_td-flex-1 w-full"
+                />
               </div>
             </Col>
             <Col span={12}>

@@ -42,6 +42,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
   const receiptData = queryResult?.data?.data as DataType
   const isFromDebitNote = Boolean(receiptData?.debit_note_id)
   const isFromRenewal = Boolean(receiptData?.created_from_renewal_id)
+  const isFromCreditNote = Boolean(receiptData?.created_from_credit_note_id)
   const watchDate = Form.useWatch(['date'], form)
   const watchPaymentDate = Form.useWatch(['payment_date'], form)
   const watchPremium = Form.useWatch(['premium'], form) ?? 0
@@ -62,7 +63,11 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
 
   const { selectProps, queryResult: connectedQueryResult } =
     useSelect<TDebitNote>({
-      resource: isFromDebitNote ? 'debit_notes' : 'renewals',
+      resource: isFromCreditNote
+        ? 'credit_notes'
+        : isFromRenewal
+          ? 'renewals'
+          : 'debit_notes',
       optionLabel: 'note_no',
       optionValue: 'id',
     })
@@ -70,26 +75,30 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
   const { data: receiptsData } = useList<DataType>({
     resource: 'receipts',
   })
-  //取得receipts的debit_note_id or created_from_renewal_id
+  //取得receipts的debit_note_id or created_from_renewal_id or created_from_credit_note_id
   const receiptsIds =
     receiptsData?.data?.map((item) => {
-      if (isFromDebitNote) {
-        return item?.debit_note_id
-      } else {
+      if (isFromCreditNote) {
+        return item?.created_from_credit_note_id
+      } else if (isFromRenewal) {
         return item?.created_from_renewal_id
       }
+      return item?.debit_note_id
     }) || []
 
   //過濾掉已經有receipts的debitNote or renewal
   const newData = selectProps.options?.filter((item) => {
-		// 如果為當前的debit_note_id or created_from_renewal_id，則不過濾
+    // 如果為當前的debit_note_id or created_from_renewal_id，則不過濾
     if (
-      isFromDebitNote
-        ? item?.value === receiptData?.debit_note_id
-        : item?.value === receiptData?.created_from_renewal_id
-    ) {
+      isFromCreditNote &&
+      item?.value === receiptData?.created_from_credit_note_id
+    )
       return true
-    }
+    if (isFromRenewal && item?.value === receiptData?.created_from_renewal_id)
+      return true
+    if (isFromDebitNote && item?.value === receiptData?.debit_note_id)
+      return true
+
     return !receiptsIds.includes(item?.value as number)
   })
   const fxnDebitNoteSelectProps = {
@@ -97,7 +106,13 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
     options: newData || [],
   }
   const selectedId = Form.useWatch(
-    [isFromDebitNote ? 'debit_note_id' : 'created_from_renewal_id'],
+    [
+      isFromCreditNote
+        ? 'created_from_credit_note_id'
+        : isFromRenewal
+          ? 'created_from_renewal_id'
+          : 'debit_note_id',
+    ],
     form,
   )
   const connectedQuery = connectedQueryResult?.data?.data || []
@@ -108,9 +123,22 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
   // 當selectedId改變時，更新premium的值
   useEffect(() => {
     if (!!selectedId) {
-      const setPremium =
-        receiptsData?.data.find((item) => item?.debit_note_id === selectedId)
-          ?.premium || getTotalPremiumByDebitNote(selectedConnected)
+      let setPremium = 0
+      if (isFromCreditNote) {
+        setPremium =
+          receiptsData?.data.find(
+            (item) => item?.created_from_credit_note_id === selectedId,
+          )?.premium || getTotalPremiumByDebitNote(selectedConnected)
+      } else if (isFromRenewal) {
+        setPremium =
+          receiptsData?.data.find(
+            (item) => item?.created_from_renewal_id === selectedId,
+          )?.premium || getTotalPremiumByDebitNote(selectedConnected)
+      } else {
+        setPremium =
+          receiptsData?.data.find((item) => item?.debit_note_id === selectedId)
+            ?.premium || getTotalPremiumByDebitNote(selectedConnected)
+      }
       form.setFieldValue(['premium'], setPremium)
     }
   }, [selectedId])
@@ -166,7 +194,9 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
     >
       <Form {...formProps} layout="vertical">
         <div className="table table_td-flex-1 w-full">
-          <div className={`tr ${isFromDebitNote ? '' : 'tw-hidden'}`}>
+          <div
+            className={`tr ${isFromDebitNote && !isFromCreditNote ? '' : 'tw-hidden'}`}
+          >
             <div className="th">Connected Debit Note</div>
             <div className="td">
               <Form.Item noStyle name={['debit_note_id']}>
@@ -185,6 +215,21 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
             <div className="th">Connected Renewal</div>
             <div className="td">
               <Form.Item noStyle name={['created_from_renewal_id']}>
+                <Select
+                  {...fxnDebitNoteSelectProps}
+                  size="small"
+                  className="w-full"
+                  allowClear
+                />
+              </Form.Item>
+            </div>
+            <div className="th"></div>
+            <div className="td"></div>
+          </div>
+          <div className={`tr ${isFromCreditNote ? '' : 'tw-hidden'}`}>
+            <div className="th">Connected Credit Note</div>
+            <div className="td">
+              <Form.Item noStyle name={['created_from_credit_note_id']}>
                 <Select
                   {...fxnDebitNoteSelectProps}
                   size="small"

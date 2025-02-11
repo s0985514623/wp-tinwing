@@ -203,13 +203,14 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
         {!is_adjust_balance && (
           <>
             <Table.Column width={120} dataIndex="cheque_no" title="Cheque No" />
-            <Table.Column
+
+          </>
+        )}
+				<Table.Column
               width={120}
               dataIndex="payment_receiver_account"
               title="Bank"
             />
-          </>
-        )}
         <Table.Column width={120} dataIndex="remark" title="Remark" />
         <Table.Column
           width={120}

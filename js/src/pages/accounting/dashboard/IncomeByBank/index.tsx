@@ -8,9 +8,9 @@ const index: React.FC<{ incomeByBankReceipt: { bank: string; income: number }[] 
             {incomeByBankReceipt.map((item) => {
                 return (
                     <div key={nanoid()} className="flex flex-col w-full shadow-md bg-white rounded-lg p-5">
-                        <div className="text-xs text-slate-300">{item.bank}</div>
                         <div className="text-2xl text-slate-700 font-bold">{item.income.toLocaleString()}</div>
-                    </div>
+                    		<div className="text-xs text-slate-300">{item.bank}</div>
+										</div>
                 );
             })}
         </div>
