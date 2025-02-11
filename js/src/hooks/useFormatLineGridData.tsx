@@ -94,12 +94,14 @@ export const useFormatLineGridData = ({
   if (type === 'insurerPayment') {
     return (data as TReceipts[])?.reduce((acc, receipt) => {
       //取得date
-      const date = dayjs.unix(receipt?.date as number).format('YYYY-MM-DD')
+      const date = dayjs.unix(receipt?.pay_to_insurer_by_payment_date as number).format('YYYY-MM-DD')
+
       // const debitNote = debitNotesData?.find((dn) => dn?.id === receipt?.debit_note_id);
       // const insurer = insurerData?.find((ins) => ins?.id === debitNote?.insurer_id);
       const debitNote = debitNotesData?.find(
         (dn: TDebitNote) => dn.id === receipt.debit_note_id,
       )
+
       const renewal = renewalsData?.find(
         (r: TRenewals) => r.id === receipt.created_from_renewal_id,
       )
@@ -110,6 +112,7 @@ export const useFormatLineGridData = ({
           return insurer.id === debitNote?.insurer_id
         }
       })
+
       //取得value
       const premium = insurer
         ? getInsurerPayment(
@@ -118,6 +121,7 @@ export const useFormatLineGridData = ({
             insurer as TInsurers,
           )
         : 0
+
       // 尋找是否已經有該日期的紀錄
       const existingDate = acc.find((item) => item.date === date)
       if (existingDate) {

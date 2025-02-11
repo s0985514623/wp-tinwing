@@ -129,9 +129,9 @@ final class Receipts {
 		],
 		'pay_to_insurer_by_payment_date' =>[
 			'display_function'  => 'render_meta_box',
-			'input_type'        => 'text',
-			'meta_type'         => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
+			'input_type'        => 'number',
+			'meta_type'         => 'integer',
+			'sanitize_callback' => 'absint',
 		],
 	];
 	/**

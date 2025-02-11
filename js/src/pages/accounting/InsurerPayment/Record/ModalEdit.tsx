@@ -41,7 +41,7 @@ export const ModalEdit: React.FC<ModalEditProps> = ({
       ids: selectedRowKeys,
       ...value,
       is_paid: (value as { is_paid?: boolean })?.is_paid ? 1 : 0,
-			payment_date: (value as { payment_date?: any })?.payment_date?.unix(),
+			pay_to_insurer_by_payment_date: (value as { pay_to_insurer_by_payment_date?: any })?.pay_to_insurer_by_payment_date?.unix(),
     }
     // 重組資料並送出表單
     formProps?.onFinish?.(formatValues)
@@ -53,7 +53,7 @@ export const ModalEdit: React.FC<ModalEditProps> = ({
           <div className="tr">
             <div className="th">Invoice Number</div>
             <div className="td flex">
-              <Form.Item noStyle name={['invoice_no']}>
+              <Form.Item noStyle name={['pay_to_insurer_by_invoice']}>
                 <Input />
               </Form.Item>
             </div>
@@ -63,7 +63,7 @@ export const ModalEdit: React.FC<ModalEditProps> = ({
           <div className="tr">
             <div className="th">Cheque Number</div>
             <div className="td flex">
-              <Form.Item noStyle name={['cheque_no']}>
+              <Form.Item noStyle name={['pay_to_insurer_by_cheque']}>
                 <Input />
               </Form.Item>
             </div>
@@ -73,13 +73,13 @@ export const ModalEdit: React.FC<ModalEditProps> = ({
           <div className="tr">
             <div className="th">Payment Date</div>
             <div className="td flex">
-              <Form.Item noStyle name={['payment_date']}>
+              <Form.Item noStyle name={['pay_to_insurer_by_payment_date']}>
 							<DatePicker size="small" className="w-full" />
               </Form.Item>
             </div>
           </div>
         </div>
-				<ReceiptBankSelect className={className} />
+				<ReceiptBankSelect className={className} bankName={'pay_to_insurer_by_bank'}/>
         <div className={className}>
           <div className="tr">
             <div className="th">Paid Status</div>

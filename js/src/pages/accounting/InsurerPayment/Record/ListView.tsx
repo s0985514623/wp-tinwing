@@ -45,12 +45,12 @@ export const ListView: React.FC = () => {
         {
           field: 'date[0]',
           operator: 'eq',
-          value: dateRange ? dateRange[0]?.unix() : undefined,
+          value: dateRange ? dateRange[0] : undefined,
         },
         {
           field: 'date[1]',
           operator: 'eq',
-          value: dateRange ? dateRange[1]?.unix() : undefined,
+          value: dateRange ? dateRange[1] : undefined,
         },
         {
           field: 'meta_query[0][key]',
@@ -75,14 +75,14 @@ export const ListView: React.FC = () => {
           field: 'date[0]',
           operator: 'eq',
           value: values?.dateRange
-            ? dayjs(values?.dateRange[0])?.unix()
+            ? dayjs(values?.dateRange[0])
             : undefined,
         },
         {
           field: 'date[1]',
           operator: 'eq',
           value: values?.dateRange
-            ? dayjs(values?.dateRange[1])?.unix()
+            ? dayjs(values?.dateRange[1])
             : undefined,
         },
         {
@@ -446,26 +446,26 @@ export const ListView: React.FC = () => {
           />
           <Table.Column
             width={120}
-            dataIndex="invoice_no"
+            dataIndex="pay_to_insurer_by_invoice"
             title="Invoice No"
             {...getColumnSearchProps({
-              dataIndex: 'invoice_no',
+              dataIndex: 'pay_to_insurer_by_invoice',
             })}
-            {...getSortProps<DataType>('invoice_no')}
+            {...getSortProps<DataType>('pay_to_insurer_by_invoice')}
           />
 
           <Table.Column
             width={120}
-            dataIndex="cheque_no"
+            dataIndex="pay_to_insurer_by_cheque"
             title="Cheque No"
             {...getColumnSearchProps({
-              dataIndex: 'cheque_no',
+              dataIndex: 'pay_to_insurer_by_cheque',
             })}
-            {...getSortProps<DataType>('cheque_no')}
+            {...getSortProps<DataType>('pay_to_insurer_by_cheque')}
           />
           <Table.Column
             width={120}
-            dataIndex="payment_receiver_account"
+            dataIndex="pay_to_insurer_by_bank"
             title="Bank"
             render={(payment_receiver_account: string, record: DataType) => {
               if (record.is_paid) {
@@ -476,9 +476,9 @@ export const ListView: React.FC = () => {
           {/* <Table.Column width={120} dataIndex="remark" title="Remark" /> */}
           <Table.Column
             width={120}
-            dataIndex="payment_date"
+            dataIndex="pay_to_insurer_by_payment_date"
             title="Payment Date"
-            render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
+            render={(date: number) => date?dayjs.unix(date).format('YYYY-MM-DD'):''}
           />
           <Table.Column
             width={120}

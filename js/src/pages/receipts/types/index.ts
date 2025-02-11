@@ -17,6 +17,10 @@ export const ZDataType = z.object({
 		created_from_renewal_id:z.number().nullable(),
 		created_from_credit_note_id:z.number().nullable(),
 		invoice_no: z.string().nullable(),
+		pay_to_insurer_by_bank: z.string().nullable(),
+		pay_to_insurer_by_cheque: z.string().nullable(),
+		pay_to_insurer_by_invoice: z.string().nullable(),
+		pay_to_insurer_by_payment_date: z.number().nullable(),
 });
 
 export type DataType = z.infer<typeof ZDataType>;

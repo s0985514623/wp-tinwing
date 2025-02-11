@@ -14,10 +14,12 @@ export const ReceiptBankSelect: React.FC<{
   data?: DataType | TExpense
   model?: 'edit' | 'show'
   className?: string
+	bankName?: string
 }> = ({
   data,
   model = 'edit',
   className = 'table table_td-flex-1 w-full mt-12',
+	bankName = 'payment_receiver_account',
 }) => {
   const bankString = data?.payment_receiver_account || ''
   const TextArea = () => {
@@ -27,7 +29,7 @@ export const ReceiptBankSelect: React.FC<{
     //如果有傳入data，則顯示data.bank value選項,否則顯示Select placeholder
     const formItemProps = bankString ? { initialValue: { bankString } } : ''
     return (
-      <Form.Item noStyle name={['payment_receiver_account']} {...formItemProps}>
+      <Form.Item noStyle name={[bankName]} {...formItemProps}>
         <Select
           className="w-1/2"
           placeholder="Select a Bank"

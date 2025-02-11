@@ -93,21 +93,31 @@ export const ListView: React.FC = () => {
               value: 'AND',
             },
             {
-              field: 'date[0]',
+              field: 'meta_query[0][key]',
+              operator: 'eq',
+              value: 'date',
+            },
+            {
+              field: 'meta_query[0][value][0]',
               operator: 'eq',
               value: dateRange[0]?.unix(),
             },
             {
-              field: 'date[1]',
+              field: 'meta_query[0][value][1]',
               operator: 'eq',
               value: dateRange[1]?.unix(),
+            },
+            {
+              field: 'meta_query[0][compare]',
+              operator: 'eq',
+              value: 'BETWEEN',
             },
           ]
         : [],
     })
-  const { data: creditNotesData, isLoading: creditNotesIsLoading } =
-    useList<TDebitNote>({
-      resource: 'credit_notes',
+  const { data: InsurerPaymentData, isLoading: InsurerPaymentIsLoading } =
+    useList<TReceipts>({
+      resource: 'receipts',
       filters: dateRange
         ? [
             {
@@ -116,17 +126,32 @@ export const ListView: React.FC = () => {
               value: 'AND',
             },
             {
-              field: 'date[0]',
+              field: 'meta_query[0][key]',
+              operator: 'eq',
+              value: 'pay_to_insurer_by_payment_date',
+            },
+            {
+              field: 'meta_query[0][value][0]',
               operator: 'eq',
               value: dateRange[0]?.unix(),
             },
             {
-              field: 'date[1]',
+              field: 'meta_query[0][value][1]',
               operator: 'eq',
               value: dateRange[1]?.unix(),
             },
+            {
+              field: 'meta_query[0][compare]',
+              operator: 'eq',
+              value: 'BETWEEN',
+            },
           ]
         : [],
+    })
+  const { data: creditNotesData, isLoading: creditNotesIsLoading } =
+    useList<TDebitNote>({
+      resource: 'credit_notes',
+      filters: filters as CrudFilters,
     })
 
   //一般expenses 費用
@@ -280,7 +305,7 @@ export const ListView: React.FC = () => {
       (acc, receipt) => {
         const bank = receipt?.payment_receiver_account
         if (!bank) return acc
-				//如果是creditNote就不計算
+        //如果是creditNote就不計算
         const ifCreditNote = receipt?.created_from_credit_note_id
         if (ifCreditNote) return acc
         const premium = receipt?.premium
@@ -381,7 +406,7 @@ export const ListView: React.FC = () => {
 
   //5.Insurer Payment [要給保險的錢](insurerTotalFee)
   const formatInsurerPayment = useFormatLineGridData({
-    data: receiptsData?.data as TReceipts[],
+    data: InsurerPaymentData?.data as TReceipts[],
     type: 'insurerPayment',
     debitNotesData: debitNotesData?.data,
     renewalsData: renewalsData?.data,
@@ -399,12 +424,12 @@ export const ListView: React.FC = () => {
     type: 'totalAdjustBalances',
   })
   // 追加creditNotesData data
-	const creditNotesFormReceipt= receiptsData?.data.filter((receipt) => {
-		if(receipt.created_from_credit_note_id) return true
-		return false
-	})
+  const creditNotesFormReceipt = receiptsData?.data.filter((receipt) => {
+    if (receipt.created_from_credit_note_id) return true
+    return false
+  })
 
-	const formatTotalCreditNotes = useFormatLineGridData({
+  const formatTotalCreditNotes = useFormatLineGridData({
     data: creditNotesFormReceipt as TDebitNote[],
     type: 'totalCreditNotes',
   })
@@ -434,7 +459,7 @@ export const ListView: React.FC = () => {
     { bank: 'Adjust Balances', income: totalAdjustBalances },
     { bank: 'Insurer Payment', income: totalInsurerPayment },
   ]
-  //結合所有數據並排序
+  //TODO 這邊可以改掉 結合所有數據並排序
   const allData = _.sortBy(
     [
       ...formatTotalIncome,
@@ -455,7 +480,8 @@ export const ListView: React.FC = () => {
     adjustBalancesIsLoading ||
     creditNotesIsLoading ||
     insurersIsLoading ||
-    renewalsIsLoading
+    renewalsIsLoading ||
+    InsurerPaymentIsLoading
   //顯示數據
   const ShowData = () => {
     if (allData.length === 0) {
