@@ -165,12 +165,13 @@ final class Receipts {
 	 * @return \WP_REST_Response
 	 */
 	public function post_receipts_callback( $request ) { // phpcs:ignore
-		$params = $request->get_json_params() ?? [];
-		$params = WP::sanitize_text_field_deep( $params, false );
+		$params         = $request->get_json_params() ?? [];
+		$params         = WP::sanitize_text_field_deep( $params, false );
+		$is_credit_note =$params['created_from_credit_note_id'];
 		// 檢查是否為空的receipts
 		$is_empty = empty($params['debit_note_id'])&&empty($params['created_from_renewal_id']);
-		// 如果為空，則同步創建一個新的debit_note
-		if ($is_empty) {
+		// 如果為空，則同步創建一個新的debit_note=>這邊是為了先創建receipts時，沒有debit_note_id，但是後續會有debit_note_id的情況，但是避開為credit_note的情況
+		if ($is_empty && !$is_credit_note) {
 			$debit_note_id = wp_insert_post(
 				[
 					'post_type'    => 'debit_notes', // 自定義文章類型名稱
@@ -267,7 +268,6 @@ final class Receipts {
 				$response_data = [
 					'id'         => get_the_ID(),
 					'created_at' => strtotime(get_the_date('Y-m-d')),
-					'date'       => strtotime(get_the_date('Y-m-d')),
 					'receipt_no' => html_entity_decode(get_the_title()),
 				];
 				// 整理 meta 資料

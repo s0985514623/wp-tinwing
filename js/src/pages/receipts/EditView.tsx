@@ -45,7 +45,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
   const isFromCreditNote = Boolean(receiptData?.created_from_credit_note_id)
   const watchDate = Form.useWatch(['date'], form)
   const watchPaymentDate = Form.useWatch(['payment_date'], form)
-  const watchPremium = Form.useWatch(['premium'], form) ?? 0
+  const watchPremium = Number(Form.useWatch(['premium'], form)) || 0
   const [dateProps, setDateProps] = useState<{
     value?: Dayjs
   }>({})

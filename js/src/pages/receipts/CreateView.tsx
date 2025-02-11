@@ -47,7 +47,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
       navigate('/archived_receipts')
     },
   })
-  const watchPremium = Form.useWatch(['premium'], form) ?? 0
+  const watchPremium = Number(Form.useWatch(['premium'], form)) || 0
   //取得state
   const { state } = useLocation()
   const debit_note_id = state?.debit_note_id || 0
@@ -196,7 +196,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
     } else if (selectOptions == 'creditNote' && !!selectedCreditNoteId) {
       form.setFieldValue(
         ['premium'],
-        getTotalPremiumByDebitNote(selectedCreditNote),
+        -getTotalPremiumByDebitNote(selectedCreditNote),
       )
     } else form.setFieldValue(['premium'], 0)
   }, [

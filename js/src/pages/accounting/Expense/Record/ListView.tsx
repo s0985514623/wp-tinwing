@@ -7,16 +7,21 @@ import {
   ExportButton,
   CreateButton,
   DeleteButton,
+  useModal,
 } from '@refinedev/antd'
-import { Space, Table } from 'antd'
+import { Space, Table, Button } from 'antd'
+import { useRowSelection } from 'antd-toolkit'
 import { DataType as TTerms } from 'pages/terms/types'
 import { DataType, ZDataType } from '../types'
 import { safeParse } from 'utils'
 import dayjs, { Dayjs } from 'dayjs'
 import Filter from '../../dashboard/Filter'
+import { ModalEdit } from './ModalEdit'
 export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
   is_adjust_balance = false,
 }) => {
+  const { show, close, modalProps } = useModal()
+  const { selectedRowKeys, rowSelection } = useRowSelection<DataType>()
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
     dayjs().add(-30, 'd'),
     dayjs(),
@@ -66,7 +71,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
         {
           field: 'meta_query[1][compare]',
           operator: 'eq',
-          value: is_adjust_balance?'=':'!=',
+          value: is_adjust_balance ? '=' : '!=',
         },
       ],
     },
@@ -105,7 +110,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
         {
           field: 'meta_query[1][compare]',
           operator: 'eq',
-          value: is_adjust_balance?'=':'!=',
+          value: is_adjust_balance ? '=' : '!=',
         },
       ]
       return filters as CrudFilters
@@ -156,91 +161,128 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
     },
   })
   return (
-    <List
-      headerButtons={() => (
-        <>
-          <Filter
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-            formProps={searchFormProps}
-          />
-          <ExportButton
-            onClick={triggerExport}
-            loading={exportLoading}
-            disabled={disabledBtn}
-          />
-          <CreateButton />
-        </>
+    <>
+      {!is_adjust_balance && (
+        <ModalEdit
+          modalProps={modalProps}
+          selectedRowKeys={selectedRowKeys}
+          close={close}
+        />
       )}
-    >
-      <Table {...parsedTableProps} rowKey="id" size="middle">
-        <Table.Column
-          width={120}
-          dataIndex="date"
-          title="Date"
-          render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
-        />
-        {!is_adjust_balance && (
-          <Table.Column
-            width={120}
-            dataIndex="term_id"
-            title="Category"
-            render={(term_id: number) => {
-              const termData = termsData?.data?.find(
-                (term) => term.id === term_id,
-              )
-              return termData?.name
-            }}
-          />
-        )}
-
-        <Table.Column
-          width={120}
-          dataIndex="amount"
-          title="Amount"
-          render={(amount) => amount.toLocaleString()}
-        />
-        {!is_adjust_balance && (
+      <List
+        headerButtons={() => (
           <>
-            <Table.Column width={120} dataIndex="cheque_no" title="Cheque No" />
-
+            {!is_adjust_balance && (
+              <Button
+                size="small"
+                type="primary"
+                onClick={show}
+                disabled={selectedRowKeys.length == 0}
+              >
+                Quick Edits
+              </Button>
+            )}
+            <Filter
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+              formProps={searchFormProps}
+            />
+            <ExportButton
+              onClick={triggerExport}
+              loading={exportLoading}
+              disabled={disabledBtn}
+            />
+            <CreateButton />
           </>
         )}
-				<Table.Column
+      >
+        <Table
+          {...parsedTableProps}
+          rowKey="id"
+          size="middle"
+          rowSelection={!is_adjust_balance ? rowSelection : undefined}
+        >
+          <Table.Column
+            width={120}
+            dataIndex="date"
+            title="Date"
+            render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
+          />
+          {!is_adjust_balance && (
+            <Table.Column
               width={120}
-              dataIndex="payment_receiver_account"
-              title="Bank"
+              dataIndex="term_id"
+              title="Category"
+              render={(term_id: number) => {
+                const termData = termsData?.data?.find(
+                  (term) => term.id === term_id,
+                )
+                return termData?.name
+              }}
             />
-        <Table.Column width={120} dataIndex="remark" title="Remark" />
-        <Table.Column
-          width={120}
-          dataIndex="id"
-          title=""
-          render={(id) => {
-            return (
-              <>
-                <Space>
-                  <EditButton
-                    type="primary"
-                    hideText
-                    shape="circle"
-                    size="small"
-                    recordItemId={id}
-                  />
-                  <DeleteButton
-                    type="primary"
-                    danger
-                    hideText
-                    shape="circle"
-                    size="small"
-                    recordItemId={id}
-                  />
-                </Space>
-              </>
-            )
-          }}
-        />
-      </Table>
-    </List>
+          )}
+
+          <Table.Column
+            width={120}
+            dataIndex="amount"
+            title="Amount"
+            render={(amount) => amount.toLocaleString()}
+          />
+          {!is_adjust_balance && (
+            <>
+              <Table.Column
+                width={120}
+                dataIndex="cheque_no"
+                title="Cheque No"
+              />
+            </>
+          )}
+          <Table.Column
+            width={120}
+            dataIndex="payment_receiver_account"
+            title="Bank"
+          />
+          {!is_adjust_balance && (
+            <Table.Column
+              width={120}
+              dataIndex="payment_date"
+              title="Payment Date"
+              render={(date: number) =>
+                date ? dayjs.unix(date).format('YYYY-MM-DD') : ''
+              }
+            />
+          )}
+          <Table.Column width={120} dataIndex="remark" title="Remark" />
+          <Table.Column
+            width={120}
+            dataIndex="id"
+            title=""
+            render={(id) => {
+              return (
+                <>
+                  <Space>
+                    <EditButton
+                      type="primary"
+                      hideText
+                      shape="circle"
+                      size="small"
+                      recordItemId={id}
+                    />
+                    <DeleteButton
+                      type="primary"
+                      danger
+                      hideText
+                      shape="circle"
+                      size="small"
+                      recordItemId={id}
+                    />
+                  </Space>
+                </>
+              )
+            }}
+          />
+        </Table>
+      </List>
+    </>
   )
 }

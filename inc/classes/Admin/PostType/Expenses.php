@@ -57,6 +57,13 @@ final class Expenses {
 			'meta_type'         => 'boolean',
 			'sanitize_callback' => 'rest_sanitize_boolean',
 		],
+		// Payment Date
+		'payment_date' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
 	];
 	/**
 	 * 建構子

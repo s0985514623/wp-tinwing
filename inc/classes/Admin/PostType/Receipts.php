@@ -19,6 +19,12 @@ final class Receipts {
 	 * @var array
 	 */
 	public $receipts_meta = [
+		'date' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'number',
+			'meta_type'         => 'integer',
+			'sanitize_callback' => 'absint',
+		],
 		'debit_note_id' =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'number',
@@ -98,6 +104,30 @@ final class Receipts {
 			'sanitize_callback' => 'sanitize_text_field',
 		],
 		'invoice_no' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
+		'pay_to_insurer_by_bank'=>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
+		'pay_to_insurer_by_cheque'=>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
+		'pay_to_insurer_by_invoice'=>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
+		'pay_to_insurer_by_payment_date' =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'text',
 			'meta_type'         => 'string',

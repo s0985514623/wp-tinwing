@@ -61,6 +61,11 @@ final class Expenses {
 				'method'              => 'delete',
 				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
 			],
+			[
+				'endpoint'            => 'expenses_bulk_edit',
+				'method'              => 'post',
+				'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
+			],
 		];
 	}
 
@@ -301,6 +306,34 @@ final class Expenses {
 			return new \WP_Error( 'error_post_not_found', 'Post not found', [ 'status' => 404 ] );
 		}
 		$response = new \WP_REST_Response(  $result  );
+		return $response;
+	}
+	/**
+	 * Expenses Bulk Edit callback
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return \WP_REST_Response
+	 */
+	public function post_expenses_bulk_edit_callback( $request ) { // phpcs:ignore
+		$params = $request->get_json_params() ?? [];
+		$params = WP::sanitize_text_field_deep( $params, false);
+
+		// 更新文章
+		$post_ids = $params['ids'];
+		foreach ($post_ids as $post_id) {
+			// 判斷是否具有該文章
+			if (!get_post($post_id)) {
+				return new \WP_Error( 'error_post_not_found', 'Post not found', [ 'status' => 404 ] );
+			}
+
+			// 更新文章的 meta 資料
+			foreach (PostType\Receipts::instance()->get_meta() as $key => $value) {
+				if (isset($params[ $key ])) {
+					update_post_meta($post_id, $key, $params[ $key ]);
+				}
+			}
+		}
+		$response = new \WP_REST_Response(  $post_ids  );
 		return $response;
 	}
 }
