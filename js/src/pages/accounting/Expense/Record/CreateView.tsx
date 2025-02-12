@@ -104,6 +104,9 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
                   <ReceiptBankSelect className="table table_td-flex-1 w-full" />
                 </>
               )}
+							<ReceiptBankSelect
+                  className="table table_td-flex-1 w-full"
+                />
             </div>
           </Col>
           <Col span={12}>
