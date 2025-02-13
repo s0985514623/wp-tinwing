@@ -338,9 +338,11 @@ export const ListView: React.FC = () => {
   const bankBalance =
     receiptsData?.data.reduce(
       (acc, receipt) => {
-        const bank = receipt?.pay_to_insurer_by_bank
+        const bank = receipt?.payment_receiver_account
+        const payToBank = receipt?.pay_to_insurer_by_bank
+        const isPaid = receipt?.is_paid
         if (!bank) return acc
-        if (!receipt?.is_paid) return acc
+        if (!isPaid) return acc
         const debitNote = debitNotesData?.data.find(
           (dn: TDebitNote) => dn.id === receipt.debit_note_id,
         )
@@ -370,12 +372,16 @@ export const ListView: React.FC = () => {
                 ) as TDebitNote[]
               )[0] ?? 0,
             )
-        const total = premium - insurerPayment
+        // const total = premium - insurerPayment
         const existingBank = acc.find((item) => item.bank === bank)
+        const existingPayToBank = acc.find((item) => item.bank === payToBank)
         if (existingBank) {
-          existingBank.income += total
+          existingBank.income += premium
         } else {
-          acc.push({ bank, income: total })
+          acc.push({ bank, income: premium })
+        }
+        if (existingPayToBank && isPaid) {
+          existingPayToBank.income -= insurerPayment
         }
         return acc
       },
