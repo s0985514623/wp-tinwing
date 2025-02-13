@@ -332,37 +332,15 @@ export const ListView: React.FC = () => {
     ) || []
 
   /*4-3. Bank Balance 計算
-	receipt能計算的只有Receipt Amount(premium)跟 Insurer Payment 跟Credit Note Amount
+	receipt能計算的只有Receipt Amount(premium)跟 Credit Note Amount
 	Adjust Balance & Expenses 要另外計算
+	Insurer Payment 也要另外計算因為銀行有可能不同
 	*/
   const bankBalance =
     receiptsData?.data.reduce(
       (acc, receipt) => {
         const bank = receipt?.payment_receiver_account
-        const payToBank = receipt?.pay_to_insurer_by_bank
-        const isPaid = receipt?.is_paid
         if (!bank) return acc
-        if (!isPaid) return acc
-        const debitNote = debitNotesData?.data.find(
-          (dn: TDebitNote) => dn.id === receipt.debit_note_id,
-        )
-        const renewal = renewalsData?.data.find(
-          (r: TRenewals) => r.id === receipt.created_from_renewal_id,
-        )
-        const insurer = insurersData?.data?.find((insurer) => {
-          if (renewal) {
-            return insurer.id === renewal.insurer_id
-          } else {
-            return insurer.id === debitNote?.insurer_id
-          }
-        })
-        const insurerPayment = insurer
-          ? getInsurerPayment(
-              receipt,
-              renewal ?? (debitNote as TDebitNote),
-              insurer as TInsurers,
-            )
-          : 0
         const premium = receipt?.premium
           ? Number(receipt?.premium)
           : getTotalPremiumByDebitNote(
@@ -378,12 +356,6 @@ export const ListView: React.FC = () => {
           existingBank.income += premium
         } else {
           acc.push({ bank, income: premium })
-        }
-
-				//如果有payToBank 就扣掉
-				const existingPayToBank = acc.find((item) => item.bank === payToBank)
-        if (existingPayToBank && isPaid) {
-          existingPayToBank.income -= insurerPayment
         }
         return acc
       },
@@ -414,7 +386,37 @@ export const ListView: React.FC = () => {
       bankBalance.push({ bank, income: -amount })
     }
   })
-
+	//計算 Insurer Payment 扣除
+	InsurerPaymentData?.data.map((InsurerPayment) => {
+		const bank = InsurerPayment?.pay_to_insurer_by_bank
+		if (!bank) return
+		const debitNote = debitNotesData?.data.find(
+			(dn: TDebitNote) => dn.id === InsurerPayment.debit_note_id,
+		)
+		const renewal = renewalsData?.data.find(
+			(r: TRenewals) => r.id === InsurerPayment.created_from_renewal_id,
+		)
+		const insurer = insurersData?.data?.find((insurer) => {
+			if (renewal) {
+				return insurer.id === renewal.insurer_id
+			} else {
+				return insurer.id === debitNote?.insurer_id
+			}
+		})
+		const insurerPayment = insurer
+			? getInsurerPayment(
+				InsurerPayment,
+					renewal ?? (debitNote as TDebitNote),
+					insurer as TInsurers,
+				)
+			: 0
+			const existingBank = bankBalance.find((item) => item.bank === bank)
+			if (existingBank) {
+				existingBank.income -= insurerPayment
+			} else {
+				bankBalance.push({ bank, income: -insurerPayment })
+			}
+	})
   //5.Insurer Payment [要給保險的錢](insurerTotalFee)
   const formatInsurerPayment = useFormatLineGridData({
     data: InsurerPaymentData?.data as TReceipts[],
