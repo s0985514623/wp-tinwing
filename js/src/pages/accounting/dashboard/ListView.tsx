@@ -117,8 +117,39 @@ export const ListView: React.FC = () => {
               operator: 'eq',
               value: 'BETWEEN',
             },
+            {
+              field: 'meta_query[1][key]',
+              operator: 'eq',
+              value: 'is_paid',
+            },
+            {
+              field: 'meta_query[1][value]',
+              operator: 'eq',
+              value: 1,
+            },
+            {
+              field: 'meta_query[1][compare]',
+              operator: 'eq',
+              value: '=',
+            },
           ]
-        : [],
+        : [
+            {
+              field: 'meta_query[0][key]',
+              operator: 'eq',
+              value: 'is_paid',
+            },
+            {
+              field: 'meta_query[0][value]',
+              operator: 'eq',
+              value: 1,
+            },
+            {
+              field: 'meta_query[0][compare]',
+              operator: 'eq',
+              value: '=',
+            },
+          ],
     })
   const { data: creditNotesData, isLoading: creditNotesIsLoading } =
     useList<TDebitNote>({
