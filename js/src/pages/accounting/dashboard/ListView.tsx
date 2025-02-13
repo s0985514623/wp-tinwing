@@ -374,12 +374,14 @@ export const ListView: React.FC = () => {
             )
         // const total = premium - insurerPayment
         const existingBank = acc.find((item) => item.bank === bank)
-        const existingPayToBank = acc.find((item) => item.bank === payToBank)
         if (existingBank) {
           existingBank.income += premium
         } else {
           acc.push({ bank, income: premium })
         }
+
+				//如果有payToBank 就扣掉
+				const existingPayToBank = acc.find((item) => item.bank === payToBank)
         if (existingPayToBank && isPaid) {
           existingPayToBank.income -= insurerPayment
         }
