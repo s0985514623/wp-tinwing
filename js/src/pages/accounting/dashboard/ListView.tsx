@@ -307,9 +307,9 @@ export const ListView: React.FC = () => {
   const bankBalance =
     receiptsData?.data.reduce(
       (acc, receipt) => {
-        const bank = receipt?.payment_receiver_account
+        const bank = receipt?.pay_to_insurer_by_bank
         if (!bank) return acc
-
+        if (!receipt?.is_paid) return acc
         const debitNote = debitNotesData?.data.find(
           (dn: TDebitNote) => dn.id === receipt.debit_note_id,
         )
