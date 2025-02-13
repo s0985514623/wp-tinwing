@@ -235,7 +235,13 @@ final class CPT {
 	 */
 	public function render_meta_box( $post, $args ): void {
 		$meta_value = \get_post_meta( $post->ID, $args['title'], true );
+		// 新屬性 date 沒有值時,預設為 post_date
+		if ('date' ===$args['title'] && empty($meta_value)) {
+			// 使用 get_post_time() 獲取本地時間的 Unix 時間戳
+			$unix_timestamp_local = get_post_time('U', true, $post); // 'U' 表示 Unix 時間戳
 
+			$meta_value =$unix_timestamp_local;
+		}
 		\printf(
 			/*html*/'
 			<p>

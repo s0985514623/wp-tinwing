@@ -34,7 +34,7 @@ export const ListView: React.FC = () => {
         {
           field: 'meta_query[0][key]',
           operator: 'eq',
-          value: 'period_of_insurance_to',
+          value: 'date',
         },
         {
           field: 'meta_query[0][value][0]',
@@ -85,35 +85,7 @@ export const ListView: React.FC = () => {
   const { data: receiptsData, isLoading: receiptsIsLoading } =
     useList<TReceipts>({
       resource: 'receipts',
-      filters: dateRange
-        ? [
-            {
-              field: 'meta_query[relation]',
-              operator: 'eq',
-              value: 'AND',
-            },
-            {
-              field: 'meta_query[0][key]',
-              operator: 'eq',
-              value: 'date',
-            },
-            {
-              field: 'meta_query[0][value][0]',
-              operator: 'eq',
-              value: dateRange[0]?.unix(),
-            },
-            {
-              field: 'meta_query[0][value][1]',
-              operator: 'eq',
-              value: dateRange[1]?.unix(),
-            },
-            {
-              field: 'meta_query[0][compare]',
-              operator: 'eq',
-              value: 'BETWEEN',
-            },
-          ]
-        : [],
+      filters: filters as CrudFilters,
     })
   const { data: InsurerPaymentData, isLoading: InsurerPaymentIsLoading } =
     useList<TReceipts>({

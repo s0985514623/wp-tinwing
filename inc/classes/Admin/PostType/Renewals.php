@@ -20,6 +20,12 @@ final class Renewals {
 	 * @var array
 	 */
 	public $insurance_meta = [
+		'date' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'number',
+			'meta_type'         => 'integer',
+			'sanitize_callback' => 'absint',
+		],
 		'template'                 =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'text',
