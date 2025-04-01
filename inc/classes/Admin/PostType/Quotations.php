@@ -168,7 +168,7 @@ final class Quotations {
 		'premium' =>[
 			'display_function'  => 'render_meta_box',
 			'input_type'        => 'number',
-			'meta_type'         => 'integer',
+			'meta_type'         => 'number',
 			'sanitize_callback' => 'absint',
 		],
 		'less' =>[
