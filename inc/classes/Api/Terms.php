@@ -88,7 +88,7 @@ final class Terms {
 		// 查詢 Custom Post Type 'terms' 的文章
 		$args = [
 			'post_type'      => 'terms',   // 自定義文章類型名稱
-			'posts_per_page' => isset($params['posts_per_page'])?$params['posts_per_page']:10,       // 每頁顯示文章數量
+			'posts_per_page' => isset($params['posts_per_page'])?$params['posts_per_page']:-1,       // 每頁顯示文章數量
 			'paged'          => isset($params['page'])?$params['page']:1,       // 當前頁碼
 			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
 			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）

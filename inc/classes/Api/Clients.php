@@ -92,7 +92,7 @@ final class Clients {
 		 */
 		$args = [
 			'post_type'      => 'clients',   // 自定義文章類型名稱
-			'posts_per_page' => isset($params['posts_per_page'])?$params['posts_per_page']:10,       // 每頁顯示文章數量
+			'posts_per_page' => isset($params['posts_per_page'])?$params['posts_per_page']:-1,       // 每頁顯示文章數量
 			'paged'          => isset($params['page'])?$params['page']:1,       // 當前頁碼
 			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
 			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）
@@ -119,6 +119,8 @@ final class Clients {
 		if (isset($params['id'])) {
 			$args['post__in'] = $params['id'];
 		}
+		// TEST 記得移除
+		\J7\WpUtils\Classes\ErrorLog::info(\print_r($args, true));
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
