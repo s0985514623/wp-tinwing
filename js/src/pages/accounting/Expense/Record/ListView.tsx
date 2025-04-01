@@ -125,9 +125,9 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
   const { data: termsData } = useMany<TTerms>({
     resource: 'terms',
     ids:
-      parsedTableProps?.dataSource?.map(
-        (theRecord) => theRecord?.term_id || '0',
-      ) ?? [],
+      parsedTableProps?.dataSource
+        ?.map((r) => r?.term_id)
+        .filter((id): id is number => typeof id === 'number') ?? [],
     queryOptions: {
       enabled: !!parsedTableProps?.dataSource && !is_adjust_balance,
     },

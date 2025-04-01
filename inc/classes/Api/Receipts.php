@@ -130,7 +130,11 @@ final class Receipts {
 				],
 			];
 		}
-		$query = new \WP_Query($args);
+		// 如果有id參數，則加入查詢條件(取得多筆文章)
+		if (isset($params['id'])) {
+			$args['post__in'] = $params['id'];
+		}
+		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
 			while ($query->have_posts()) {

@@ -74,16 +74,12 @@ export const ListView: React.FC = () => {
         {
           field: 'date[0]',
           operator: 'eq',
-          value: values?.dateRange
-            ? dayjs(values?.dateRange[0])
-            : undefined,
+          value: values?.dateRange ? dayjs(values?.dateRange[0]) : undefined,
         },
         {
           field: 'date[1]',
           operator: 'eq',
-          value: values?.dateRange
-            ? dayjs(values?.dateRange[1])
-            : undefined,
+          value: values?.dateRange ? dayjs(values?.dateRange[1]) : undefined,
         },
         {
           field: 'meta_query[0][key]',
@@ -115,9 +111,9 @@ export const ListView: React.FC = () => {
   const { data: debitNoteData } = useMany<TDebitNote>({
     resource: 'debit_notes',
     ids:
-      parsedTableProps?.dataSource?.map(
-        (theRecord) => theRecord?.debit_note_id || '0',
-      ) ?? [],
+      parsedTableProps?.dataSource
+        ?.map((r) => r?.debit_note_id)
+        .filter((id): id is number => typeof id === 'number') ?? [],
     queryOptions: {
       enabled: !!parsedTableProps?.dataSource,
     },
@@ -128,9 +124,9 @@ export const ListView: React.FC = () => {
   const { data: renewalsData } = useMany<TRenewal>({
     resource: 'renewals',
     ids:
-      parsedTableProps?.dataSource?.map(
-        (theRecord) => theRecord?.created_from_renewal_id || '0',
-      ) ?? [],
+      parsedTableProps?.dataSource
+        ?.map((r) => r?.created_from_renewal_id)
+        .filter((id): id is number => typeof id === 'number') ?? [],
     queryOptions: {
       enabled: !!parsedTableProps?.dataSource,
     },
@@ -478,7 +474,9 @@ export const ListView: React.FC = () => {
             width={120}
             dataIndex="pay_to_insurer_by_payment_date"
             title="Payment Date"
-            render={(date: number) => date?dayjs.unix(date).format('YYYY-MM-DD'):''}
+            render={(date: number) =>
+              date ? dayjs.unix(date).format('YYYY-MM-DD') : ''
+            }
           />
           <Table.Column
             width={120}

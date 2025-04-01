@@ -100,7 +100,9 @@ export const ListView: React.FC = () => {
     //取得符合當前搜尋dataSource的terms
     const { data: _termsData } = useMany<TTerms>({
         resource: 'terms',
-        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.term_id || '0') ?? [],
+        ids: parsedTableProps?.dataSource
+				?.map((r) => r?.term_id)
+				.filter((id): id is number => typeof id === 'number') ?? [],
         queryOptions: {
             enabled: !!parsedTableProps?.dataSource,
         },

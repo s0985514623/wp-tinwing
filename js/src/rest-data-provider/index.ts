@@ -67,7 +67,7 @@ export const dataProvider = (
     const requestMethod = (method as THttpMethods) ?? 'get'
 
     const { data } = await httpClient[requestMethod](
-      `${apiUrl}/${resource}?${stringify({ id: ids })}`,
+      `${apiUrl}/${resource}?${stringify({ id: ids }, { arrayFormat: 'bracket' })}`,
       { headers },
     )
 

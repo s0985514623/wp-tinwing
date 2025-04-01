@@ -115,6 +115,10 @@ final class Clients {
 				],
 			];
 		}
+		// 如果有id參數，則加入查詢條件(取得多筆文章)
+		if (isset($params['id'])) {
+			$args['post__in'] = $params['id'];
+		}
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
@@ -223,6 +227,7 @@ final class Clients {
 	}
 	/**
 	 * Get clients by id callback
+	 * 只適用於單一文章
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response

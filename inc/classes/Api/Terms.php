@@ -108,6 +108,11 @@ final class Terms {
 				],
 			];
 		}
+		// 如果有id參數，則加入查詢條件(取得多筆文章)
+		if (isset($params['id'])) {
+			// TEST 記得移除
+			$args['post__in'] = $params['id'];
+		}
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
@@ -121,7 +126,7 @@ final class Terms {
 				$posts_data[] = [
 					'id'         => get_the_ID(),
 					'created_at' => strtotime(get_the_date('Y-m-d')),
-					'name'    => html_entity_decode(get_the_title()),
+					'name'       => html_entity_decode(get_the_title()),
 				];
 				// 取得最後一個索引 (即剛剛推入的那個項目)
 				$last_index = count($posts_data) - 1;
@@ -238,7 +243,7 @@ final class Terms {
 				$response_data = [
 					'id'         => get_the_ID(),
 					'created_at' => strtotime(get_the_date('Y-m-d')),
-					'name'    => html_entity_decode(get_the_title()),
+					'name'       => html_entity_decode(get_the_title()),
 				];
 				// 整理 meta 資料
 				foreach (PostType\Terms::instance()->get_meta() as $key => $value) {
