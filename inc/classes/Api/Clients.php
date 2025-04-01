@@ -93,6 +93,7 @@ final class Clients {
 		$args = [
 			'post_type'      => 'clients',   // 自定義文章類型名稱
 			'posts_per_page' => isset($params['posts_per_page'])?$params['posts_per_page']:10,       // 每頁顯示文章數量
+			'paged'          => isset($params['page'])?$params['page']:1,       // 當前頁碼
 			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
 			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 		];
@@ -153,7 +154,7 @@ final class Clients {
 		$response = new \WP_REST_Response(  $posts_data  );
 
 		// Set pagination in header.
-		// $response->header( 'X-WP-Total', $total );
+		$response->header( 'X-WP-Total', $query->found_posts );
 		// $response->header( 'X-WP-TotalPages', $total_pages );
 
 		return $response;
