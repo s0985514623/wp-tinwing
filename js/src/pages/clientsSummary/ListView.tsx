@@ -136,6 +136,9 @@ const termOptions = {
     ]
     return filters as CrudFilters
   },
+	pagination:{
+		pageSize:-1,
+	}
 }
 
 export const ListView: React.FC = () => {
