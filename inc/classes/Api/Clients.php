@@ -119,8 +119,6 @@ final class Clients {
 		if (isset($params['id'])) {
 			$args['post__in'] = $params['id'];
 		}
-		// TEST 記得移除
-		\J7\WpUtils\Classes\ErrorLog::info(\print_r($args, true));
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {

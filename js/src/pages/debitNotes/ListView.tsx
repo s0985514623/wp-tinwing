@@ -258,9 +258,9 @@ export const ListView: React.FC = () => {
       <Table
         {...parsedTableProps}
         //Refine的onChange會重新送出request,這邊複寫onChange,避免重新送出request
-        onChange={() => {
-          return
-        }}
+        // onChange={() => {
+        //   return
+        // }}
         rowKey="id"
         size="middle"
       >

@@ -231,9 +231,9 @@ export const ListView: React.FC = () => {
             <Table
                 {...parsedTableProps}
                 //Refine的onChange會重新送出request,這邊複寫onChange,避免重新送出request
-                onChange={() => {
-                    return;
-                }}
+                // onChange={() => {
+                //     return;
+                // }}
                 rowKey="id"
                 size="middle">
                 <Table.Column width={100} dataIndex="period_of_insurance_to" title="End Date" render={(period_of_insurance_to: number) => (period_of_insurance_to ? dayjs.unix(period_of_insurance_to).format('YYYY-MM-DD') : '')} {...getSortProps<DataType>('period_of_insurance_to')} />
