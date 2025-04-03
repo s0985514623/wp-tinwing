@@ -33,7 +33,7 @@ const EditMetaGeneral = () => {
     const insurerTotalFee = levyValue + watchExtraValue + round(watchPremium * (watchInsurerFeePercent / 100), 2);
 
     useEffect(() => {
-        setInsurerFee(round(watchPremium * (watchInsurerFeePercent / 100)));
+        setInsurerFee(round(watchPremium * (watchInsurerFeePercent / 100),2));
     }, [watchInsurerFeePercent]);
 
     const handleChange = (value: number | null) => {
@@ -57,7 +57,7 @@ const EditMetaGeneral = () => {
                             </Form.Item>
                         </div>
                         <div>
-                            <InputNumber className="w-full" size="small" min={0} addonBefore="HKD" value={insurerFee} onChange={handleChange} onBlur={handleBlur} />
+                            <InputNumber className="w-full" size="small" min={0} addonBefore="HKD" value={insurerFee} onChange={handleChange} onBlur={handleBlur} step="0.01"/>
                         </div>
                     </div>
                     <div className="th">除稅後款項</div>

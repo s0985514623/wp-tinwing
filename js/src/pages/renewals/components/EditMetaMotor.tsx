@@ -46,7 +46,7 @@ const EditMetaMotor = () => {
                     <div className="td flex">
                         <div>
                             <Form.Item noStyle name={['insurer_fee_percent']}>
-                                <InputNumber className="w-full" size="small" min={0} addonAfter="%" />
+                                <InputNumber className="w-full" size="small" min={0} addonAfter="%" step="0.01"/>
                             </Form.Item>
                         </div>
                         <div>
