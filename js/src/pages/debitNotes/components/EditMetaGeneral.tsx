@@ -25,13 +25,9 @@ const EditMetaGeneral = () => {
         extraValue: watchExtraField,
     });
 
-    const profit = totalPremium - (levyValue + watchExtraValue + round(totalPremium * (watchInsurerFeePercent / 100), 2)) - watchAgentFee;
-    // console.log('🚀 ~ totalPremium:', totalPremium);
-    // console.log('🚀 ~ profit:', profit);
-    const margin = round(profit / totalPremium, 2);
-
     const insurerTotalFee = levyValue + watchExtraValue + round(watchPremium * (watchInsurerFeePercent / 100), 2);
-
+		const profit = totalPremium - insurerTotalFee - watchAgentFee;
+    const margin = round(profit / totalPremium, 2);
     useEffect(() => {
         setInsurerFee(round(watchPremium * (watchInsurerFeePercent / 100),2));
     }, [watchInsurerFeePercent]);
