@@ -27,7 +27,7 @@ const EditMetaGeneral = () => {
 
     const insurerTotalFee = levyValue + watchExtraValue + round(watchPremium * (watchInsurerFeePercent / 100), 2);
 		const profit = totalPremium - insurerTotalFee - watchAgentFee;
-    const margin = round(profit / totalPremium, 2);
+    const margin = round(profit *100 / totalPremium, 2);
     useEffect(() => {
         setInsurerFee(round(watchPremium * (watchInsurerFeePercent / 100),2));
     }, [watchInsurerFeePercent]);
@@ -144,7 +144,7 @@ const EditMetaGeneral = () => {
                 </Col>
                 <Col span={8} className="text-center">
                     <p className="text-[#555] font-light">Margin</p>
-                    <p className="font-black text-4xl">{isNaN(margin) ? 'N/A' : `${margin * 100}%`}</p>
+                    <p className="font-black text-4xl">{isNaN(margin) ? 'N/A' : `${margin}%`}</p>
                 </Col>
             </Row>
         </>

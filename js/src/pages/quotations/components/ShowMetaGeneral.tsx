@@ -41,7 +41,7 @@ const ShowMetaGeneral = () => {
 
 		const insurerTotalFee = levyValue + extra_fieldValue + round(premium * (insurerPaymentRate / 100), 2);
     const profit = totalPremium - insurerTotalFee - agent_fee;
-    const margin = round(profit / totalPremium, 2);
+    const margin = round(profit *100 / totalPremium, 2);
 
 
 
@@ -96,7 +96,7 @@ const ShowMetaGeneral = () => {
                 </Col>
                 <Col span={8} className="text-center">
                     <p className="text-[#555] font-light">Margin</p>
-                    <p className="font-black text-4xl">{isNaN(margin) ? 'N/A' : `${margin * 100}%`}</p>
+                    <p className="font-black text-4xl">{isNaN(margin) ? 'N/A' : `${margin}%`}</p>
                 </Col>
             </Row>
         </>

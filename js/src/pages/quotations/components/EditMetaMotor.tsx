@@ -33,7 +33,7 @@ const EditMetaMotor = () => {
 
     const profit = totalPremium - (mibValue + watchExtraValue + round(grossPremium * (watchInsurerFeePercent / 100), 2)) - watchAgentFee;
     // console.log('🚀 ~ profit:', profit);
-    const margin = round(profit / totalPremium, 2);
+    const margin = round(profit *100 / totalPremium, 2);
 
     const insurerFee = round(grossPremium * (watchInsurerFeePercent / 100), 2);
     const insurerTotalFee = mibValue + watchExtraValue + round(grossPremium * (watchInsurerFeePercent / 100), 2);
@@ -146,7 +146,7 @@ const EditMetaMotor = () => {
                 </Col>
                 <Col span={8} className="text-center">
                     <p className="text-[#555] font-light">Margin</p>
-                    <p className="font-black text-4xl">{isNaN(margin) ? 'N/A' : `${margin * 100}%`}</p>
+                    <p className="font-black text-4xl">{isNaN(margin) ? 'N/A' : `${margin}%`}</p>
                 </Col>
             </Row>
         </>
