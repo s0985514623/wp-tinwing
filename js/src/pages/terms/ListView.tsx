@@ -29,6 +29,9 @@ export const ListView: React.FC<{ taxonomy: string }> = ({ taxonomy = '' }) => {
 								},
             ],
         },
+				pagination:{
+					pageSize: 30,
+				}
     });
 
     const parsedTableProps = safeParse<DataType>({

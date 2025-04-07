@@ -115,6 +115,9 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
       ]
       return filters as CrudFilters
     },
+		pagination:{
+			pageSize: 30,
+		}
   })
 
   const parsedTableProps = safeParse<DataType>({

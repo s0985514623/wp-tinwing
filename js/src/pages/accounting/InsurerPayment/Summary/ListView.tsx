@@ -10,7 +10,11 @@ import { safeParse, getInsurerPayment } from 'utils';
 
 export const ListView: React.FC = () => {
     //當前Table的props
-    const { tableProps } = useTable<DataType>();
+    const { tableProps } = useTable<DataType>({
+			pagination:{
+				pageSize: 30,
+			}
+		});
     const parsedTableProps = safeParse<DataType>({
         tableProps,
         ZDataType,

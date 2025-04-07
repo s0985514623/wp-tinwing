@@ -100,6 +100,9 @@ export const ListView: React.FC = () => {
       // console.log('🚀 ~ filters:', filters)
       return filters as CrudFilters
     },
+		pagination:{
+			pageSize: 30,
+		}
   })
 
   const parsedTableProps = safeParse<DataType>({
