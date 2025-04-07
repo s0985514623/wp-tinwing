@@ -64,7 +64,7 @@ const ShowMetaMotor = () => {
                             <div className="td text-right">{mib ? `${mib}%` : ''}</div>
                             <div className="td text-right">{getPrice(mibValue)}</div>
                         </div>
-                        <div className={`${extra_fieldLabel ? '' : 'hidden'} tr `}>
+                        <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr `}>
                             <div className="th">{extra_fieldLabel}</div>
                             <div className="td text-right">{extra_fieldField}%</div>
                             <div className="td text-right">{getPrice(extra_fieldValue)}</div>
@@ -86,7 +86,7 @@ const ShowMetaMotor = () => {
                             <div className="th"></div>
                             <div className="td text-right">{getPrice(mibValue)}</div>
                         </div>
-                        <div className={`${extra_fieldLabel ? '' : 'hidden'} tr `}>
+                        <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr `}>
                             <div className="th"></div>
                             <div className="td text-right">{getPrice(extra_fieldValue)}</div>
                         </div>

@@ -83,7 +83,7 @@ const EditMetaGeneral = () => {
                         })}
                     </div>
                 </div>
-                <div className={`${watchExtraLabel ? '' : 'hidden'} tr `}>
+                <div className={`${watchExtraLabel ? '' : 'tw-hidden'} tr `}>
                     <div className="th">{watchExtraLabel}</div>
                     <div className="td flex">
                         <div>{watchExtraField}%</div>

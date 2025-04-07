@@ -116,7 +116,7 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({
                 <p>{getPrice(round(premium * (levy / 100), 2))}</p>{' '}
               </div>
             </div>
-            <div className={`${extra_fieldLabel ? '' : 'hidden'} tr `}>
+            <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr `}>
               <div className="th">
                 <p>{extra_fieldLabel}</p>
               </div>

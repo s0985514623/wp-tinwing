@@ -66,7 +66,7 @@ const ShowMetaGeneral = () => {
                     <div className="th"></div>
                     <div className="td flex justify-end">{getPrice(levyValue)}</div>
                 </div>
-                <div className={`${extra_fieldLabel ? '' : 'hidden'} tr `}>
+                <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr `}>
                     <div className="th">{extra_fieldLabel}</div>
                     <div className="td flex">
                         <div>{extra_fieldField}%</div>

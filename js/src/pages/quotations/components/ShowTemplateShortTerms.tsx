@@ -39,7 +39,7 @@ const ShowTemplateShortTerms: React.FC<{ data?: DataType }> = ({ data: debitNote
                             <div className="td text-right">{levy}%</div>
                             <div className="td">{getPrice(round(premium * (levy / 100), 2))}</div>
                         </div>
-                        <div className={`${extra_fieldLabel ? '' : 'hidden'} tr `}>
+                        <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr `}>
                             <div className="th">{extra_fieldLabel}</div>
                             <div className="td text-right">{extra_fieldValue}%</div>
                             <div className="td text-right">{getPrice(round(premium * (Number(extra_fieldValue) / 100), 2))}</div>

@@ -129,7 +129,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                             <div className="td text-right">{mib ? `${mib}%` : ''}</div>
                             <div className="td text-right">{getPrice(round(grossPremium * (mib / 100), 2))}</div>
                         </div>
-                        <div className={`${extra_fieldLabel ? '' : 'hidden'} tr`}>
+                        <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr`}>
                             <div className="th">{extra_fieldLabel}</div>
                             <div className="td text-right">{extra_fieldValue}%</div>
                             <div className="td text-right">{getPrice(round(grossPremium * (Number(extra_fieldValue) / 100), 2))}</div>

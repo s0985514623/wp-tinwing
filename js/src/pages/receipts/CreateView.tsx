@@ -274,7 +274,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
             </div>
             <div className="w-1/2"></div>
           </div>
-          <div className={`tr ${selectOptions == 'renewal' ? '' : 'hidden'}`}>
+          <div className={`tr ${selectOptions == 'renewal' ? '' : 'tw-hidden'}`}>
             <div className="th">Connected Renewal</div>
             <div className="td">
               <Form.Item noStyle name={['created_from_renewal_id']}>
@@ -288,7 +288,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
             </div>
             <div className="w-1/2"></div>
           </div>
-          <div className={`tr ${selectOptions == 'debitNote' ? '' : 'hidden'}`}>
+          <div className={`tr ${selectOptions == 'debitNote' ? '' : 'tw-hidden'}`}>
             <div className="th">Connected Debit Note </div>
             <div className="td">
               <Form.Item noStyle name={['debit_note_id']}>
@@ -302,7 +302,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
             </div>
             <div className="w-1/2"></div>
           </div>
-					<div className={`tr ${selectOptions == 'creditNote' ? '' : 'hidden'}`}>
+					<div className={`tr ${selectOptions == 'creditNote' ? '' : 'tw-hidden'}`}>
             <div className="th">Connected Credit Note </div>
             <div className="td">
               <Form.Item noStyle name={['created_from_credit_note_id']}>

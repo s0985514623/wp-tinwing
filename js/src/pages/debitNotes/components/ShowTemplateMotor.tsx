@@ -14,6 +14,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
     const mib = debitNoteData?.motor_attr?.mib || 0;
     const less = debitNoteData?.less || 0;
     const extra_fieldLabel = debitNoteData?.extra_field?.label || '';
+    console.log("🚀 ~ extra_fieldLabel:", extra_fieldLabel)
     const extra_fieldValue = debitNoteData?.extra_field?.value || '';
 
     const grossPremium = getGrossPremium({
@@ -129,7 +130,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                             <div className="td text-right"><p>{mib ? `${mib}%` : ''}</p></div>
                             <div className="td text-right"><p>{getPrice(round(grossPremium * (mib / 100), 2))}</p></div>
                         </div>
-                        <div className={`${extra_fieldLabel ? '' : 'hidden'} tr`}>
+                        <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr`}>
                             <div className="th"><p>{extra_fieldLabel}</p></div>
                             <div className="td text-right"><p>{extra_fieldValue}%</p></div>
                             <div className="td text-right"><p>{getPrice(round(grossPremium * (Number(extra_fieldValue) / 100), 2))}</p></div>
