@@ -342,12 +342,12 @@ export const ListView: React.FC = () => {
         <Table.Column
           dataIndex="date"
           title="Bill Date"
-          render={(period_of_insurance_to: number) =>
-            period_of_insurance_to
-              ? dayjs.unix(period_of_insurance_to).format('YYYY-MM-DD')
+          render={(date: number) =>
+            date
+              ? dayjs.unix(date).format('YYYY-MM-DD')
               : ''
           }
-          {...getSortProps<DataType>('period_of_insurance_to')}
+          {...getSortProps<DataType>('date')}
         />
       </Table>
     </>
