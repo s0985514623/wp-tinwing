@@ -226,6 +226,9 @@ export const ListView: React.FC = () => {
             },
           },
         }}
+				pagination={{
+					pageSize:30,
+				}}
         rowKey={(record) => `${record.date}-${record.id}`}
         size="middle"
       >
