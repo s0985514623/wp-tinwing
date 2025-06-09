@@ -163,6 +163,18 @@ final class Quotations {
 					'meta_type'         => 'number',
 					'sanitize_callback' => 'floatval',
 				],
+				'coverage' =>[
+					'display_function'  => 'render_meta_box',
+					'input_type'        => 'text',
+					'meta_type'         => 'string',
+					'sanitize_callback' => 'sanitize_text_field',
+				],
+				'particulars' =>[
+					'display_function'  => 'render_meta_box',
+					'input_type'        => 'text',
+					'meta_type'         => 'string',
+					'sanitize_callback' => 'sanitize_text_field',
+				],
 			],
 		],
 		'premium' =>[

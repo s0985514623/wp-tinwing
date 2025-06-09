@@ -97,6 +97,15 @@ const EditTemplateMotor = () => {
                             </div>
                         </div>
                         <div className="tr">
+                            <div className="th">保障範圍 Coverage</div>
+                            <div className="td">
+                                <Form.Item noStyle name={['motor_attr', 'coverage']}>
+                                    <Input size="small" />
+                                </Form.Item>
+                            </div>
+                        </div>
+                        
+                        <div className="tr">
                             <div className="th">製造年份 Manufacturing Year</div>
                             <div className="td">
                                 <Form.Item noStyle name={['motor_attr', 'manufacturingYear']}>
@@ -177,6 +186,14 @@ const EditTemplateMotor = () => {
                                 </Form.Item>
                                 <Form.Item hidden name={['period_of_insurance_to']} initialValue={dayjs().unix()}>
                                     <InputNumber />
+                                </Form.Item>
+                            </div>
+                        </div>
+                        <div className="tr">
+                            <div className="th">項目詳情 Particulars</div>
+                            <div className="td">
+                                <Form.Item noStyle name={['motor_attr', 'particulars']}>
+                                    <Input.TextArea className="h-32" />
                                 </Form.Item>
                             </div>
                         </div>
