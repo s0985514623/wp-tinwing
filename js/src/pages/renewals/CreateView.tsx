@@ -66,6 +66,25 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
       }
     }),
   }
+
+  // 客戶編號的 Select
+  const { selectProps: clientNumberSelectProps } = useSelect<TClient>({
+    resource: 'clients',
+    optionLabel: 'client_number',
+    optionValue: 'id',
+  })
+  //轉換新的clientNumberSelectProps options
+  const fxnClientNumberSelectProps = {
+    ...clientNumberSelectProps,
+    options: clientNumberSelectProps?.options?.map((option) => {
+      return {
+        label: clientQueryResult?.data?.data.find(
+          (client) => client.id === option.value,
+        )?.client_number,
+        value: option.value,
+      }
+    }),
+  }
   const filterOption = (
     input: string,
     option?: { label: string; value: string },
@@ -86,6 +105,14 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
   }
   const handleClientSelect = (value: any) => {
     setSelectedClientId(value)
+    // 同步更新客戶ID到表單
+    form.setFieldValue(['client_id'], value)
+  }
+
+  const handleClientNumberSelect = (value: any) => {
+    setSelectedClientId(value)
+    // 同步更新客戶選擇的表單值
+    form.setFieldValue(['client_id'], value)
   }
 
   const { selectProps: agentSelectProps } = useSelect<TAgent>({
@@ -394,7 +421,15 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                 <div className="tr">
                   <div className="th">客戶編號 Client No</div>
                   <div className="td">
-                    {selectedClient?.client_number || ' '}
+                    <Select
+                      {...fxnClientNumberSelectProps}
+                      size="small"
+                      className="w-full"
+                      allowClear
+                      value={selectedClientId}
+                      onChange={handleClientNumberSelect}
+                      filterOption={filterOption as any}
+                    />
                   </div>
                 </div>
               </div>
