@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useMany, CrudFilters, useExport, useLink } from '@refinedev/core'
 import { List, useTable, ExportButton, useModal } from '@refinedev/antd'
 import { Table, Button } from 'antd'
@@ -147,6 +147,26 @@ export const ListView: React.FC = () => {
     },
   })
   const insurers = insurersData?.data || []
+
+  // 計算實際相關的保險公司列表（用於篩選選項）
+  const relevantInsurers = useMemo(() => {
+    if (!parsedTableProps?.dataSource) return []
+    
+    const insurerIds = new Set<number>()
+    
+    parsedTableProps.dataSource.forEach((record) => {
+      const renewal = renewals.find(r => r.id === record.created_from_renewal_id)
+      const debitNote = debitNotes.find(dn => dn.id === record.debit_note_id)
+      
+      if (renewal?.insurer_id) {
+        insurerIds.add(renewal.insurer_id)
+      } else if (debitNote?.insurer_id) {
+        insurerIds.add(debitNote.insurer_id)
+      }
+    })
+    
+    return insurers.filter(insurer => insurerIds.has(insurer.id))
+  }, [parsedTableProps?.dataSource, renewals, debitNotes, insurers])
 
   //如果没有数据，就禁用导出按钮
   const disabledBtn = parsedTableProps.dataSource?.length == 0 ? true : false
@@ -349,7 +369,6 @@ export const ListView: React.FC = () => {
           />
           <Table.Column
             width={120}
-            dataIndex="id"
             title="Insurer"
             render={(id: number, record: DataType) => {
               const renewal = renewals.find(
@@ -368,31 +387,25 @@ export const ListView: React.FC = () => {
               })
               return haveData ? <>{insurerData?.name}</> : ''
             }}
-            filters={insurers.map((insurer) => ({
+            filters={relevantInsurers.map((insurer) => ({
               text: insurer?.name,
               value: insurer?.id,
             }))}
             onFilter={(value, record) => {
               // value = insurer.id
-              const isFromRenewal = Boolean(record.created_from_renewal_id)
-              const isFromDebitNote = Boolean(record.debit_note_id)
+              const renewal = renewals.find(
+                (r) => r.id === record.created_from_renewal_id,
+              )
+              const debitNote = debitNotes.find(
+                (dn) => dn.id === record.debit_note_id,
+              )
+              
               // 如果兩個都沒有值，就不顯示
-              if (!isFromRenewal && !isFromRenewal) return false
-              // 如果是從renewal來的，就比對renewal的insurer_id
-              if (isFromRenewal) {
-                const renewal = renewals.find(
-                  (r) => r.id === record.created_from_renewal_id,
-                )
-                return renewal?.insurer_id === value
-              }
-              // 如果是從debitNote來的，就比對debitNote的insurer_id
-              if (isFromDebitNote) {
-                const debitNote = debitNotes.find(
-                  (dn) => dn.id === record?.debit_note_id,
-                )
-                return debitNote?.insurer_id === value
-              }
-              return false
+              if (!renewal && !debitNote) return false
+              
+              // 比對 insurer_id
+              const insurerId = renewal?.insurer_id ?? debitNote?.insurer_id
+              return insurerId === value
             }}
           />
           <Table.Column
