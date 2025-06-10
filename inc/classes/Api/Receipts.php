@@ -11,6 +11,7 @@ use J7\WpTinwing\Plugin;
 use J7\WpUtils\Classes\WP;
 use J7\WpTinwing\Admin\PostType;
 use J7\WpTinwing\Utils\Base;
+// use J7\WpUtils\Classes\Log;
 
 /**
  * Class Entry
@@ -134,6 +135,7 @@ final class Receipts {
 		if (isset($params['id'])) {
 			$args['post__in'] = $params['id'];
 		}
+		// Log::debug(print_r($args, true));
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {
@@ -170,6 +172,7 @@ final class Receipts {
 			}
 			wp_reset_postdata();
 		}
+		// Log::debug(print_r($posts_data, true));
 		$response = new \WP_REST_Response(  $posts_data  );
 
 		// Set pagination in header.

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { CrudFilters, useList, useExport } from '@refinedev/core'
 import Filter from './Filter'
 import { ExportButton } from '@refinedev/antd'
@@ -14,7 +14,7 @@ import { getTotalPremiumByDebitNote, getInsurerPayment } from 'utils'
 import IncomeByBank from './IncomeByBank'
 import LineGrid from './LineGrid'
 import { useFormatLineGridData } from 'hooks/useFormatLineGridData'
-import _ from 'lodash-es'
+import { sortBy } from 'lodash-es'
 import NoDisplay from './NoDisplay'
 
 type DataType = TReceipts | TDebitNote | TQuotations
@@ -71,25 +71,40 @@ export const ListView: React.FC = () => {
     useList<TDebitNote>({
       resource: 'debit_notes',
       filters: filters as CrudFilters,
+      pagination: {
+        pageSize: -1,
+      },
     })
   const { data: quotationsData, isLoading: quotationsIsLoading } =
     useList<TQuotations>({
       resource: 'quotations',
       filters: filters as CrudFilters,
+      pagination: {
+        pageSize: -1,
+      },
     })
   const { data: renewalsData, isLoading: renewalsIsLoading } =
     useList<TRenewals>({
       resource: 'renewals',
       filters: filters as CrudFilters,
+      pagination: {
+        pageSize: -1,
+      },
     })
   const { data: receiptsData, isLoading: receiptsIsLoading } =
     useList<TReceipts>({
       resource: 'receipts',
       filters: filters as CrudFilters,
+      pagination: {
+        pageSize: -1,
+      },
     })
   const { data: InsurerPaymentData, isLoading: InsurerPaymentIsLoading } =
     useList<TReceipts>({
       resource: 'receipts',
+      pagination: {
+        pageSize: -1,
+      },
       filters: dateRange
         ? [
             {
@@ -155,12 +170,18 @@ export const ListView: React.FC = () => {
     useList<TDebitNote>({
       resource: 'credit_notes',
       filters: filters as CrudFilters,
+      pagination: {
+        pageSize: -1,
+      },
     })
 
   //一般expenses 費用
   const { data: expensesData, isLoading: expensesIsLoading } =
     useList<TExpenses>({
       resource: 'expenses',
+      pagination: {
+        pageSize: -1,
+      },
       filters: dateRange
         ? [
             {
@@ -221,6 +242,9 @@ export const ListView: React.FC = () => {
   const { data: adjustBalancesData, isLoading: adjustBalancesIsLoading } =
     useList<TExpenses>({
       resource: 'expenses',
+      pagination: {
+        pageSize: -1,
+      },
       filters: dateRange
         ? [
             {
@@ -281,6 +305,9 @@ export const ListView: React.FC = () => {
   const { data: insurersData, isLoading: insurersIsLoading } =
     useList<TInsurers>({
       resource: 'insurers',
+      pagination: {
+        pageSize: -1,
+      },
     })
 
   //123.各種數量
@@ -303,8 +330,9 @@ export const ListView: React.FC = () => {
   })
 
   //4-2. 計算 Receipt 收入，分銀行來紀錄
-  const receiptsByBankToIncome =
-    receiptsData?.data.reduce(
+  const receiptsByBankToIncome = useMemo(() => {
+      
+    return receiptsData?.data.reduce(
       (acc, receipt) => {
         const bank = receipt?.payment_receiver_account
         if (!bank) return acc
@@ -330,93 +358,109 @@ export const ListView: React.FC = () => {
       },
       [] as { bank: string; income: number }[],
     ) || []
+          
+        
+  }, [receiptsData?.data, debitNotesData?.data])
 
   /*4-3. Bank Balance 計算
 	receipt能計算的只有Receipt Amount(premium)跟 Credit Note Amount
 	Adjust Balance & Expenses 要另外計算
 	Insurer Payment 也要另外計算因為銀行有可能不同
 	*/
-  const bankBalance =
-    receiptsData?.data.reduce(
-      (acc, receipt) => {
-        const bank = receipt?.payment_receiver_account
-        if (!bank) return acc
-        const premium = receipt?.premium
-          ? Number(receipt?.premium)
-          : getTotalPremiumByDebitNote(
-              (
-                debitNotesData?.data?.filter(
-                  (debitNote) => debitNote?.id === receipt?.debit_note_id,
-                ) as TDebitNote[]
-              )[0] ?? 0,
-            )
-        // const total = premium - insurerPayment
-        const existingBank = acc.find((item) => item.bank === bank)
-        if (existingBank) {
-          existingBank.income += premium
+  const bankBalance = useMemo(() => {
+    const balance =
+      receiptsData?.data.reduce(
+        (acc, receipt) => {
+          const bank = receipt?.payment_receiver_account
+          if (!bank) return acc
+          const premium = receipt?.premium
+            ? Number(receipt?.premium)
+            : getTotalPremiumByDebitNote(
+                (
+                  debitNotesData?.data?.filter(
+                    (debitNote) => debitNote?.id === receipt?.debit_note_id,
+                  ) as TDebitNote[]
+                )[0] ?? 0,
+              )
+          const existingBank = acc.find((item) => item.bank === bank)
+          if (existingBank) {
+            existingBank.income += premium
+          } else {
+            acc.push({ bank, income: premium })
+          }
+          return acc
+        },
+        [] as { bank: string; income: number }[],
+      ) || []
+
+    //計算Adjust Balances
+    adjustBalancesData?.data.forEach((adjustBalance) => {
+      const bank = adjustBalance?.payment_receiver_account
+      if (!bank) return
+      const amount = adjustBalance?.amount
+      const existingBank = balance.find((item) => item.bank === bank)
+      if (existingBank) {
+        existingBank.income -= amount
+      } else {
+        balance.push({ bank, income: -amount })
+      }
+    })
+
+    //計算Expenses
+    expensesData?.data.forEach((expense) => {
+      const bank = expense?.payment_receiver_account
+      if (!bank) return
+      const amount = expense?.amount
+      const existingBank = balance.find((item) => item.bank === bank)
+      if (existingBank) {
+        existingBank.income -= amount
+      } else {
+        balance.push({ bank, income: -amount })
+      }
+    })
+
+    //計算 Insurer Payment 扣除
+    InsurerPaymentData?.data.forEach((InsurerPayment) => {
+      const bank = InsurerPayment?.pay_to_insurer_by_bank
+      if (!bank) return
+      const debitNote = debitNotesData?.data.find(
+        (dn: TDebitNote) => dn.id === InsurerPayment.debit_note_id,
+      )
+      const renewal = renewalsData?.data.find(
+        (r: TRenewals) => r.id === InsurerPayment.created_from_renewal_id,
+      )
+      const insurer = insurersData?.data?.find((insurer) => {
+        if (renewal) {
+          return insurer.id === renewal.insurer_id
         } else {
-          acc.push({ bank, income: premium })
+          return insurer.id === debitNote?.insurer_id
         }
-        return acc
-      },
-      [] as { bank: string; income: number }[],
-    ) || []
-  // console.log('🚀 ~ bankBalance:', bankBalance)
-  //計算Adjust Balances
-  adjustBalancesData?.data.map((adjustBalance) => {
-    const bank = adjustBalance?.payment_receiver_account
-    if (!bank) return
-    const amount = adjustBalance?.amount
-    const existingBank = bankBalance.find((item) => item.bank === bank)
-    if (existingBank) {
-      existingBank.income -= amount
-    } else {
-      bankBalance.push({ bank, income: -amount })
-    }
-  })
-  //計算Expenses
-  expensesData?.data.map((expense) => {
-    const bank = expense?.payment_receiver_account
-    if (!bank) return
-    const amount = expense?.amount
-    const existingBank = bankBalance.find((item) => item.bank === bank)
-    if (existingBank) {
-      existingBank.income -= amount
-    } else {
-      bankBalance.push({ bank, income: -amount })
-    }
-  })
-	//計算 Insurer Payment 扣除
-	InsurerPaymentData?.data.map((InsurerPayment) => {
-		const bank = InsurerPayment?.pay_to_insurer_by_bank
-		if (!bank) return
-		const debitNote = debitNotesData?.data.find(
-			(dn: TDebitNote) => dn.id === InsurerPayment.debit_note_id,
-		)
-		const renewal = renewalsData?.data.find(
-			(r: TRenewals) => r.id === InsurerPayment.created_from_renewal_id,
-		)
-		const insurer = insurersData?.data?.find((insurer) => {
-			if (renewal) {
-				return insurer.id === renewal.insurer_id
-			} else {
-				return insurer.id === debitNote?.insurer_id
-			}
-		})
-		const insurerPayment = insurer
-			? getInsurerPayment(
-				InsurerPayment,
-					renewal ?? (debitNote as TDebitNote),
-					insurer as TInsurers,
-				)
-			: 0
-			const existingBank = bankBalance.find((item) => item.bank === bank)
-			if (existingBank) {
-				existingBank.income -= insurerPayment
-			} else {
-				bankBalance.push({ bank, income: -insurerPayment })
-			}
-	})
+      })
+      const insurerPayment = insurer
+        ? getInsurerPayment(
+            InsurerPayment,
+            renewal ?? (debitNote as TDebitNote),
+            insurer as TInsurers,
+          )
+        : 0
+      const existingBank = balance.find((item) => item.bank === bank)
+      if (existingBank) {
+        existingBank.income -= insurerPayment
+      } else {
+        balance.push({ bank, income: -insurerPayment })
+      }
+    })
+
+    return balance
+  }, [
+    receiptsData?.data,
+    debitNotesData?.data,
+    adjustBalancesData?.data,
+    expensesData?.data,
+    InsurerPaymentData?.data,
+    renewalsData?.data,
+    insurersData?.data,
+  ])
   //5.Insurer Payment [要給保險的錢](insurerTotalFee)
   const formatInsurerPayment = useFormatLineGridData({
     data: InsurerPaymentData?.data as TReceipts[],
@@ -437,52 +481,65 @@ export const ListView: React.FC = () => {
     type: 'totalAdjustBalances',
   })
   // 追加creditNotesData data
-  const creditNotesFormReceipt = receiptsData?.data.filter((receipt) => {
-    if (receipt.created_from_credit_note_id) return true
-    return false
-  })
+  const creditNotesFormReceipt = useMemo(() => {
+    return receiptsData?.data.filter((receipt) => {
+      if (receipt.created_from_credit_note_id) return true
+      return false
+    }) || []
+  }, [receiptsData?.data])
 
   const formatTotalCreditNotes = useFormatLineGridData({
     data: creditNotesFormReceipt as TDebitNote[],
     type: 'totalCreditNotes',
   })
+
   //7.Net Income [收入] 扣掉 [要給保險的錢] 扣掉 [費用紀錄金額](就是依照時間篩出來的第6項總和)
-  const totalExpense = formatTotalExpense.reduce(
-    (acc, item) => acc + item.value,
-    0,
-  )
-  const totalAdjustBalances = formatTotalAdjustBalances.reduce(
-    (acc, item) => acc + item.value,
-    0,
-  )
-  const totalInsurerPayment = formatInsurerPayment.reduce(
-    (acc, item) => acc + item.value,
-    0,
-  )
-  const totalCreditNotes = formatTotalCreditNotes.reduce(
-    (acc, item) => acc + item.value,
-    0,
-  )
+  const totalExpense = useMemo(() => {
+    return formatTotalExpense.reduce((acc, item) => acc + item.value, 0)
+  }, [formatTotalExpense])
+
+  const totalAdjustBalances = useMemo(() => {
+    return formatTotalAdjustBalances.reduce((acc, item) => acc + item.value, 0)
+  }, [formatTotalAdjustBalances])
+
+  const totalInsurerPayment = useMemo(() => {
+    return formatInsurerPayment.reduce((acc, item) => acc + item.value, 0)
+  }, [formatInsurerPayment])
+
+  const totalCreditNotes = useMemo(() => {
+    return formatTotalCreditNotes.reduce((acc, item) => acc + item.value, 0)
+  }, [formatTotalCreditNotes])
 
   //8.Income by Bank Receipt 有選入帳銀行 按銀行計算
   //將第一位塞入totalExpense , 第二位塞入CreditNotes
-  const incomeByBankReceipt = [
-    { bank: 'Expenses', income: totalExpense },
-    { bank: 'Credit Notes', income: totalCreditNotes },
-    { bank: 'Adjust Balances', income: totalAdjustBalances },
-    { bank: 'Insurer Payment', income: totalInsurerPayment },
-  ]
+  const incomeByBankReceipt = useMemo(() => {
+    return [
+      { bank: 'Expenses', income: totalExpense },
+      { bank: 'Credit Notes', income: totalCreditNotes },
+      { bank: 'Adjust Balances', income: totalAdjustBalances },
+      { bank: 'Insurer Payment', income: totalInsurerPayment },
+    ]
+  }, [totalExpense, totalCreditNotes, totalAdjustBalances, totalInsurerPayment])
+
   //TODO 這邊可以改掉 結合所有數據並排序
-  const allData = _.sortBy(
-    [
-      ...formatTotalIncome,
-      ...formatTotalExpense,
-      ...formatTotalAdjustBalances,
-      ...formatInsurerPayment,
-      ...formatTotalCreditNotes,
-    ],
-    ['date', 'value'],
-  )
+  const allData = useMemo(() => {
+    return sortBy(
+      [
+        ...formatTotalIncome,
+        ...formatTotalExpense,
+        ...formatTotalAdjustBalances,
+        ...formatInsurerPayment,
+        ...formatTotalCreditNotes,
+      ],
+      ['date', 'value'],
+    )
+  }, [
+    formatTotalIncome,
+    formatTotalExpense,
+    formatTotalAdjustBalances,
+    formatInsurerPayment,
+    formatTotalCreditNotes,
+  ])
 
   //是否顯示Spin
   const isLoading =
