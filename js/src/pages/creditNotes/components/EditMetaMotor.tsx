@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Row, Col, Form, InputNumber } from 'antd';
 import { getGrossPremium, getMotorTotalPremium } from 'utils';
 import { round } from 'lodash-es';
 
 const EditMetaMotor = () => {
+    const [insurerFee, setInsurerFee] = useState(0);
     const form = Form.useFormInstance();
     const watchPremium = Form.useWatch(['premium'], form) || 0;
     const watchLs = Form.useWatch(['motor_attr', 'ls'], form) || 0;
@@ -35,9 +36,20 @@ const EditMetaMotor = () => {
     // console.log('🚀 ~ profit:', profit);
     const margin = round(profit *100 / totalPremium, 2);
 
-    const insurerFee = round(grossPremium * (watchInsurerFeePercent / 100), 2);
+    // const insurerFee = round(grossPremium * (watchInsurerFeePercent / 100), 2);
     const insurerTotalFee = mibValue + watchExtraValue + round(grossPremium * (watchInsurerFeePercent / 100), 2);
+    useEffect(() => {
+        setInsurerFee(round(watchPremium * (watchInsurerFeePercent / 100),2));
+    }, [watchInsurerFeePercent]);
 
+    const handleChange = (value: number | null) => {
+        if (value) {
+            setInsurerFee(value);
+        }
+    };
+    const handleBlur = () => {
+        form.setFieldValue(['insurer_fee_percent'], round((insurerFee / watchPremium) * 100, 2));
+    };
     return (
         <>
             <div className="table table_td-flex-1 w-full mt-12">
@@ -50,12 +62,7 @@ const EditMetaMotor = () => {
                             </Form.Item>
                         </div>
                         <div>
-                            {isNaN(insurerFee)
-                                ? ''
-                                : insurerFee.toLocaleString('en-US', {
-                                      minimumFractionDigits: 2, // 最少小數點後兩位
-                                      maximumFractionDigits: 2, // 最多小數點後兩位
-                                  })}
+                            <InputNumber className="w-full" size="small" min={0} addonBefore="HKD" value={insurerFee} onChange={handleChange} onBlur={handleBlur} step="0.01"/>
                         </div>
                     </div>
                     <div className="th">除稅後款項</div>
