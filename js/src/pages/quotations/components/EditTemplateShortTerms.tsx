@@ -7,7 +7,7 @@ import { getGeneralTotalPremium, getPrice } from 'utils';
 
 const { TextArea } = Input;
 
-const EditTemplateGeneral = () => {
+const EditTemplateShortTerms = () => {
     const form = Form.useFormInstance();
     const { queryResult } = useForm();
     const extra_fieldLabel = queryResult?.data?.data?.extra_field?.label || '';
@@ -92,4 +92,4 @@ const EditTemplateGeneral = () => {
     );
 };
 
-export default EditTemplateGeneral;
+export default EditTemplateShortTerms;

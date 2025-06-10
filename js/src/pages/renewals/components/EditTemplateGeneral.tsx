@@ -3,13 +3,13 @@ import { useSelect } from '@refinedev/antd';
 import { Row, Col, Select, Form, Input, InputNumber, DatePicker, Tooltip } from 'antd';
 import { round } from 'lodash-es';
 import dayjs, { Dayjs } from 'dayjs';
-import { RangeValue } from 'rc-picker/lib/interface';
+import type { RangePickerProps } from 'antd/es/date-picker';
 import { DataType as TInsurer } from 'pages/insurers/types';
 import { getGeneralTotalPremium, getPrice } from 'utils';
 import { InfoCircleFilled } from '@ant-design/icons';
 
 const { RangePicker } = DatePicker;
-const EditTemplateShortTerms = () => {
+const EditTemplateGeneral = () => {
     const form = Form.useFormInstance();
     const watchPremium = Form.useWatch(['premium'], form) || 0;
     const watchLevy = Form.useWatch(['levy'], form) || 0;
@@ -34,7 +34,7 @@ const EditTemplateShortTerms = () => {
         optionValue: 'id',
     });
 
-    const handlePeriodChange = (value: RangeValue<Dayjs>) => {
+    const handlePeriodChange = (value: RangePickerProps['value']) => {
         if (!!value && !!value[0] && !!value[1]) {
             form.setFieldValue(['period_of_insurance_from'], value[0].unix());
             form.setFieldValue(['period_of_insurance_to'], value[1].unix());
@@ -171,4 +171,4 @@ const EditTemplateShortTerms = () => {
     );
 };
 
-export default EditTemplateShortTerms;
+export default EditTemplateGeneral;

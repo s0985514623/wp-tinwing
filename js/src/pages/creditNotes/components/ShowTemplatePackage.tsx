@@ -5,7 +5,7 @@ import { round } from 'lodash-es';
 import { DataType } from '../types';
 import { getGeneralTotalPremium, getPrice } from 'utils';
 
-const ShowTemplateShortTerms: React.FC<{ data?: DataType }> = ({ data: debitNoteData }) => {
+const ShowTemplatePackage: React.FC<{ data?: DataType }> = ({ data: debitNoteData }) => {
     const premium = debitNoteData?.premium || 0;
     const levy = debitNoteData?.levy || 0;
     const less = debitNoteData?.less || 0;
@@ -65,4 +65,4 @@ const ShowTemplateShortTerms: React.FC<{ data?: DataType }> = ({ data: debitNote
     );
 };
 
-export default ShowTemplateShortTerms;
+export default ShowTemplatePackage;

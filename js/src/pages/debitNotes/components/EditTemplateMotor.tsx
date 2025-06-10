@@ -3,7 +3,7 @@ import { useSelect } from '@refinedev/antd';
 import { Row, Col, Select, Form, Input, InputNumber, DatePicker, Tooltip } from 'antd';
 import { round } from 'lodash-es';
 import dayjs, { Dayjs } from 'dayjs';
-import { RangeValue } from 'rc-picker/lib/interface';
+import type { RangePickerProps } from 'antd/es/date-picker';
 import { DataType as TInsurer } from 'pages/insurers/types';
 import { getGrossPremium, getMotorTotalPremium, getPrice } from 'utils';
 import { InfoCircleFilled } from '@ant-design/icons';
@@ -42,7 +42,7 @@ const EditTemplateMotor = () => {
         optionValue: 'id',
     });
 
-    const handlePeriodChange = (value: RangeValue<Dayjs>) => {
+    const handlePeriodChange = (value: RangePickerProps['value']) => {
         if (!!value && !!value[0] && !!value[1]) {
             form.setFieldValue(['period_of_insurance_from'], value[0].unix());
             form.setFieldValue(['period_of_insurance_to'], value[1].unix());

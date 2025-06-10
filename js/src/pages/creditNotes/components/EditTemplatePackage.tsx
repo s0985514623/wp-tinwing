@@ -6,7 +6,7 @@ import { getGeneralTotalPremium, getPrice } from 'utils';
 
 const { TextArea } = Input;
 
-const EditTemplateGeneral = () => {
+const EditTemplatePackage = () => {
     const form = Form.useFormInstance();
     const watchPremium = Form.useWatch(['premium'], form) || 0;
     const watchLevy = Form.useWatch(['levy'], form) || 0;
@@ -94,4 +94,4 @@ const EditTemplateGeneral = () => {
     );
 };
 
-export default EditTemplateGeneral;
+export default EditTemplatePackage;

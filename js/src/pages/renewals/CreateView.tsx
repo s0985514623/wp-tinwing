@@ -11,6 +11,7 @@ import DebitNoteHeader from './components/EditDebitNoteHeader'
 import DetailFooter from 'components/DetailFooter'
 import EditMetaMotor from './components/EditMetaMotor'
 import EditMetaGeneral from './components/EditMetaGeneral'
+import EditMetaPackage from './components/EditMetaPackage'
 import { TTemplate } from './types'
 import { DataType as TClient, defaultClient } from 'pages/clients/types'
 import { DataType as TAgent } from 'pages/agents/types'
@@ -414,6 +415,8 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         <RemarkTextArea />
         {selectedTemplate === 'general' && <EditMetaGeneral />}
         {selectedTemplate === 'motor' && <EditMetaMotor />}
+        {selectedTemplate === 'shortTerms' && <EditMetaGeneral />}
+        {selectedTemplate === 'package' && <EditMetaPackage />}
       </Form>
     </Create>
   )
