@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { IResourceComponentsProps } from '@refinedev/core'
 import { Create, useForm, useSelect } from '@refinedev/antd'
 import {
@@ -112,7 +112,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
     form.setFieldValue(['client_id'], value)
   }
 
-  const { selectProps: agentSelectProps } = useSelect<TAgent>({
+  const { selectProps: agentSelectProps, queryResult: agentQueryResult } = useSelect<TAgent>({
     resource: 'agents',
     optionLabel: 'agent_number',
     optionValue: 'id',
@@ -125,6 +125,15 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
   }
 
   const templateText = getTemplateText(selectedTemplate)
+
+  // 預設選中 PIA232 代理
+  useEffect(() => {
+    const agents = agentQueryResult?.data?.data || []
+    const piaAgent = agents.find((agent) => agent.agent_number === 'PIA232')
+    if (piaAgent && !form.getFieldValue(['agent_id'])) {
+      form.setFieldValue(['agent_id'], piaAgent.id)
+    }
+  }, [agentQueryResult?.data?.data])
 
   const { selectProps: termSelectProps } = useSelect<TTerm>({
     resource: 'terms',

@@ -105,7 +105,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
     form.setFieldValue(['client_id'], value)
   }
 
-  const { selectProps: agentSelectProps } = useSelect<TAgent>({
+  const { selectProps: agentSelectProps, queryResult: agentQueryResult } = useSelect<TAgent>({
     resource: 'agents',
     optionLabel: 'agent_number',
     optionValue: 'id',
@@ -132,6 +132,15 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
       setSelectedTemplate(debitNoteData?.template || 'general')
     }
   }, [debitNoteData])
+
+  // 預設選中 PIA232 代理
+  useEffect(() => {
+    const agents = agentQueryResult?.data?.data || []
+    const piaAgent = agents.find((agent) => agent.agent_number === 'PIA232')
+    if (piaAgent && !form.getFieldValue(['agent_id'])) {
+      form.setFieldValue(['agent_id'], piaAgent.id)
+    }
+  }, [agentQueryResult?.data?.data])
 
   const Link = useLink()
 
