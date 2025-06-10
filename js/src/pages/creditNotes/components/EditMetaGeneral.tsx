@@ -38,7 +38,7 @@ const EditMetaGeneral = () => {
         }
     };
     const handleBlur = () => {
-        form.setFieldValue(['insurer_fee_percent'], round((insurerFee / watchPremium) * 100, 2));
+        form.setFieldValue(['insurer_fee_percent'], round((insurerFee / watchPremium) * 100, 5));
     };
 
     return (
@@ -49,7 +49,7 @@ const EditMetaGeneral = () => {
                     <div className="td flex">
                         <div className="mr-2">
                             <Form.Item noStyle name={['insurer_fee_percent']}>
-                                <InputNumber className="w-full" size="small" min={0} addonAfter="%" stringMode step="0.01" />
+                                <InputNumber className="w-full" size="small" min={0} addonAfter="%" stringMode step="0.00001" />
                             </Form.Item>
                         </div>
                         <div>
