@@ -167,6 +167,24 @@ final class DebitNotes {
 	public function post_debit_notes_callback( $request ) { // phpcs:ignore
 		$params = $request->get_json_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
+		
+		// 檢查 post_title 是否重複
+		if (isset($params['note_no']) && !empty($params['note_no'])) {
+			$existing_query = new \WP_Query([
+				'post_type' => 'debit_notes',
+				'title' => $params['note_no'],
+				'posts_per_page' => 1,
+				'fields' => 'ids'
+			]);
+			if ($existing_query->found_posts > 0) {
+				return new \WP_Error( 
+					'duplicate_note_no', 
+					'號碼重複不能使用', 
+					[ 'status' => 400 ] 
+				);
+			}
+		}
+		
 		// 創建文章
 		$post_id = wp_insert_post(
 			[
@@ -199,6 +217,25 @@ final class DebitNotes {
 		$params     = WP::sanitize_text_field_deep( $params, false );
 		$post_id    = $request->get_param('id');
 		$post_title = isset($params['note_no'])?$params['note_no']:\get_the_title($post_id);
+		
+		// 檢查 post_title 是否重複（排除當前正在更新的文章）
+		if (isset($params['note_no']) && !empty($params['note_no'])) {
+			$existing_query = new \WP_Query([
+				'post_type' => 'debit_notes',
+				'title' => $params['note_no'],
+				'posts_per_page' => 1,
+				'fields' => 'ids',
+				'post__not_in' => [$post_id]
+			]);
+			if ($existing_query->found_posts > 0) {
+				return new \WP_Error( 
+					'duplicate_note_no', 
+					'號碼重複不能使用', 
+					[ 'status' => 400 ] 
+				);
+			}
+		}
+		
 		// 更新文章
 		$post_id = wp_update_post(
 			[
