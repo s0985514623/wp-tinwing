@@ -36,6 +36,7 @@ import { ToWords } from 'to-words'
 import { DataType } from './types'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { RemarkTextArea } from 'components/RemarkTextArea'
 
 export const CreateView: React.FC<IResourceComponentsProps> = () => {
   const navigate = useNavigate()
@@ -133,7 +134,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
   const renewalsData = renewalsProps.options?.filter(
     (item) => !receiptsCreatedFromRenewalIds.includes(item?.value as number),
   )
-	const fxnRenewalsDataSelectProps = {
+  const fxnRenewalsDataSelectProps = {
     ...renewalsProps,
     options: renewalsData || [],
   }
@@ -141,10 +142,10 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
   const creditNoteData = creditNoteSelectProps.options?.filter(
     (item) => !receiptsCreatedFromCreditNoteIds.includes(item?.value as number),
   )
-	const fxnCreditNoteSelectProps = {
-		...creditNoteSelectProps,
-		options: creditNoteData || [],
-	}
+  const fxnCreditNoteSelectProps = {
+    ...creditNoteSelectProps,
+    options: creditNoteData || [],
+  }
 
   //取得選擇的debit_note_id
   const selectedDebitNoteId = Form.useWatch(['debit_note_id'], form)
@@ -245,11 +246,11 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
   //處理日期
   const handleDateChange =
     (namePath: string | number | (string | number)[]) =>
-    (value: Dayjs | null) => {
-      if (!!value) {
-        form.setFieldValue(namePath, value.unix())
+      (value: Dayjs | null) => {
+        if (!!value) {
+          form.setFieldValue(namePath, value.unix())
+        }
       }
-    }
   return (
     <Create saveButtonProps={saveButtonProps}>
       <Form {...formProps} layout="vertical" onFinish={handleFinish}>
@@ -302,7 +303,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
             </div>
             <div className="w-1/2"></div>
           </div>
-					<div className={`tr ${selectOptions == 'creditNote' ? '' : 'tw-hidden'}`}>
+          <div className={`tr ${selectOptions == 'creditNote' ? '' : 'tw-hidden'}`}>
             <div className="th">Connected Credit Note </div>
             <div className="td">
               <Form.Item noStyle name={['created_from_credit_note_id']}>
@@ -448,6 +449,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                     </Form.Item>
                   </div>
                 </div>
+                <RemarkTextArea textAreaClassName="w-full" />
               </div>
             </Col>
             <Col span={12}>

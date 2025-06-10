@@ -18,6 +18,7 @@ import DetailFooter from 'components/DetailFooter'
 import { ToWords } from 'to-words'
 import autograph from 'assets/images/autograph.jpg'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
+import { RemarkTextArea } from 'components/RemarkTextArea'
 
 export const ShowView: React.FC<IResourceComponentsProps> = () => {
   const toWords = new ToWords()
@@ -212,6 +213,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                   <div className="th">Code No</div>
                   <div className="td">{receiptData?.code_no}</div>
                 </div>
+                <RemarkTextArea data={receiptData} textAreaClassName="w-full" model="show"/>
               </div>
             </Col>
             <Col

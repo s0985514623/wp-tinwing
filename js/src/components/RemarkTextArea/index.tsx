@@ -9,7 +9,7 @@ import { DataType } from 'pages/debitNotes/types';
  * @param {"edit"|"show"} model 當前模式(預設為edit)
  * @returns table
  */
-export const RemarkTextArea: React.FC<{ data?: DataType; model?: 'edit' | 'show' }> = ({ data, model = 'edit' }) => {
+export const RemarkTextArea: React.FC<{ data?: DataType; model?: 'edit' | 'show';textAreaClassName?:string }> = ({ data, model = 'edit',textAreaClassName='w-1/2' }) => {
     const remarkString = data?.remark || '';
     const TextArea = () => {
         if (model === 'show') {
@@ -17,7 +17,7 @@ export const RemarkTextArea: React.FC<{ data?: DataType; model?: 'edit' | 'show'
         }
         return (
             <Form.Item noStyle name={['remark']} initialValue={remarkString}>
-                <Input.TextArea className="w-1/2" rows={4} />
+                <Input.TextArea className={textAreaClassName} rows={4} />
             </Form.Item>
         );
     };
@@ -26,7 +26,7 @@ export const RemarkTextArea: React.FC<{ data?: DataType; model?: 'edit' | 'show'
         <div className="table table_td-flex-1 w-full mt-12">
             <div className="tr mt-4">
                 <div className="th">備註</div>
-                <div className="td flex">
+                <div className="td flex w-full">
                     <TextArea />
                 </div>
             </div>

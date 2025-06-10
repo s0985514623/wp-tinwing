@@ -35,6 +35,7 @@ import logo from 'assets/images/logo.jpg'
 import DetailFooter from 'components/DetailFooter'
 import { ToWords } from 'to-words'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
+import { RemarkTextArea } from 'components/RemarkTextArea'
 
 export const EditView: React.FC<IResourceComponentsProps> = () => {
   const toWords = new ToWords()
@@ -376,6 +377,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                     </Form.Item>
                   </div>
                 </div>
+                <RemarkTextArea data={receiptData} textAreaClassName="w-full" />
               </div>
             </Col>
             <Col span={12}>
