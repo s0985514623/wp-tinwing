@@ -476,10 +476,28 @@ export const ListView: React.FC = () => {
     type: 'totalExpense',
   })
   //6.Adjust balances 在Adjust balances輸入了各項Expense的總和[費用紀錄金額]
-  const formatTotalAdjustBalances = useFormatLineGridData({
-    data: adjustBalancesData?.data as TExpenses[],
-    type: 'totalAdjustBalances',
-  })
+  const formatTotalAdjustBalances = useMemo(() => {
+      
+    return adjustBalancesData?.data.reduce(
+      (acc, receipt) => {
+        const bank = receipt?.payment_receiver_account
+        if (!bank) return acc
+        
+        const premium = receipt?.amount
+          ? Number(receipt?.amount)
+          : 0
+        const existingBank = acc.find((item) => item.bank === bank)
+        if (existingBank) {
+          existingBank.income += premium
+        } else {
+          acc.push({ bank, income: premium })
+        }
+        return acc
+      },
+      [] as { bank: string; income: number }[],
+    ) || []
+  }, [adjustBalancesData?.data])
+
   // 追加creditNotesData data
   const creditNotesFormReceipt = useMemo(() => {
     return receiptsData?.data.filter((receipt) => {
@@ -498,9 +516,9 @@ export const ListView: React.FC = () => {
     return formatTotalExpense.reduce((acc, item) => acc + item.value, 0)
   }, [formatTotalExpense])
 
-  const totalAdjustBalances = useMemo(() => {
-    return formatTotalAdjustBalances.reduce((acc, item) => acc + item.value, 0)
-  }, [formatTotalAdjustBalances])
+  // const totalAdjustBalances = useMemo(() => {
+  //   return formatTotalAdjustBalances.reduce((acc, item) => acc + item.value, 0)
+  // }, [formatTotalAdjustBalances])
 
   const totalInsurerPayment = useMemo(() => {
     return formatInsurerPayment.reduce((acc, item) => acc + item.value, 0)
@@ -516,10 +534,10 @@ export const ListView: React.FC = () => {
     return [
       { bank: 'Expenses', income: totalExpense },
       { bank: 'Credit Notes', income: totalCreditNotes },
-      { bank: 'Adjust Balances', income: totalAdjustBalances },
+      // { bank: 'Adjust Balances', income: totalAdjustBalances },
       { bank: 'Insurer Payment', income: totalInsurerPayment },
     ]
-  }, [totalExpense, totalCreditNotes, totalAdjustBalances, totalInsurerPayment])
+  }, [totalExpense, totalCreditNotes, totalInsurerPayment])
 
   //TODO 這邊可以改掉 結合所有數據並排序
   const allData = useMemo(() => {
@@ -565,6 +583,7 @@ export const ListView: React.FC = () => {
         <NoDisplay noDisplayData={noDisplayData} />
         <IncomeByBank incomeByBankReceipt={receiptsByBankToIncome} />
         <h2 className="mt-4 font-bold">Expenses</h2>
+        <IncomeByBank incomeByBankReceipt={formatTotalAdjustBalances} />
         <IncomeByBank incomeByBankReceipt={incomeByBankReceipt} />
         {/* <LineGrid data={allData} /> */}
       </>
