@@ -126,7 +126,7 @@ export const Sider: React.FC<RefineLayoutSiderProps> = ({ Title: TitleFromProps,
             <Menu
                 className="mt-4 overflow-y-auto h-[calc(100vh-140px)]"
                 selectedKeys={[selectedKey]}
-                defaultOpenKeys={defaultOpenKeys}
+                defaultOpenKeys={[...defaultOpenKeys, '/accountingDropdown', '/recordDropdown']}
                 mode="inline"
                 onClick={() => {
                     setDrawerOpen(false);
