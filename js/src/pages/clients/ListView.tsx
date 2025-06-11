@@ -11,6 +11,7 @@ import { Table, Typography, Space } from 'antd'
 import { DataType, ZDataType } from './types'
 import { safeParse } from 'utils'
 import Filter from './Filter'
+import { getSortProps } from 'utils'
 
 export const ListView: React.FC = () => {
   const { tableProps, searchFormProps } = useTable<DataType>({
@@ -22,9 +23,9 @@ export const ListView: React.FC = () => {
         },
       ],
     },
-		filters:{
-			defaultBehavior: 'replace', // 確保查詢參數不會被合併
-		},
+    filters: {
+      defaultBehavior: 'replace', // 確保查詢參數不會被合併
+    },
     onSearch: (values: any) => {
       const filters = [
         {
@@ -35,17 +36,17 @@ export const ListView: React.FC = () => {
       ]
       // 遍歷 values 物件中的每個 key 和 value
       Object.keys(values).forEach((key, index) => {
-				// 如果是 client_number，則改為搜尋s(標題)
-				if(key === 'client_number'&&values[key] !== undefined && values[key] !== ''){
-					filters.push(
-						{
-							field: `s`,
-							operator: 'eq',
-							value: values[key],
-						},
-					)
-					return;
-				}
+        // 如果是 client_number，則改為搜尋s(標題)
+        if (key === 'client_number' && values[key] !== undefined && values[key] !== '') {
+          filters.push(
+            {
+              field: `s`,
+              operator: 'eq',
+              value: values[key],
+            },
+          )
+          return;
+        }
         // 檢查該值是否有效（例如，不是空字符串）
         if (values[key] !== undefined && values[key] !== '') {
           // 將查詢條件分別推入到 queryParams 陣列中
@@ -70,6 +71,9 @@ export const ListView: React.FC = () => {
       })
       return filters as CrudFilters
     },
+    pagination: {
+      pageSize: 30,
+    }
   })
 
   const parsedTableProps = safeParse<DataType>({
@@ -93,11 +97,13 @@ export const ListView: React.FC = () => {
         <Table.Column
           width={120}
           dataIndex="client_number"
+          {...getSortProps<DataType>('client_number')}
           title="Client No."
         />
         <Table.Column
           width={120}
           dataIndex="display_name"
+          sorter={(a: DataType, b: DataType) => a?.[a?.display_name as "name_en" | "name_zh" | "company"]?.localeCompare(b?.[b?.display_name as "name_en" | "name_zh" | "company"] || '') || 0}
           title="Display Name"
           render={(
             display_name: 'name_en' | 'name_zh' | 'company',
@@ -149,6 +155,7 @@ export const ListView: React.FC = () => {
         <Table.Column
           width={120}
           dataIndex="mobile2"
+          {...getSortProps<DataType>('mobile2')}
           title="Mobile"
           render={(mobile2: number) => (
             <>
@@ -158,7 +165,19 @@ export const ListView: React.FC = () => {
           )}
         />
 
-        <Table.Column dataIndex="company" title="Company" />
+        <Table.Column dataIndex="company" title="Company"
+          sorter={(a: DataType, b: DataType) => {
+            const aName = a.company?.trim()
+            const bName = b.company?.trim()
+
+            // 空值永遠排到最後
+            if (!aName && bName) return 1
+            if (aName && !bName) return -1
+            if (!aName && !bName) return 0
+
+            return aName.localeCompare(bName)
+          }} />
+
         <Table.Column
           dataIndex="contact2"
           title="More Contact"

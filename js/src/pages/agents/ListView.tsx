@@ -5,7 +5,11 @@ import { DataType, ZDataType } from './types';
 import { safeParse } from 'utils';
 
 export const ListView: React.FC = () => {
-    const { tableProps } = useTable<DataType>();
+    const { tableProps } = useTable<DataType>({
+        pagination: {
+            pageSize: 30,
+        }
+    });
 
     const parsedTableProps = safeParse<DataType>({
         tableProps,
