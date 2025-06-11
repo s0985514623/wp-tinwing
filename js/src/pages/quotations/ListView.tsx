@@ -226,6 +226,7 @@ export const ListView: React.FC = () => {
                     width={100}
                     dataIndex="note_no"
                     title="Note No."
+                    sorter={(a, b) => a?.note_no?.localeCompare(b?.note_no || '') || 0}
                     {...getColumnSearchProps({
                         dataIndex: 'note_no',
                     })}

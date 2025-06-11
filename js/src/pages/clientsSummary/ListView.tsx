@@ -233,6 +233,16 @@ export const ListView: React.FC = () => {
         size="middle"
       >
         <Table.Column
+          dataIndex="date"
+          title="Bill Date"
+          render={(date: number) =>
+            date
+              ? dayjs.unix(date).format('YYYY-MM-DD')
+              : ''
+          }
+          {...getSortProps<DataType>('date')}
+        />
+        <Table.Column
           dataIndex="template"
           title="Type"
           render={(value) =>
@@ -252,6 +262,7 @@ export const ListView: React.FC = () => {
         <Table.Column
           dataIndex="note_no"
           title="Note No."
+          sorter={(a, b) => a?.note_no?.localeCompare(b?.note_no || '') || 0}
           {...getColumnSearchProps({
             dataIndex: 'note_no',
           })}
@@ -342,16 +353,7 @@ export const ListView: React.FC = () => {
           }
           {...getSortProps<DataType>('period_of_insurance_to')}
         />
-        <Table.Column
-          dataIndex="date"
-          title="Bill Date"
-          render={(date: number) =>
-            date
-              ? dayjs.unix(date).format('YYYY-MM-DD')
-              : ''
-          }
-          {...getSortProps<DataType>('date')}
-        />
+        
       </Table>
     </>
   )
