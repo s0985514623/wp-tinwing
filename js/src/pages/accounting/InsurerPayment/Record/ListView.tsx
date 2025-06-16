@@ -166,16 +166,19 @@ export const ListView: React.FC = () => {
     parsedTableProps.dataSource.forEach((record) => {
       const renewal = renewals.find(r => r.id === record.created_from_renewal_id)
       const debitNote = debitNotes.find(dn => dn.id === record.debit_note_id)
+      const creditNote = creditNotes.find(cn => cn.id === record.created_from_credit_note_id)
       
       if (renewal?.insurer_id) {
         insurerIds.add(renewal.insurer_id)
       } else if (debitNote?.insurer_id) {
         insurerIds.add(debitNote.insurer_id)
+      } else if (creditNote?.insurer_id) {
+        insurerIds.add(creditNote.insurer_id)
       }
     })
     
     return insurers.filter(insurer => insurerIds.has(insurer.id))
-  }, [parsedTableProps?.dataSource, renewals, debitNotes, insurers])
+  }, [parsedTableProps?.dataSource, renewals, debitNotes, insurers, creditNotes])
 
   //如果没有数据，就禁用导出按钮
   const disabledBtn = parsedTableProps.dataSource?.length == 0 ? true : false
@@ -386,9 +389,14 @@ export const ListView: React.FC = () => {
               const debitNote = debitNotes.find(
                 (dn) => dn.id === record.debit_note_id,
               )
-              const haveData = Boolean(renewal) || Boolean(debitNote)
+              const creditNote = creditNotes.find(
+                (cn) => cn.id === record.created_from_credit_note_id,
+              )
+              const haveData = Boolean(renewal) || Boolean(debitNote) || Boolean(creditNote)
               const insurerData = insurers?.find((insurer) => {
-                if (renewal) {
+                if (creditNote) {
+                  return insurer.id === creditNote.insurer_id
+                } else if (renewal) {
                   return insurer.id === renewal.insurer_id
                 } else {
                   return insurer.id === debitNote?.insurer_id
@@ -401,6 +409,8 @@ export const ListView: React.FC = () => {
               value: insurer?.id,
             }))}
             onFilter={(value, record) => {
+              console.log("🚀 ~ value:", value)
+              console.log("🚀 ~ record:", record)
               // value = insurer.id
               const renewal = renewals.find(
                 (r) => r.id === record.created_from_renewal_id,
@@ -408,12 +418,17 @@ export const ListView: React.FC = () => {
               const debitNote = debitNotes.find(
                 (dn) => dn.id === record.debit_note_id,
               )
-              
+              const creditNote = creditNotes.find(
+                (cn) => cn.id === record.created_from_credit_note_id,
+              )
+              console.log("🚀 ~ creditNote:", creditNote)
+              console.log("🚀 ~ renewal:", renewal)
+              console.log("🚀 ~ debitNote:", debitNote)
               // 如果兩個都沒有值，就不顯示
-              if (!renewal && !debitNote) return false
+              if (!renewal && !debitNote && !creditNote) return false
               
               // 比對 insurer_id
-              const insurerId = renewal?.insurer_id ?? debitNote?.insurer_id
+              const insurerId = creditNote?.insurer_id ?? renewal?.insurer_id ?? debitNote?.insurer_id
               return insurerId === value
             }}
           />

@@ -25,13 +25,17 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
   const { queryResult } = useShow<DataType>()
   const receiptData = queryResult?.data?.data as DataType
   const isLoading = queryResult?.isLoading
-  const isDebitNotes = Boolean(receiptData?.debit_note_id)
+  // const isDebitNotes = Boolean(receiptData?.debit_note_id)
+  const isFromRenewal = Boolean(receiptData?.created_from_renewal_id)
+  const isFromCreditNote = Boolean(receiptData?.created_from_credit_note_id)
 
   const { data: debitNoteData } = useOne<TDebitNote>({
-    resource: isDebitNotes ? 'debit_notes' : 'renewals',
-    id: isDebitNotes
-      ? (receiptData?.debit_note_id as number)
-      : (receiptData?.created_from_renewal_id as number),
+    resource: isFromRenewal ? 'renewals' : isFromCreditNote ? 'credit_notes' : 'debit_notes',
+    id: isFromRenewal
+      ? (receiptData?.created_from_renewal_id as number)
+      : isFromCreditNote
+      ? (receiptData?.created_from_credit_note_id as number)
+      : (receiptData?.debit_note_id as number),
     queryOptions: {
       enabled: !!receiptData,
     },
@@ -88,7 +92,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       <div className="table table_td-flex-1 w-full">
         <div className="tr">
           <div className="th">
-            {isDebitNotes ? 'Connected Debit Note' : 'Connected Renewal'}
+            {isFromRenewal ? 'Connected Renewal' : isFromCreditNote ? 'Connected Credit Note' : 'Connected Debit Note'}
           </div>
           <div className="td flex justify-between">
             <span>{debitNoteNo}</span>
