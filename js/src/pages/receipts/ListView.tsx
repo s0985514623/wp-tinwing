@@ -83,9 +83,9 @@ export const ListView: React.FC = () => {
       ]
       return filters as CrudFilters
     },
-		pagination:{
-			pageSize: 30,
-		}
+    pagination: {
+      pageSize: 30,
+    }
   })
   const parsedTableProps = safeParse<DataType>({
     tableProps,
@@ -103,6 +103,17 @@ export const ListView: React.FC = () => {
     },
   })
   const debitNotes = debitNoteData?.data || []
+  const { data: creditNoteData } = useMany<TDebitNote>({
+    resource: 'credit_notes',
+    ids:
+      parsedTableProps?.dataSource?.map(
+        (theRecord) => theRecord?.created_from_credit_note_id || '0',
+      ) ?? [],
+    queryOptions: {
+      enabled: !!parsedTableProps?.dataSource,
+    },
+  })
+  const creditNotes = creditNoteData?.data || []
   const { getColumnSearchProps } = useColumnSearch<DataType>()
   return (
     <List
@@ -129,20 +140,25 @@ export const ListView: React.FC = () => {
         <Table.Column
           width={120}
           dataIndex="debit_note_id"
-          title="Debit Note"
+          title="DN/CN"
           // render={(id: number) => {
           //     const debitNote = debitNotes.find((dn) => dn.id === id);
           //     return debitNote ? <>{debitNote?.note_no}</> : '';
           // }}
           {...getColumnSearchProps({
             dataIndex: 'debit_note_id',
-            render: (id) => {
-              const debitNote = debitNotes.find((dn) => dn.id === id)
-              return debitNote ? <>{debitNote?.note_no}</> : ''
+            render: (_id, record?: DataType) => {
+              // 根據 record 決定要從哪個數組中查找
+              const sourceData = record?.created_from_credit_note_id ? creditNotes : debitNotes;
+              const id = record?.created_from_credit_note_id ? record?.created_from_credit_note_id : record?.debit_note_id;
+              const note = sourceData.find((note) => note.id === id);
+              return note ? <>{note?.note_no}</> : ''
             },
-            renderText: (id) => {
-              const debitNote = debitNotes.find((dn) => dn.id === id)
-              return debitNote ? (debitNote?.note_no as string) : ''
+            renderText: (_id, record?: DataType) => {
+              const sourceData = record?.created_from_credit_note_id ? creditNotes : debitNotes;
+              const id = record?.created_from_credit_note_id ? record?.created_from_credit_note_id : record?.debit_note_id;
+              const note = sourceData.find((note) => note.id === id);
+              return note ? (note?.note_no as string) : ''
             },
           })}
         />
