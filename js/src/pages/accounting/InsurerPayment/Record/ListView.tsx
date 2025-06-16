@@ -135,9 +135,17 @@ export const ListView: React.FC = () => {
     },
   })
   const renewals = renewalsData?.data || []
+  // CreditNote 資料
+  const { data: creditNoteData } = useMany<TDebitNote>({
+    resource: 'credit_notes',
+    ids:
+      parsedTableProps?.dataSource?.map((r) => r?.created_from_credit_note_id)
+        .filter((id): id is number => typeof id === 'number') ?? [],
+  })
+  const creditNotes = creditNoteData?.data || []
 
   //取得所有的insurer_id
-  const getInsurersIds = [...debitNotes, ...renewals]
+  const getInsurersIds = [...debitNotes, ...renewals, ...creditNotes]
   // Insurer 資料
   const { data: insurersData } = useMany<TInsurer>({
     resource: 'insurers',
@@ -147,6 +155,7 @@ export const ListView: React.FC = () => {
     },
   })
   const insurers = insurersData?.data || []
+  // console.log("🚀 ~ insurers:", insurers)
 
   // 計算實際相關的保險公司列表（用於篩選選項）
   const relevantInsurers = useMemo(() => {
@@ -425,6 +434,7 @@ export const ListView: React.FC = () => {
                     ) as TDebitNote[]
                   )[0] ?? {},
                 )
+             
               return Number(premium).toLocaleString()
             }}
           />
@@ -433,26 +443,40 @@ export const ListView: React.FC = () => {
             dataIndex="id"
             title="Payment to Insurer"
             render={(id: number, record: DataType) => {
+              // console.log("🚀 ~ record:", record)
               const debitNote = debitNotes.find(
                 (dn) => dn.id === record.debit_note_id,
               )
               const renewal = renewals.find(
                 (r) => r.id === record.created_from_renewal_id,
               )
+              // console.log("🚀 ~ renewal:", renewal)
+              const creditNote = creditNotes.find(
+                (cn) => cn.id === record.created_from_credit_note_id,
+              )
+              // console.log("🚀 ~ creditNote:", creditNote)
               const insurer = insurersData?.data?.find((insurer) => {
-                if (renewal) {
+                if (creditNote) {
+                  return insurer.id === creditNote.insurer_id
+                } else if (renewal) {
                   return insurer.id === renewal.insurer_id
                 } else {
                   return insurer.id === debitNote?.insurer_id
                 }
               })
-              const premium = insurer
+              // console.log("🚀 ~ insurer ~ insurer:", insurer)
+              let premium = insurer
                 ? getInsurerPayment(
                     record,
-                    renewal ?? (debitNote as TDebitNote),
+                    creditNote ?? renewal ?? (debitNote as TDebitNote),
                     insurer as TInsurer,
                   )
                 : 0
+                if(creditNote){
+                  //premium為負數
+                  premium = -premium
+                }
+                // console.log("🚀 ~ premium:", premium)
               return Number(premium).toLocaleString()
             }}
           />
