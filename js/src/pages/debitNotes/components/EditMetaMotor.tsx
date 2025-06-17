@@ -22,7 +22,7 @@ const EditMetaMotor = () => {
         ls: watchLs,
         ncb: watchNcb,
     });
-
+    
     const mibValue = round(grossPremium * (watchMib / 100), 2);
 
     const totalPremium = getMotorTotalPremium({
@@ -39,7 +39,7 @@ const EditMetaMotor = () => {
     // const insurerFee = round(grossPremium * (watchInsurerFeePercent / 100), 2);
     const insurerTotalFee = mibValue + watchExtraValue + round(grossPremium * (watchInsurerFeePercent / 100), 2);
     useEffect(() => {
-        setInsurerFee(round(watchPremium * (watchInsurerFeePercent / 100),2));
+        setInsurerFee(round(grossPremium * (watchInsurerFeePercent / 100),2));
     }, [watchInsurerFeePercent]);
 
     const handleChange = (value: number | null) => {
