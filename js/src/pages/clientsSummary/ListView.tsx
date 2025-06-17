@@ -138,6 +138,7 @@ const termOptions = {
   },
 	pagination:{
 		pageSize:-1,
+		mode: "off" as const,
 	}
 }
 
@@ -227,7 +228,9 @@ export const ListView: React.FC = () => {
           },
         }}
 				pagination={{
-					pageSize:30,
+					pageSize: 30,
+          showSizeChanger: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
 				}}
         rowKey={(record) => `${record.date}-${record.id}`}
         size="middle"

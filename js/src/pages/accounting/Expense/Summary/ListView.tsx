@@ -6,7 +6,7 @@ import { DataType as TTerms } from 'pages/terms/types';
 import { DataType, ZDataType } from '../types';
 import { safeParse } from 'utils';
 import dayjs, { Dayjs } from 'dayjs';
-import _ from 'lodash-es';
+import { orderBy } from 'lodash-es';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
 
 export const ListView: React.FC = () => {
@@ -92,7 +92,8 @@ export const ListView: React.FC = () => {
             return filters as CrudFilters;
         },
 				pagination:{
-					pageSize: 30,
+					pageSize: -1,
+					mode: "off" as const,
 				}
     });
 
@@ -126,7 +127,7 @@ export const ListView: React.FC = () => {
             }
             return acc;
         }, [] as any) ?? [];
-    const sortDataSource = _.orderBy([...formatDataSource], ['year', 'month'], ['desc', 'desc']);
+    const sortDataSource = orderBy([...formatDataSource], ['year', 'month'], ['desc', 'desc']);
 
     //如果没有数据，就禁用导出按钮
     const disabledBtn = parsedTableProps.dataSource?.length == 0 ? true : false;
@@ -137,7 +138,7 @@ export const ListView: React.FC = () => {
             filename: `Expenses_summaries/${year?.year() ?? 'all'}`,
             useKeysAsHeaders: true,
         });
-        const exportData = sortDataSource.map((item) => ({
+        const exportData = sortDataSource.map((item: any) => ({
             Year: item.year,
             Month: item.month,
             Expenses: item.amount.toLocaleString(),
@@ -196,7 +197,12 @@ export const ListView: React.FC = () => {
                     <ExportButton onClick={triggerExport} loading={isExporting} disabled={disabledBtn} />
                 </>
             )}>
-            <Table {...parsedTableProps} dataSource={sortDataSource} rowKey="id" size="middle">
+            <Table {...parsedTableProps} dataSource={sortDataSource} rowKey="id" size="middle"
+                pagination={{
+                    pageSize: 30,
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                }}>
                 <Table.Column width={120} dataIndex="year" title="Year" />
                 <Table.Column
                     width={120}

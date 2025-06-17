@@ -7,7 +7,8 @@ import { safeParse } from 'utils';
 export const ListView: React.FC = () => {
     const { tableProps } = useTable<DataType>({
         pagination: {
-            pageSize: 30,
+            pageSize: -1, // 一次取得所有資料
+            mode: "off" as const,
         }
     });
 
@@ -18,7 +19,12 @@ export const ListView: React.FC = () => {
 
     return (
         <List createButtonProps={{ type: 'primary' }}>
-            <Table {...parsedTableProps} rowKey="id" size="middle">
+            <Table {...parsedTableProps} rowKey="id" size="middle"
+                pagination={{
+                    pageSize: 30,
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                }}>
                 <Table.Column width={120} dataIndex="agent_number" title="Agent No." />
 
                 <Table.Column dataIndex="name" title="Name" />

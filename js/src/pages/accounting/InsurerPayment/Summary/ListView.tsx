@@ -12,7 +12,8 @@ export const ListView: React.FC = () => {
     //當前Table的props
     const { tableProps } = useTable<DataType>({
 			pagination:{
-				pageSize: 30,
+				pageSize: -1,
+				mode: "off" as const,
 			}
 		});
     const parsedTableProps = safeParse<DataType>({
@@ -59,7 +60,12 @@ export const ListView: React.FC = () => {
     });
     return (
         <List headerButtons={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
-            <Table {...parsedTableProps} rowKey="id" size="middle">
+            <Table {...parsedTableProps} rowKey="id" size="middle"
+                pagination={{
+                    pageSize: 30,
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                }}>
                 <Table.Column width={120} dataIndex="insurer_number" title="Insurer No." />
                 <Table.Column dataIndex="name" title="Name" />
                 <Table.Column

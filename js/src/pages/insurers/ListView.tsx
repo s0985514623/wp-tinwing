@@ -4,7 +4,12 @@ import { DataType, ZDataType } from './types';
 import { safeParse } from 'utils';
 
 export const ListView: React.FC = () => {
-    const { tableProps } = useTable<DataType>();
+    const { tableProps } = useTable<DataType>({
+        pagination: {
+            pageSize: -1, // 一次取得所有資料
+            mode: "off" as const,
+        }
+    });
     // console.log('🚀 ~ tableProps:', tableProps);
 
     const parsedTableProps = safeParse<DataType>({
@@ -14,7 +19,12 @@ export const ListView: React.FC = () => {
 
     return (
         <List createButtonProps={{ type: 'primary' }}>
-            <Table {...parsedTableProps} rowKey="id" size="middle">
+            <Table {...parsedTableProps} rowKey="id" size="middle"
+                pagination={{
+                    pageSize: 30,
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                }}>
                 <Table.Column width={120} dataIndex="insurer_number" title="Insurer No." />
 
                 <Table.Column dataIndex="name" title="Name" />

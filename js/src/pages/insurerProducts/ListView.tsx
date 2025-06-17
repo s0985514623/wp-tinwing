@@ -6,7 +6,12 @@ import { safeParse } from 'utils';
 import { nanoid } from 'nanoid';
 
 export const ListView: React.FC = () => {
-    const { tableProps } = useTable<DataType>({});
+    const { tableProps } = useTable<DataType>({
+        pagination: {
+            pageSize: -1, // 一次取得所有資料
+            mode: "off" as const,
+        }
+    });
 
     const parsedTableProps = safeParse<DataType>({
         tableProps,
@@ -65,7 +70,12 @@ export const ListView: React.FC = () => {
 
     return (
         <List createButtonProps={{ type: 'primary' }}>
-            <Table {...parsedTableProps} rowKey="id" size="middle">
+            <Table {...parsedTableProps} rowKey="id" size="middle"
+                pagination={{
+                    pageSize: 30,
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                }}>
                 <Table.Column width={120} dataIndex="insurer_products_number" title="Product No." sorter={(a: DataType, b: DataType) => a.insurer_products_number.localeCompare(b.insurer_products_number)} />
 
                 <Table.Column width={120} dataIndex="name" title="Package" sorter={(a: DataType, b: DataType) => a.name.localeCompare(b.name)} />

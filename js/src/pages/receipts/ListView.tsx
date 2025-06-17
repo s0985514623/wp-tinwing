@@ -83,8 +83,9 @@ export const ListView: React.FC = () => {
       ]
       return filters as CrudFilters
     },
-    pagination: {
-      pageSize: 30,
+    pagination:{
+      pageSize: -1, // 一次取得所有資料
+      mode: "off", // 關閉服務端分頁
     }
   })
   const parsedTableProps = safeParse<DataType>({
@@ -130,6 +131,11 @@ export const ListView: React.FC = () => {
         // }}
         rowKey="id"
         size="middle"
+        pagination={{
+          pageSize: 30,
+          showSizeChanger: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+        }}
       >
         <Table.Column
           width={120}

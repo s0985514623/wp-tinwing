@@ -101,7 +101,8 @@ export const ListView: React.FC = () => {
       return filters as CrudFilters
     },
 		pagination:{
-			pageSize: 30,
+			pageSize: -1,
+			mode: "off" as const,
 		}
   })
 
@@ -349,6 +350,11 @@ export const ListView: React.FC = () => {
                 </Table.Summary.Cell>
               </Table.Summary.Row>
             )
+          }}
+          pagination={{
+            pageSize: 30,
+            showSizeChanger: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
           }}
         >
           <Table.Column

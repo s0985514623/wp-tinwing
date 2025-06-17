@@ -116,7 +116,8 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
       return filters as CrudFilters
     },
 		pagination:{
-			pageSize: 30,
+			pageSize: -1,
+			mode: "off" as const,
 		}
   })
 
@@ -204,6 +205,11 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
           rowKey="id"
           size="middle"
           rowSelection={!is_adjust_balance ? rowSelection : undefined}
+          pagination={{
+            pageSize: 30,
+            showSizeChanger: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+          }}
         >
           <Table.Column
             width={120}

@@ -30,7 +30,8 @@ export const ListView: React.FC<{ taxonomy: string }> = ({ taxonomy = '' }) => {
             ],
         },
 				pagination:{
-					pageSize: 30,
+					pageSize: -1,
+					mode: "off" as const,
 				}
     });
 
@@ -41,7 +42,12 @@ export const ListView: React.FC<{ taxonomy: string }> = ({ taxonomy = '' }) => {
 
     return (
         <List createButtonProps={{ type: 'primary' }}>
-            <Table {...parsedTableProps} rowKey="id" size="middle">
+            <Table {...parsedTableProps} rowKey="id" size="middle"
+                pagination={{
+                    pageSize: 30,
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                }}>
                 <Table.Column dataIndex="name" title="Name" />
 
                 <Table.Column

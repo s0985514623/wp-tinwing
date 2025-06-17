@@ -151,7 +151,8 @@ export const ListView: React.FC = () => {
 				return filters as CrudFilters
 			},
 			pagination:{
-				pageSize: 30,
+				pageSize: -1, // 一次取得所有資料
+				mode: "off", // 關閉服務端分頁
 			}
 		})
     const formattedTableProps = {
@@ -238,7 +239,12 @@ export const ListView: React.FC = () => {
                 //     return;
                 // }}
                 rowKey="id"
-                size="middle">
+                size="middle"
+                pagination={{
+                    pageSize: 30,
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                }}>
                 <Table.Column width={100} dataIndex="period_of_insurance_to" title="End Date" render={(period_of_insurance_to: number) => (period_of_insurance_to ? dayjs.unix(period_of_insurance_to).format('YYYY-MM-DD') : '')} {...getSortProps<DataType>('period_of_insurance_to')} />
                 <Table.Column
                     width={100}
