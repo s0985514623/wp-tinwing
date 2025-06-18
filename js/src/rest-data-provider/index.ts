@@ -54,7 +54,7 @@ export const dataProvider = (
       },
     )
 
-    const total = headers?.['X-WP-Total'] || data.length
+    const total = parseInt(headers?.['x-wp-total'],10) || data.length
 
     return {
       data,
