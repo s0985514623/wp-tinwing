@@ -333,7 +333,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
           <div className="table table_td-flex-1 w-full">
             <div className="w-full mb-4 flex justify-between border-b-2 border-solid border-black pb-6 px-4">
               <div className="w-full">
-                <img src={logo} className="print:w-1/3 min-w-[400px]" />
+                <img src={logo} className="print:w-1/3 min-w-[400px] max-w-[600px]" />
               </div>
               <div className="text-right text-xl font-semibold w-full flex flex-col justify-end">
                 <p>{templateText.zh}</p>

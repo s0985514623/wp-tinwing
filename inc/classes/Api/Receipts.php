@@ -263,7 +263,7 @@ final class Receipts {
 		$params     = $request->get_json_params() ?? [];
 		$params     = WP::sanitize_text_field_deep( $params, false );
 		$post_id    = $request->get_param('id');
-		$post_title = isset($params['note_no'])?$params['note_no']:\get_the_title($post_id);
+		$post_title = isset($params['receipt_no'])?$params['receipt_no']:\get_the_title($post_id);
 
 		// 檢查 post_title 是否重複（排除當前正在更新的文章）
 		if (isset($params['receipt_no']) && !empty($params['receipt_no'])) {

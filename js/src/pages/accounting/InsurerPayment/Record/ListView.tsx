@@ -5,6 +5,7 @@ import { Table, Button } from 'antd'
 import { DataType, ZDataType } from 'pages/receipts/types'
 import { DataType as TInsurer } from 'pages/insurers/types'
 import { DataType as TRenewal } from 'pages/renewals/types'
+import { DataType as TClient } from 'pages/clients/types'
 import {
   safeParse,
   getTotalPremiumByDebitNote,
@@ -100,10 +101,10 @@ export const ListView: React.FC = () => {
       // console.log('🚀 ~ filters:', filters)
       return filters as CrudFilters
     },
-		pagination:{
-			pageSize: -1,
-			mode: "off" as const,
-		}
+    pagination: {
+      pageSize: -1,
+      mode: "off" as const,
+    }
   })
 
   const parsedTableProps = safeParse<DataType>({
@@ -158,17 +159,24 @@ export const ListView: React.FC = () => {
   const insurers = insurersData?.data || []
   // console.log("🚀 ~ insurers:", insurers)
 
+  // 取得client資料
+  const { data: clientData } = useMany<TClient>({
+    resource: 'clients',
+    ids: getInsurersIds?.map((theRecord) => theRecord?.client_id || '0') ?? [],
+  })
+  const clients = clientData?.data || []
+
   // 計算實際相關的保險公司列表（用於篩選選項）
   const relevantInsurers = useMemo(() => {
     if (!parsedTableProps?.dataSource) return []
-    
+
     const insurerIds = new Set<number>()
-    
+
     parsedTableProps.dataSource.forEach((record) => {
       const renewal = renewals.find(r => r.id === record.created_from_renewal_id)
       const debitNote = debitNotes.find(dn => dn.id === record.debit_note_id)
       const creditNote = creditNotes.find(cn => cn.id === record.created_from_credit_note_id)
-      
+
       if (renewal?.insurer_id) {
         insurerIds.add(renewal.insurer_id)
       } else if (debitNote?.insurer_id) {
@@ -177,7 +185,7 @@ export const ListView: React.FC = () => {
         insurerIds.add(creditNote.insurer_id)
       }
     })
-    
+
     return insurers.filter(insurer => insurerIds.has(insurer.id))
   }, [parsedTableProps?.dataSource, renewals, debitNotes, insurers, creditNotes])
 
@@ -187,17 +195,17 @@ export const ListView: React.FC = () => {
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
     filters: dateRange
       ? [
-          {
-            field: 'date[0]',
-            operator: 'eq',
-            value: dateRange[0].startOf('day').unix(),
-          },
-          {
-            field: 'date[1]',
-            operator: 'eq',
-            value: dateRange[1].startOf('day').unix(),
-          },
-        ]
+        {
+          field: 'date[0]',
+          operator: 'eq',
+          value: dateRange[0].startOf('day').unix(),
+        },
+        {
+          field: 'date[1]',
+          operator: 'eq',
+          value: dateRange[1].startOf('day').unix(),
+        },
+      ]
       : undefined,
     mapData: (item) => {
       if (!item) return
@@ -224,10 +232,10 @@ export const ListView: React.FC = () => {
         )
       const paymentToInsurer = debitNote
         ? getInsurerPayment(
-            item,
-            debitNote as TDebitNote,
-            insurerData as TInsurer,
-          )
+          item,
+          debitNote as TDebitNote,
+          insurerData as TInsurer,
+        )
         : 0
       return {
         'Note No': `'${note_no}'`, //加上單引號才不會被省略前導0
@@ -258,10 +266,10 @@ export const ListView: React.FC = () => {
     })
     const paymentToInsurer = insurerData
       ? getInsurerPayment(
-          receipt as DataType,
-          renewal ?? (debitNote as TDebitNote),
-          insurerData as TInsurer,
-        )
+        receipt as DataType,
+        renewal ?? (debitNote as TDebitNote),
+        insurerData as TInsurer,
+      )
       : 0
 
     return paymentToInsurer
@@ -378,12 +386,117 @@ export const ListView: React.FC = () => {
               )
             }}
           />
+          <Table.Column
+            width={120}
+            title="Client Name"
+            render={(id: number, record: DataType) => {
+              if (record.created_from_renewal_id) {
+                const renewal = renewals.find((r) => r.id === record.created_from_renewal_id)
+                const client = clients.find((c) => c.id === renewal?.client_id)
+                return client?.company || client?.name_en || client?.name_zh
+              } else if (record.created_from_credit_note_id) {
+                const creditNote = creditNotes.find((cn) => cn.id === record.created_from_credit_note_id)
+                const client = clients.find((c) => c.id === creditNote?.client_id)
+                return client?.company || client?.name_en || client?.name_zh
+              } else if (record.debit_note_id) {
+                const debitNote = debitNotes.find((dn) => dn.id === record.debit_note_id)
+                const client = clients.find((c) => c.id === debitNote?.client_id)
+                return client?.company || client?.name_en || client?.name_zh
+              }
+              return ''
+            }}
+            sorter={(a: DataType, b: DataType) => {
+              //取得a company name 
+              let aName = ''
+              let bName = ''
+              if (a.created_from_renewal_id) {
+                const renewal = renewals.find((r) => r.id === a.created_from_renewal_id)
+                const client = clients.find((c) => c.id === renewal?.client_id)
+                aName = client?.company || client?.name_en || client?.name_zh || ''
+              } else if (a.created_from_credit_note_id) {
+                const creditNote = creditNotes.find((cn) => cn.id === a.created_from_credit_note_id)
+                const client = clients.find((c) => c.id === creditNote?.client_id)
+                aName = client?.company || client?.name_en || client?.name_zh || ''
+              } else if (a.debit_note_id) {
+                const debitNote = debitNotes.find((dn) => dn.id === a.debit_note_id)
+                const client = clients.find((c) => c.id === debitNote?.client_id)
+                aName = client?.company || client?.name_en || client?.name_zh || ''
+              }
+              if (b.created_from_renewal_id) {
+                const renewal = renewals.find((r) => r.id === b.created_from_renewal_id)
+                const client = clients.find((c) => c.id === renewal?.client_id)
+                bName = client?.company || client?.name_en || client?.name_zh || ''
+              } else if (b.created_from_credit_note_id) {
+                const creditNote = creditNotes.find((cn) => cn.id === b.created_from_credit_note_id)
+                const client = clients.find((c) => c.id === creditNote?.client_id)
+                bName = client?.company || client?.name_en || client?.name_zh || ''
+              } else if (b.debit_note_id) {
+                const debitNote = debitNotes.find((dn) => dn.id === b.debit_note_id)
+                const client = clients.find((c) => c.id === debitNote?.client_id)
+                bName = client?.company || client?.name_en || client?.name_zh || ''
+              }
+              // 空值永遠排到最後
+              if (!aName && bName) return 1
+              if (aName && !bName) return -1
+              if (!aName && !bName) return 0
 
+              return aName.localeCompare(bName)
+            }}
+          />
+          <Table.Column
+            width={120}
+            title="Policy Number"
+            render={(id: number, record: DataType) => {
+              if (record.created_from_renewal_id) {
+                const renewal = renewals.find((r) => r.id === record.created_from_renewal_id)
+                return renewal?.policy_no || ''
+              } else if (record.created_from_credit_note_id) {
+                const creditNote = creditNotes.find((cn) => cn.id === record.created_from_credit_note_id)
+                return creditNote?.policy_no || ''
+              } else if (record.debit_note_id) {
+                const debitNote = debitNotes.find((dn) => dn.id === record.debit_note_id)
+                return debitNote?.policy_no || ''
+              } else
+                return ''
+            }}
+            sorter={(a: DataType, b: DataType) => {
+              //取得a company name 
+              let aName = ''
+              let bName = ''
+              if (a.created_from_renewal_id) {
+                const renewal = renewals.find((r) => r.id === a.created_from_renewal_id)
+                aName = renewal?.policy_no || ''
+              } else if (a.created_from_credit_note_id) {
+                const creditNote = creditNotes.find((cn) => cn.id === a.created_from_credit_note_id)
+                aName = creditNote?.policy_no || ''
+              } else if (a.debit_note_id) {
+                const debitNote = debitNotes.find((dn) => dn.id === a.debit_note_id)
+                aName = debitNote?.policy_no || ''
+              }
+              if (b.created_from_renewal_id) {
+                const renewal = renewals.find((r) => r.id === b.created_from_renewal_id)
+                bName = renewal?.policy_no || ''
+              } else if (b.created_from_credit_note_id) {
+                const creditNote = creditNotes.find((cn) => cn.id === b.created_from_credit_note_id)
+                bName = creditNote?.policy_no || ''
+              } else if (b.debit_note_id) {
+                const debitNote = debitNotes.find((dn) => dn.id === b.debit_note_id)
+                bName = debitNote?.policy_no || ''
+              }
+              // 空值永遠排到最後
+              if (!aName && bName) return 1
+              if (aName && !bName) return -1
+              if (!aName && !bName) return 0
+
+              return aName.localeCompare(bName)
+            }}
+          />
           <Table.Column
             width={120}
             dataIndex="date"
             title="Note Date"
             render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
+            {...getSortProps<DataType>('date')}
           />
           <Table.Column
             width={120}
@@ -415,8 +528,6 @@ export const ListView: React.FC = () => {
               value: insurer?.id,
             }))}
             onFilter={(value, record) => {
-              console.log("🚀 ~ value:", value)
-              console.log("🚀 ~ record:", record)
               // value = insurer.id
               const renewal = renewals.find(
                 (r) => r.id === record.created_from_renewal_id,
@@ -427,12 +538,9 @@ export const ListView: React.FC = () => {
               const creditNote = creditNotes.find(
                 (cn) => cn.id === record.created_from_credit_note_id,
               )
-              console.log("🚀 ~ creditNote:", creditNote)
-              console.log("🚀 ~ renewal:", renewal)
-              console.log("🚀 ~ debitNote:", debitNote)
               // 如果兩個都沒有值，就不顯示
               if (!renewal && !debitNote && !creditNote) return false
-              
+
               // 比對 insurer_id
               const insurerId = creditNote?.insurer_id ?? renewal?.insurer_id ?? debitNote?.insurer_id
               return insurerId === value
@@ -455,7 +563,7 @@ export const ListView: React.FC = () => {
                     ) as TDebitNote[]
                   )[0] ?? {},
                 )
-             
+
               return Number(premium).toLocaleString()
             }}
           />
@@ -488,16 +596,16 @@ export const ListView: React.FC = () => {
               // console.log("🚀 ~ insurer ~ insurer:", insurer)
               let premium = insurer
                 ? getInsurerPayment(
-                    record,
-                    creditNote ?? renewal ?? (debitNote as TDebitNote),
-                    insurer as TInsurer,
-                  )
+                  record,
+                  creditNote ?? renewal ?? (debitNote as TDebitNote),
+                  insurer as TInsurer,
+                )
                 : 0
-                if(creditNote){
-                  //premium為負數
-                  premium = -premium
-                }
-                // console.log("🚀 ~ premium:", premium)
+              if (creditNote) {
+                //premium為負數
+                premium = -premium
+              }
+              // console.log("🚀 ~ premium:", premium)
               return Number(premium).toLocaleString()
             }}
           />
@@ -538,6 +646,7 @@ export const ListView: React.FC = () => {
             render={(date: number) =>
               date ? dayjs.unix(date).format('YYYY-MM-DD') : ''
             }
+            {...getSortProps<DataType>('pay_to_insurer_by_payment_date')}
           />
           <Table.Column
             width={120}
