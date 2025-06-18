@@ -34,3 +34,4 @@ release/*
 /vendor/
 
 composer.lock
+vite-dev-server.json

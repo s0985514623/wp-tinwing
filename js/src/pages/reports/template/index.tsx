@@ -57,7 +57,7 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
                 'Note No.': item.note_no,
                 Date: dayjs.unix(item.date).format('YYYY-MM-DD'),
                 'Payment Date': dayjs.unix(item.date).add(1, 'month').format('YYYY-MM-DD'),
-                'Premium (HKD)': `${item.premium.toLocaleString()}`,
+                'Premium (HKD)': `${item.premium?.toLocaleString() ?? 0}`,
             };
         },
     });
@@ -87,7 +87,7 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
                                 ...rowSelection,
                             }}
                             summary={(pageData) => {
-                                const totalPremium = pageData.reduce((acc, cur) => acc + cur.premium, 0);
+                                const totalPremium = pageData.reduce((acc, cur) => acc + Number(cur.premium ?? 0), 0);
 
                                 return (
                                     <>
