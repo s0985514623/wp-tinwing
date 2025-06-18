@@ -64,7 +64,7 @@ export const ListView: React.FC = () => {
             {
               field: `meta_query[${index}][compare]`,
               operator: 'eq',
-              value: '=', // 固定為 '='，或者根據需要自定義
+              value: 'LIKE', // 固定為 '='，或者根據需要自定義
             },
           )
         }
