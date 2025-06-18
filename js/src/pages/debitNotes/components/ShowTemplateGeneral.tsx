@@ -34,8 +34,8 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({
   })
 
   return (
-    <div className="mt-12 table table_td-flex-1 w-full border-2 border-solid border-black ">
-      <Row gutter={0}>
+    <div className="mt-12 table table_td-flex-1 w-full border-2 border-solid border-black template64">
+      <Row gutter={24}>
         <Col span={12} className="pt-2">
           <div className="table table_td-flex-1 w-full">
             <div className="tr">

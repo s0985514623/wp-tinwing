@@ -42,9 +42,9 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
   const insurer = insurerData?.data
 
   return (
-    <div className="mt-12 table table_td-flex-1 w-full border-2 border-solid border-black">
-      <Row gutter={0}>
-        <Col span={12} className="pt-2">
+    <div className="mt-12 table table_td-flex-1 w-full border-2 border-solid border-black template64">
+      <Row gutter={24}>
+        <Col span={14} className="pt-2">
           <div className="table table_td-flex-1 w-full">
             <div className="tr">
               <div className="th">
@@ -183,7 +183,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
           </div>
         </Col>
 
-        <Col span={12} className="border-l-2 border-solid border-black pt-2">
+        <Col span={10} className="border-l-2 border-solid border-black pt-2">
           <div className="table table_td-flex-1 w-full">
             <div className="tr">
               <div className="th">

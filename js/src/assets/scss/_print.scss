@@ -8,7 +8,7 @@
 		height: 100vh; /* Use 100% here to support printing more than a single page*/
 		margin: 0 !important;
 		padding: 0 !important;
-
+		overflow : hidden;
 		div {
 			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
 				"Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
@@ -41,17 +41,17 @@
 			font-size: 1.25rem;
 		}
 	}
-	.Motor{
-		.table,.detailFooter {
-			p {
-				font-size: 1rem;
-			}
-			.th {
-				font-size: 1rem;
-			}
-			.td{
-				font-size: 1rem;
-			}
-		}
-	}
+	// .Motor{
+	// 	.table,.detailFooter {
+	// 		p {
+	// 			font-size: 1rem;
+	// 		}
+	// 		.th {
+	// 			font-size: 1rem;
+	// 		}
+	// 		.td{
+	// 			font-size: 1rem;
+	// 		}
+	// 	}
+	// }
 }

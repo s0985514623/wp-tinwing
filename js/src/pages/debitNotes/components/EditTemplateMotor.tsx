@@ -111,7 +111,7 @@ const EditTemplateMotor = () => {
 
     return (
         <>
-            <Row gutter={0} className="mt-12">
+            <Row gutter={24} className="mt-12">
                 <Col span={12}>
                     <div className="table table_td-flex-1 w-full">
                         <div className="tr">
