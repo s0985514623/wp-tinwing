@@ -389,22 +389,43 @@ export const ListView: React.FC = () => {
           <Table.Column
             width={120}
             title="Client Name"
-            render={(id: number, record: DataType) => {
-              if (record.created_from_renewal_id) {
-                const renewal = renewals.find((r) => r.id === record.created_from_renewal_id)
-                const client = clients.find((c) => c.id === renewal?.client_id)
-                return client?.company || client?.name_en || client?.name_zh
-              } else if (record.created_from_credit_note_id) {
-                const creditNote = creditNotes.find((cn) => cn.id === record.created_from_credit_note_id)
-                const client = clients.find((c) => c.id === creditNote?.client_id)
-                return client?.company || client?.name_en || client?.name_zh
-              } else if (record.debit_note_id) {
-                const debitNote = debitNotes.find((dn) => dn.id === record.debit_note_id)
-                const client = clients.find((c) => c.id === debitNote?.client_id)
-                return client?.company || client?.name_en || client?.name_zh
+            {...getColumnSearchProps({
+              dataIndex: 'id',
+              //複寫render方法
+              render: (_text: string | number, _record?: DataType) => {
+                if (!_record) return ''
+                if (_record.created_from_renewal_id) {
+                  const renewal = renewals.find((r) => r.id === _record.created_from_renewal_id)
+                  const client = clients.find((c) => c.id === renewal?.client_id)
+                  return client?.company || client?.name_en || client?.name_zh
+                } else if (_record.created_from_credit_note_id) {
+                  const creditNote = creditNotes.find((cn) => cn.id === _record.created_from_credit_note_id)
+                  const client = clients.find((c) => c.id === creditNote?.client_id)
+                  return client?.company || client?.name_en || client?.name_zh
+                } else if (_record.debit_note_id) {
+                  const debitNote = debitNotes.find((dn) => dn.id === _record.debit_note_id)
+                  const client = clients.find((c) => c.id === debitNote?.client_id)
+                  return client?.company || client?.name_en || client?.name_zh
+                }
+                return ''
+              },
+              renderText: (_text: string | number, _record?: DataType) => {
+                if (_record?.created_from_renewal_id) {
+                  const renewal = renewals.find((r) => r.id === _record.created_from_renewal_id)
+                  const client = clients.find((c) => c.id === renewal?.client_id)
+                  return client?.company || client?.name_en || client?.name_zh || ''
+                } else if (_record?.created_from_credit_note_id) {
+                  const creditNote = creditNotes.find((cn) => cn.id === _record.created_from_credit_note_id)
+                  const client = clients.find((c) => c.id === creditNote?.client_id)
+                  return client?.company || client?.name_en || client?.name_zh || ''
+                } else if (_record?.debit_note_id) {
+                  const debitNote = debitNotes.find((dn) => dn.id === _record.debit_note_id)
+                  const client = clients.find((c) => c.id === debitNote?.client_id)
+                  return client?.company || client?.name_en || client?.name_zh || ''
+                }
+                return ''
               }
-              return ''
-            }}
+            })}
             sorter={(a: DataType, b: DataType) => {
               //取得a company name 
               let aName = ''
@@ -446,19 +467,37 @@ export const ListView: React.FC = () => {
           <Table.Column
             width={120}
             title="Policy Number"
-            render={(id: number, record: DataType) => {
-              if (record.created_from_renewal_id) {
-                const renewal = renewals.find((r) => r.id === record.created_from_renewal_id)
-                return renewal?.policy_no || ''
-              } else if (record.created_from_credit_note_id) {
-                const creditNote = creditNotes.find((cn) => cn.id === record.created_from_credit_note_id)
-                return creditNote?.policy_no || ''
-              } else if (record.debit_note_id) {
-                const debitNote = debitNotes.find((dn) => dn.id === record.debit_note_id)
-                return debitNote?.policy_no || ''
-              } else
+            {...getColumnSearchProps({
+              dataIndex: 'id',
+              //複寫render方法
+              render: (_text: string | number, _record?: DataType) => {
+                if (!_record) return ''
+                if (_record.created_from_renewal_id) {
+                  const renewal = renewals.find((r) => r.id === _record.created_from_renewal_id)
+                  return renewal?.policy_no || ''
+                } else if (_record.created_from_credit_note_id) {
+                  const creditNote = creditNotes.find((cn) => cn.id === _record.created_from_credit_note_id)
+                  return creditNote?.policy_no || ''
+                } else if (_record.debit_note_id) {
+                  const debitNote = debitNotes.find((dn) => dn.id === _record.debit_note_id)
+                  return debitNote?.policy_no || ''
+                }
                 return ''
-            }}
+              },
+              renderText: (_text: string | number, _record?: DataType) => {
+                if (_record?.created_from_renewal_id) {
+                  const renewal = renewals.find((r) => r.id === _record.created_from_renewal_id)
+                  return renewal?.policy_no || ''
+                } else if (_record?.created_from_credit_note_id) {
+                  const creditNote = creditNotes.find((cn) => cn.id === _record.created_from_credit_note_id)
+                  return creditNote?.policy_no || ''
+                } else if (_record?.debit_note_id) {
+                  const debitNote = debitNotes.find((dn) => dn.id === _record.debit_note_id)
+                  return debitNote?.policy_no || ''
+                }
+                return ''
+              }
+            })}
             sorter={(a: DataType, b: DataType) => {
               //取得a company name 
               let aName = ''
