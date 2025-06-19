@@ -35,28 +35,28 @@ const ShowTemplatePackage: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
                         <div className="tr">
                             <div className="th">Premium</div>
                             <div className="td text-right"></div>
-                            <div className="td">{getPrice(premium)}</div>
+                            <div className="td">{getPrice(premium, 'w-full')}</div>
                         </div>
                         <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr`}>
                             <div className="th">{extra_fieldLabel}</div>
                             <div className="td text-right">{extra_fieldValue}%</div>
-                            <div className="td text-right">{getPrice(round(premium * (Number(extra_fieldValue) / 100), 2))}</div>
+                            <div className="td text-right">{getPrice(round(premium * (Number(extra_fieldValue) / 100), 2), 'w-full')}</div>
                         </div>
                         <div className={`${extra_field2Label ? '' : 'tw-hidden'} tr`}>
                             <div className="th">{extra_field2Label}</div>
                             <div className="td text-right">{extra_field2Value}%</div>
-                            <div className="td text-right">{getPrice(round(premium * (Number(extra_field2Value) / 100), 2))}</div>
+                            <div className="td text-right">{getPrice(round(premium * (Number(extra_field2Value) / 100), 2), 'w-full')}</div>
                         </div>
                         <div className="tr mt-10">
                             <div className="th text-red-500 print:text-inherit">Less</div>
                             <div className="td text-right"></div>
-                            <div className="td">{getPrice(less)}</div>
+                            <div className="td">{getPrice(less, 'w-full')}</div>
                         </div>
                         <div className="tr  border-t-2 border-solid border-black flex-wrap">
                             <div className="w-full p-2 font-bold text-xs print:text-lg">請繳付此金額 Please pay this amount</div>
                             <div className="th font-bold">總保險費 TOTAL PREMIUM</div>
                             <div className="td text-right"></div>
-                            <div className="td">{getPrice(totalPremium)}</div>
+                            <div className="td">{getPrice(totalPremium, 'w-full')}</div>
                         </div>
                     </div>
                 </Col>

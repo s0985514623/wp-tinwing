@@ -74,4 +74,8 @@ main {
 	.td {
 		flex: 1;
 	}
+	.td:last-child {
+		flex: 2;
+	}
 }
+

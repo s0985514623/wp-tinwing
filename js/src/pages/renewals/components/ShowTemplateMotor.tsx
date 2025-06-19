@@ -109,7 +109,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                             </div>
                             <div className="td text-right"></div>
                             <div className="td text-right">
-                                <p>{getPrice(round(premium, 2))}</p>
+                                <p>{getPrice(round(premium, 2), 'w-full')}</p>
                             </div>
                         </div>
                         <div className="tr">
@@ -120,7 +120,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                                 <p>{ls ? `${ls}%` : ''}</p>
                             </div>
                             <div className="td text-right">
-                                <p>{getPrice(round(premium * (ls / 100), 2))}</p>
+                                <p>{getPrice(round(premium * (ls / 100), 2), 'w-full')}</p>
                             </div>
                         </div>
                         <div className="tr">
@@ -131,7 +131,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                                 <p>{ncb ? `${ncb}%` : ''}</p>
                             </div>
                             <div className="td text-right">
-                                <p>{getPrice(round(premium * (1 + ls / 100) * (ncb / 100), 2))}</p>
+                                <p>{getPrice(round(premium * (1 + ls / 100) * (ncb / 100), 2), 'w-full')}</p>
                             </div>
                         </div>
 
@@ -141,7 +141,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                             </div>
                             <div className="td text-right"></div>
                             <div className="td text-right">
-                                <p>{getPrice(grossPremium)}</p>
+                                <p>{getPrice(grossPremium, 'w-full')}</p>
                             </div>
                         </div>
                         <div className="tr">
@@ -152,7 +152,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                                 <p>{mib ? `${mib}%` : ''}</p>
                             </div>
                             <div className="td text-right">
-                                <p>{getPrice(round(grossPremium * (mib / 100), 2))}</p>
+                                <p>{getPrice(round(grossPremium * (mib / 100), 2), 'w-full')}</p>
                             </div>
                         </div>
                         <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr`}>
@@ -163,7 +163,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                                 <p>{extra_fieldValue}%</p>
                             </div>
                             <div className="td text-right">
-                                <p>{getPrice(round(grossPremium * (Number(extra_fieldValue) / 100), 2))}</p>
+                                <p>{getPrice(round(grossPremium * (Number(extra_fieldValue) / 100), 2), 'w-full')}</p>
                             </div>
                         </div>
                         <div className="tr mt-10">
@@ -172,7 +172,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                             </div>
                             <div className="td"></div>
                             <div className="td text-right">
-                                <p>{getPrice(less)}</p>
+                                <p>{getPrice(less, 'w-full')}</p>
                             </div>
                         </div>
                         <div className="tr absolute bottom-0 border-t-2 border-solid border-black flex-wrap">
@@ -183,7 +183,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                                 <p>總保險費 TOTAL PREMIUM</p>
                             </div>
                             <div className="td text-right">
-                                <p>{getPrice(totalPremium)}</p>
+                                <p>{getPrice(totalPremium, 'w-full')}</p>
                             </div>
                         </div>
                     </div>

@@ -60,7 +60,7 @@ export const handleClearZero = (e: React.MouseEvent<HTMLInputElement>) => {
 export const isIphone = /iPhone/.test(navigator.userAgent);
 
 export const getPrice = (price: number, className = 'w-28', symbol = 'HKD') => {
-    const thePrice = !!price ? price : 0;
+    const thePrice = !!price ? Number(price) : 0;
 
     return (
         <div className={`flex justify-between ${className}`}>

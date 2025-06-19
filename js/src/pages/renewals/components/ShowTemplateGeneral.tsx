@@ -72,7 +72,7 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
                             </div>
                             <div className="td text-right"></div>
                             <div className="td text-right">
-                                <p>{getPrice(round(premium, 2))}</p>
+                                <p>{getPrice(round(premium, 2), 'w-full')}</p>
                             </div>
                         </div>
                         <div className="tr ">
@@ -83,7 +83,7 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
                                 <p>{levy}%</p>{' '}
                             </div>
                             <div className="td text-right">
-                                <p>{getPrice(round(premium * (levy / 100), 2))}</p>{' '}
+                                <p>{getPrice(round(premium * (levy / 100), 2), 'w-full')}</p>{' '}
                             </div>
                         </div>
                         <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr `}>
@@ -97,6 +97,7 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
                                 <p>
                                     {getPrice(
                                         round(premium * (Number(extra_fieldValue) / 100), 2),
+                                        'w-full'
                                     )}
                                 </p>
                             </div>
@@ -107,7 +108,7 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
                             </div>
                             <div className="td text-right"></div>
                             <div className="td text-right">
-                                <p>{getPrice(less)}</p>
+                                <p>{getPrice(less, 'w-full')}</p>
                             </div>
                         </div>
                         <div className="tr border-t-2 border-solid border-black flex-wrap">
@@ -119,7 +120,7 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
                             </div>
                             <div className="td text-right"></div>
                             <div className="td text-right">
-                                <p>{getPrice(totalPremium)}</p>
+                                <p>{getPrice(totalPremium, 'w-full')}</p>
                             </div>
                         </div>
                     </div>
