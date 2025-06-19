@@ -41,7 +41,9 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
     },
   })
   const receiptPremium = queryResult?.data?.data.premium
+  // console.log("🚀 ~ queryResult:", queryResult)
   const debitNote = debitNoteData?.data
+  // console.log("🚀 ~ debitNote:", debitNote)
   const debitNoteNo = debitNote?.note_no || ''
   const templateText = getTemplateText(debitNote?.template || 'general')
 
@@ -162,27 +164,27 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
             gutter={0}
             className="mt-12 pb-6 border-2 border-solid border-black"
           >
-            <Col span={12}>
+            <Col span={24}>
               <div className="table table_td-flex-1 w-full">
                 <div className="tr mt-4">
-                  <div className="th">Received From 茲收到</div>
+                  <div className="th w-[22rem]">Received From 茲收到</div>
                   <div className="td">{display_name}</div>
                 </div>
                 <div className="tr">
-                  <div className="th">THE SUM OF 款項</div>
+                  <div className="th w-[22rem]">THE SUM OF 款項</div>
                   <div className="td">
-                    {toWords.convert(getTotalPremiumByDebitNote(debitNote))}
+                    {toWords.convert(receiptPremium??0)}
                   </div>
                 </div>
                 <div className="tr">
-                  <div className="th w-60">BEING PAYMENT OF 用以支付項目</div>
+                  <div className="th w-[22rem]">BEING PAYMENT OF 用以支付項目</div>
                 </div>
                 <div className="tr">
-                  <div className="th w-60">POLICY 保單號碼</div>
+                  <div className="th w-[22rem]">POLICY 保單號碼</div>
                   <div className="td">{debitNote?.policy_no}</div>
                 </div>
                 <div className="tr">
-                  <div className="th w-60">DEBIT NOTE NO. 保費單號碼</div>
+                  <div className="th w-[22rem]">DEBIT NOTE NO. 保費單號碼</div>
                   <div className="td">{debitNoteNo}</div>
                 </div>
               </div>
