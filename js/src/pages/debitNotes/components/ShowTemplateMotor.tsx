@@ -42,10 +42,10 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
   const insurer = insurerData?.data
 
   return (
-    <div className="mt-12 table table_td-flex-1 w-full border-2 border-solid border-black template64">
+    <div className="mt-12 table table_td-flex-1 w-full border-2 border-solid border-black ">
       <Row gutter={24}>
         <Col span={14} className="pt-2">
-          <div className="table table_td-flex-1 w-full">
+          <div className="table table_td-flex-1 w-full template64">
             <div className="tr">
               <div className="th">
                 <p>承保公司 Insurer</p>
@@ -183,22 +183,22 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
           </div>
         </Col>
 
-        <Col span={10} className="border-l-2 border-solid border-black pt-2">
-          <div className="table table_td-flex-1 w-full">
+        <Col span={10} className="border-l-2 border-solid border-black pt-2 pr-[24px]">
+          <div className="table table_td-flex-1 w-full h-full relative">
             <div className="tr">
               <div className="th">
                 <p>Premium</p>
               </div>
               <div className="td text-right"></div>
               <div className="td text-right">
-                <p>{getPrice(premium)}</p>
+                <p>{getPrice(round(premium, 2))}</p>
               </div>
             </div>
             <div className="tr">
               <div className="th">
                 <p>LS</p>
               </div>
-              <div className="td text-right">
+              <div className="td text-left">
                 <p>{ls ? `${ls}%` : ''}</p>
               </div>
               <div className="td text-right">
@@ -209,7 +209,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
               <div className="th text-red-500 print:text-inherit">
                 <p>NCB</p>
               </div>
-              <div className="td text-right">
+              <div className="td text-left">
                 <p>{ncb ? `${ncb}%` : ''}</p>
               </div>
               <div className="td text-right">
@@ -232,7 +232,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
               <div className="th">
                 <p>MIB</p>
               </div>
-              <div className="td text-right">
+              <div className="td text-left">
                 <p>{mib ? `${mib}%` : ''}</p>
               </div>
               <div className="td text-right">
@@ -243,7 +243,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
               <div className="th">
                 <p>{extra_fieldLabel}</p>
               </div>
-              <div className="td text-right">
+              <div className="td text-left">
                 <p>{extra_fieldValue}%</p>
               </div>
               <div className="td text-right">
@@ -267,10 +267,10 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
               <div className="w-full p-2 font-bold text-xs print:text-lg">
                 請繳付此金額 Please pay this amount
               </div>
-              <div className="th font-bold">
+              <div className="th font-bold w-[18rem]">
                 <p>總保險費 TOTAL PREMIUM</p>
               </div>
-              <div className="td text-right mr-6">
+              <div className="td text-right">
                 <p>{getPrice(totalPremium)}</p>
               </div>
             </div>

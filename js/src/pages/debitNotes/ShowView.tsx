@@ -94,7 +94,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       )}
     >
       <ShowDebitNoteHeader template={debitNoteData?.template || ''} />
-      <div ref={printRef} className={`${templateText.en=='Motor Insurance'?'Motor':''} w-full`}>
+      <div ref={printRef} className={`${templateText.en=='Motor Insurance'?'Motor':''} w-full print:absolute print:top-0 print:left-0`}>
         <div className="table table_td-flex-1 w-full">
           <div className="w-full mb-4 flex justify-between border-b-2 border-solid border-black pb-6 px-4">
             <div className="w-full">
@@ -117,7 +117,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
             </div>
           </div>
           <Row gutter={24}>
-            <Col span={12}>
+            <Col span={14}>
               <div className="w-full">
                 <p>{client?.company || ' '}</p>
                 <p>
@@ -128,8 +128,8 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                 )) || ' '}
               </div>
             </Col>
-            <Col span={12}>
-              <div className="table table_td-flex-1 w-full">
+            <Col span={10}>
+              <div className="table table_td-flex-1 w-full template64">
                 <div className="tr">
                   <div className="th">
                     <p>日期 Date</p>

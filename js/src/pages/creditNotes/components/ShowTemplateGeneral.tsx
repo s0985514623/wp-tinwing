@@ -32,10 +32,10 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
     });
 
     return (
-        <div className="mt-12 table table_td-flex-1 w-full border-2 border-solid border-black template64">
+        <div className="mt-12 table table_td-flex-1 w-full border-2 border-solid border-black ">
             <Row gutter={24}>
                 <Col span={14} className="pt-2">
-                    <div className="table table_td-flex-1 w-full">
+                    <div className="table table_td-flex-1 w-full template64">
                         <div className="tr">
                             <div className="th">承保公司 Insurer</div>
                             <div className="td">{insurer?.name}</div>
@@ -64,33 +64,63 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
                     </div>
                 </Col>
 
-                <Col span={10} className="border-l-2 border-solid border-black pt-2">
-                    <div className="table table_td-flex-1 w-full">
+                <Col span={10} className="border-l-2 border-solid border-black pt-2 pr-[24px]">
+                    <div className="table table_td-flex-1 w-full h-full relative">
                         <div className="tr ">
-                            <div className="th">Premium</div>
+                            <div className="th">
+                                <p>Premium</p>
+                            </div>
                             <div className="td text-right"></div>
-                            <div className="td text-right">{getPrice(premium)}</div>
+                            <div className="td text-right">
+                                <p>{getPrice(round(premium, 2))}</p>
+                            </div>
                         </div>
                         <div className="tr ">
-                            <div className="th">IA Levy</div>
-                            <div className="td text-right">{levy}%</div>
-                            <div className="td text-right">{getPrice(round(premium * (levy / 100), 2))}</div>
+                            <div className="th">
+                                <p>IA Levy</p>
+                            </div>
+                            <div className="td text-left">
+                                <p>{levy}%</p>{' '}
+                            </div>
+                            <div className="td text-right">
+                                <p>{getPrice(round(premium * (levy / 100), 2))}</p>{' '}
+                            </div>
                         </div>
                         <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr `}>
-                            <div className="th">{extra_fieldLabel}</div>
-                            <div className="td text-right">{extra_fieldValue}%</div>
-                            <div className="td text-right">{getPrice(round(premium * (Number(extra_fieldValue) / 100), 2))}</div>
+                            <div className="th">
+                                <p>{extra_fieldLabel}</p>
+                            </div>
+                            <div className="td text-left">
+                                <p>{extra_fieldValue}%</p>
+                            </div>
+                            <div className="td text-right">
+                                <p>
+                                    {getPrice(
+                                        round(premium * (Number(extra_fieldValue) / 100), 2),
+                                    )}
+                                </p>
+                            </div>
                         </div>
                         <div className="tr mt-10">
-                            <div className="th text-red-500 print:text-inherit">Less</div>
+                            <div className="th text-red-500 print:text-inherit">
+                                <p>Less</p>
+                            </div>
                             <div className="td text-right"></div>
-                            <div className="td text-right">{getPrice(less)}</div>
+                            <div className="td text-right">
+                                <p>{getPrice(less)}</p>
+                            </div>
                         </div>
                         <div className="tr border-t-2 border-solid border-black flex-wrap">
-                            <div className="w-full p-2 font-bold text-xs print:text-lg">請繳付此金額 Please pay this amount</div>
-                            <div className="th font-bold">總保險費 TOTAL PREMIUM</div>
+                            <div className="w-full p-2 font-bold text-xs print:text-lg">
+                                請繳付此金額 Please pay this amount
+                            </div>
+                            <div className="th font-bold w-[18rem]">
+                                <p>總保險費 TOTAL PREMIUM</p>
+                            </div>
                             <div className="td text-right"></div>
-                            <div className="td text-right">{getPrice(totalPremium)}</div>
+                            <div className="td text-right">
+                                <p>{getPrice(totalPremium)}</p>
+                            </div>
                         </div>
                     </div>
                 </Col>
