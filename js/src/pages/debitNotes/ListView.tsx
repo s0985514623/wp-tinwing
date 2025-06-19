@@ -1,4 +1,4 @@
-import { useMany, CrudFilters, useExport ,BaseKey} from '@refinedev/core'
+import { useMany, CrudFilters, useExport, BaseKey } from '@refinedev/core'
 import {
   List,
   useTable,
@@ -20,6 +20,16 @@ export const ListView: React.FC = () => {
   //Export CSV
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
     mapData: (item) => {
+      const theClient =
+        clients.find((client) => client.id === item?.client_id) ||
+        defaultClient
+      const display_nameDataIndex = theClient?.display_name || 'name_en'
+      const display_name = theClient?.[display_nameDataIndex] || 'N/A'
+      const theInsurer =
+        insurerData?.data?.find(
+          (theInsurer) => theInsurer.id === item?.insurer_id,
+        )?.name
+      const insurer_name = theInsurer || 'N/A'
       return {
         ...item,
         date: dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
@@ -31,6 +41,10 @@ export const ListView: React.FC = () => {
           .format('YYYY-MM-DD'),
         motor_attr: JSON.stringify(item?.motor_attr),
         extra_field: JSON.stringify(item?.extra_field),
+        'Client no': theClient?.client_number || 'N/A',
+        Client: display_name,
+        Insurer: insurer_name,
+        'Policy No.': item?.policy_no || 'N/A',
       }
     },
   })
@@ -161,10 +175,10 @@ export const ListView: React.FC = () => {
       ]
       return filters as CrudFilters
     },
-		pagination:{
-			pageSize: -1, // 一次取得所有資料
-			mode: "off", // 關閉服務端分頁
-		}
+    pagination: {
+      pageSize: -1, // 一次取得所有資料
+      mode: "off", // 關閉服務端分頁
+    }
   })
   const formattedTableProps = {
     ...tableProps,
@@ -172,11 +186,11 @@ export const ListView: React.FC = () => {
       const motor_attr = theRecord?.motor_attr
       const formattedMotorAttr = motor_attr
         ? {
-            ...motor_attr,
-            ls: motor_attr?.ls ? Number(motor_attr?.ls) : undefined,
-            mib: motor_attr?.mib ? Number(motor_attr?.mib) : undefined,
-            ncb: motor_attr?.ncb ? Number(motor_attr?.ncb) : undefined,
-          }
+          ...motor_attr,
+          ls: motor_attr?.ls ? Number(motor_attr?.ls) : undefined,
+          mib: motor_attr?.mib ? Number(motor_attr?.mib) : undefined,
+          ncb: motor_attr?.ncb ? Number(motor_attr?.ncb) : undefined,
+        }
         : null
 
       return {
@@ -193,9 +207,9 @@ export const ListView: React.FC = () => {
   const { data: termData, isLoading: termIsLoading } = useMany<TTerm>({
     resource: 'terms',
     ids:
-		parsedTableProps?.dataSource
-		?.map((r) => r?.term_id)
-		.filter((id): id is number => typeof id === 'number') ?? [],
+      parsedTableProps?.dataSource
+        ?.map((r) => r?.term_id)
+        .filter((id): id is number => typeof id === 'number') ?? [],
     queryOptions: {
       enabled: !!parsedTableProps?.dataSource,
     },
@@ -204,9 +218,9 @@ export const ListView: React.FC = () => {
   const { data: insurerData, isLoading: insurerIsLoading } = useMany({
     resource: 'insurers',
     ids:
-			parsedTableProps?.dataSource
-			?.map((r) => r?.insurer_id)
-      .filter((id): id is number => typeof id === 'number') ?? [],
+      parsedTableProps?.dataSource
+        ?.map((r) => r?.insurer_id)
+        .filter((id): id is number => typeof id === 'number') ?? [],
     queryOptions: {
       enabled: !!parsedTableProps?.dataSource,
     },
@@ -216,8 +230,8 @@ export const ListView: React.FC = () => {
     resource: 'clients',
     ids:
       parsedTableProps?.dataSource
-			?.map((r) => r?.client_id)
-      .filter((id): id is number => typeof id === 'number') ?? [],
+        ?.map((r) => r?.client_id)
+        .filter((id): id is number => typeof id === 'number') ?? [],
     queryOptions: {
       enabled: !!parsedTableProps?.dataSource,
     },
@@ -243,10 +257,10 @@ export const ListView: React.FC = () => {
       text: 'Package',
       value: 'package',
     },
-    {
-      text: 'Others',
-      value: 'others',
-    },
+    // {
+    //   text: 'Others',
+    //   value: 'others',
+    // },
   ]
   const InsuranceClassOptions = termData?.data?.map((item) => ({
     text: item.name,
@@ -412,8 +426,8 @@ export const ListView: React.FC = () => {
               insurerIsLoading
                 ? ''
                 : insurerData?.data?.find(
-                    (theInsurer) => theInsurer.id === insurer_id,
-                  )?.name || '',
+                  (theInsurer) => theInsurer.id === insurer_id,
+                )?.name || '',
           })}
         />
         <Table.Column

@@ -19,12 +19,17 @@ export const ListView: React.FC = () => {
   //Export CSV
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
     mapData: (item) => {
+      const sourceData = item?.created_from_credit_note_id ? creditNotes : debitNotes;
+      const id = item?.created_from_credit_note_id ? item?.created_from_credit_note_id : item?.debit_note_id;
+      const note = sourceData.find((note) => note.id === id);
       return {
         ...item,
         date: dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
         payment_date: dayjs
           .unix(item?.payment_date as number)
           .format('YYYY-MM-DD'),
+        'DN/CN': note?.note_no || 'N/A',
+        'Bill Date': note?.date ? dayjs.unix(note?.date as number).format('YYYY-MM-DD') : '',
       }
     },
   })

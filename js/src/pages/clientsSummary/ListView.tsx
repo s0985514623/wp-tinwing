@@ -189,9 +189,13 @@ export const ListView: React.FC = () => {
       value: 'shortTerms',
     },
     {
-      text: 'Others',
-      value: 'others',
+      text: 'Package',
+      value: 'package',
     },
+    // {
+    //   text: 'Others',
+    //   value: 'others',
+    // },
   ]
 
   const { data: termData, isLoading: _termIsLoading } = useMany({

@@ -161,6 +161,8 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
           ?.name,
         Amount: item.amount.toLocaleString(),
         Remark: item.remark,
+        'Cheque No': item.cheque_no,
+        'Bank': item.payment_receiver_account,
       }
     },
   })
