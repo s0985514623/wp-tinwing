@@ -19,6 +19,7 @@ import { ToWords } from 'to-words'
 import autograph from 'assets/images/autograph.jpg'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
 import { RemarkTextArea } from 'components/RemarkTextArea'
+import { round } from 'lodash-es'
 
 export const ShowView: React.FC<IResourceComponentsProps> = () => {
   const toWords = new ToWords()
@@ -173,7 +174,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                 <div className="tr">
                   <div className="th w-[22rem]">THE SUM OF 款項</div>
                   <div className="td">
-                    {toWords.convert(receiptPremium??0)}
+                    {toWords.convert(Number(receiptPremium??0))}
                   </div>
                 </div>
                 <div className="tr">
@@ -231,16 +232,22 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                   <div className="th">PREMIUM 保費</div>
                   <div className="td">
                     HKD{' '}
-                    {Number(
-                      receiptPremium ??
+                    {
+                      round(Number(receiptPremium) ?? 0, 2).toLocaleString(
+                        'en-US',
+                          {
+                            minimumFractionDigits: 2, // 最少小數點後兩位
+                            maximumFractionDigits: 2, // 最多小數點後兩位
+                          },
+                      ) ??
                         getTotalPremiumByDebitNote(debitNote).toLocaleString(
                           'en-US',
                           {
                             minimumFractionDigits: 2, // 最少小數點後兩位
                             maximumFractionDigits: 2, // 最多小數點後兩位
                           },
-                        ),
-                    ).toLocaleString()}
+                        )
+                    }
                   </div>
                 </div>
               </div>

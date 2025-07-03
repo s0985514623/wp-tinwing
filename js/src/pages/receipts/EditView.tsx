@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   IResourceComponentsProps,
   useOne,
@@ -36,6 +36,7 @@ import DetailFooter from 'components/DetailFooter'
 import { ToWords } from 'to-words'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
 import { RemarkTextArea } from 'components/RemarkTextArea'
+import { round } from 'lodash-es'
 
 export const EditView: React.FC<IResourceComponentsProps> = () => {
   const toWords = new ToWords()
@@ -46,21 +47,20 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
   const isFromCreditNote = Boolean(receiptData?.created_from_credit_note_id)
   const watchDate = Form.useWatch(['date'], form)
   const watchPaymentDate = Form.useWatch(['payment_date'], form)
-  const watchPremium = Number(Form.useWatch(['premium'], form)) || 0
+  const watchPremium = Form.useWatch(['premium'], form) || 0
   const [dateProps, setDateProps] = useState<{
     value?: Dayjs
   }>({})
   const [payment_dateProps, setPaymentDateProps] = useState<{
     value?: Dayjs
   }>({})
-
   const handleDateChange =
     (namePath: string | number | (string | number)[]) =>
-    (value: Dayjs | null) => {
-      if (!!value) {
-        form.setFieldValue(namePath, value.unix())
+      (value: Dayjs | null) => {
+        if (!!value) {
+          form.setFieldValue(namePath, value.unix())
+        }
       }
-    }
 
   const { selectProps, queryResult: connectedQueryResult } =
     useSelect<TDebitNote>({
@@ -124,7 +124,8 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
   // 當selectedId改變時，更新premium的值
   useEffect(() => {
     if (!!selectedId) {
-      let setPremium = 0
+      let setPremium = watchPremium
+      // console.log("🚀 ~ setPremium:", setPremium)
       if (isFromCreditNote) {
         setPremium =
           receiptsData?.data.find(
@@ -140,7 +141,9 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
           receiptsData?.data.find((item) => item?.debit_note_id === selectedId)
             ?.premium || getTotalPremiumByDebitNote(selectedConnected)
       }
-      form.setFieldValue(['premium'], setPremium)
+      if (setPremium > 0) {
+        form.setFieldValue(['premium'], round(setPremium, 2))
+      }
     }
   }, [selectedId])
 
@@ -319,7 +322,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                 </div>
                 <div className="tr">
                   <div className="th">THE SUM OF 款項</div>
-                  <div className="td">{toWords.convert(watchPremium)}</div>
+                  <div className="td">{toWords.convert(Number(watchPremium) ?? 0)}</div>
                 </div>
                 <div className="tr">
                   <div className="th w-60">BEING PAYMENT OF 用以支付項目</div>
@@ -386,7 +389,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                   <div className="th">PREMIUM 保費</div>
                   <div className="td">
                     <Form.Item noStyle name={['premium']}>
-                      <Input size="small" />
+                      <InputNumber addonBefore="HKD" className="w-full" size="small" min={0} stringMode step="0.01" />
                     </Form.Item>
                   </div>
                 </div>
