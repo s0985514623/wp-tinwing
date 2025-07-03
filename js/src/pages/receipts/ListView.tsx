@@ -88,7 +88,7 @@ export const ListView: React.FC = () => {
       ]
       return filters as CrudFilters
     },
-    pagination:{
+    pagination: {
       pageSize: -1, // 一次取得所有資料
       mode: "off", // 關閉服務端分頁
     }
@@ -146,7 +146,7 @@ export const ListView: React.FC = () => {
           width={120}
           dataIndex="receipt_no"
           title="Receipt ID."
-          {...getSortProps<DataType>('receipt_no')}
+          sorter={(a: DataType, b: DataType) => a?.receipt_no?.localeCompare(b?.receipt_no || '') || 0}
         />
         <Table.Column
           width={120}
