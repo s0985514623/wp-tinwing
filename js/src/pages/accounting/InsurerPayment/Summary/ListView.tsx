@@ -4,6 +4,8 @@ import { Table } from 'antd';
 import { DataType, ZDataType } from 'pages/insurers/types';
 import { DataType as TReceipts } from 'pages/receipts/types';
 import { DataType as TDebitNote } from 'pages/debitNotes/types';
+import { DataType as TCreditNote } from 'pages/creditNotes/types';
+import { DataType as TRenewal } from 'pages/renewals/types';
 import { safeParse, getInsurerPayment } from 'utils';
 
 // import dayjs from 'dayjs';
@@ -22,11 +24,28 @@ export const ListView: React.FC = () => {
     });
     const { data: receiptsData } = useList<TReceipts>({
         resource: 'receipts',
+        pagination: {
+            pageSize: -1,
+          },
     });
     // console.log('🚀 ~ receiptsData:', receiptsData);
     const { data: debitNotesData } = useMany<TDebitNote>({
         resource: 'debit_notes',
         ids: (receiptsData?.data?.map((item) => item.debit_note_id) as number[]) ?? [],
+        queryOptions: {
+            enabled: !!receiptsData?.data,
+        },
+    });
+    const { data: creditNotesData } = useMany<TCreditNote>({
+        resource: 'credit_notes',
+        ids: (receiptsData?.data?.map((item) => item.created_from_credit_note_id) as number[]) ?? [],
+        queryOptions: {
+            enabled: !!receiptsData?.data,
+        },
+    });
+    const { data: renewalsData } = useMany<TRenewal>({
+        resource: 'renewals',
+        ids: (receiptsData?.data?.map((item) => item.created_from_renewal_id) as number[]) ?? [],
         queryOptions: {
             enabled: !!receiptsData?.data,
         },
@@ -106,8 +125,11 @@ export const ListView: React.FC = () => {
                         const unpaidReceipts = receiptsData?.data?.filter((receipt) => receipt.is_paid !== true);
                         const totalAmount = unpaidReceipts?.reduce((acc, receipt) => {
                             const debitNote = debitNotesData?.data?.find((dn) => dn.id === receipt.debit_note_id);
-                            if (debitNote?.insurer_id === id) {
-                                const premium = debitNote ? getInsurerPayment(receipt, debitNote as TDebitNote, record) : 0;
+                            const creditNote = creditNotesData?.data?.find((cn) => cn.id === receipt.created_from_credit_note_id);
+                            const renewal = renewalsData?.data?.find((r) => r.id === receipt.created_from_renewal_id);
+                            const theNote =  creditNote ?? renewal??debitNote;
+                            if (theNote?.insurer_id === id) {
+                                const premium = theNote ? getInsurerPayment(receipt, theNote as TDebitNote, record) : 0;
                                 return acc + premium;
                             }
                             return acc;

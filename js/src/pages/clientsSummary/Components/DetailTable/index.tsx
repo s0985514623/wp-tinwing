@@ -25,6 +25,9 @@ const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
   //確認這個rawRecordId有沒有創建過renewals
   const { data: createdFromRenewals } = useList({
     resource: 'renewals',
+    pagination: {
+      pageSize: -1,
+    },
   })
   const createdFromRenewal =
     createdFromRenewals?.data.filter((element) => {
@@ -40,6 +43,9 @@ const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
   //確認這個rawRecordId有沒有創建過receipts
   const { data: createdFromReceipts } = useList({
     resource: 'receipts',
+    pagination: {
+      pageSize: -1,
+    },
   })
   const createdFromReceipt =
     createdFromReceipts?.data.filter((element) => {

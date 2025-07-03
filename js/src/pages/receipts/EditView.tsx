@@ -75,6 +75,9 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
   //取得receipts
   const { data: receiptsData } = useList<DataType>({
     resource: 'receipts',
+    pagination: {
+      pageSize: -1,
+    },
   })
   //取得receipts的debit_note_id or created_from_renewal_id or created_from_credit_note_id
   const receiptsIds =

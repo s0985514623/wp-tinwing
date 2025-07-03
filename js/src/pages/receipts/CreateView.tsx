@@ -106,6 +106,9 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
   //取得receipts
   const { data: receiptsData } = useList<DataType>({
     resource: 'receipts',
+    pagination: {
+      pageSize: -1,
+    },
   })
   //取得receipts的debit_note_id
   const receiptsIds =

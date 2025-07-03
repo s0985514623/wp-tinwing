@@ -60,11 +60,17 @@ export const ListView: React.FC = () => {
 							value: '=',
 						},
         ],
+        pagination: {
+            pageSize: -1,
+        },
     });
     const allTerms = allTermData?.data ?? [];
 
     const { data: allInsurersData } = useList({
         resource: 'insurers',
+        pagination: {
+            pageSize: -1,
+        },
     });
     const allInsurers = allInsurersData?.data ?? [];
 
