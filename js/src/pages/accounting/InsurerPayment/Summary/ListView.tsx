@@ -93,8 +93,14 @@ export const ListView: React.FC = () => {
                     render={(id: number, record: DataType) => {
                         const totalAmount = receiptsData?.data?.reduce((acc, receipt) => {
                             const debitNote = debitNotesData?.data?.find((dn) => dn.id === receipt.debit_note_id);
-                            if (debitNote?.insurer_id === id) {
-                                const premium = debitNote ? getInsurerPayment(receipt, debitNote as TDebitNote, record) : 0;
+                            const creditNote = creditNotesData?.data?.find((cn) => cn.id === receipt.created_from_credit_note_id);
+                            const renewal = renewalsData?.data?.find((r) => r.id === receipt.created_from_renewal_id);
+                            const theNote =  creditNote ?? renewal??debitNote;
+                            if (theNote?.insurer_id === id) {
+                                const premium = theNote ? getInsurerPayment(receipt, theNote as TDebitNote, record) : 0;
+                                if(creditNote){
+                                    return acc - premium;
+                                }
                                 return acc + premium;
                             }
                             return acc;
@@ -109,8 +115,14 @@ export const ListView: React.FC = () => {
                         const paidReceipts = receiptsData?.data?.filter((receipt) => receipt.is_paid === true);
                         const totalAmount = paidReceipts?.reduce((acc, receipt) => {
                             const debitNote = debitNotesData?.data?.find((dn) => dn.id === receipt.debit_note_id);
-                            if (debitNote?.insurer_id === id) {
-                                const premium = debitNote ? getInsurerPayment(receipt, debitNote as TDebitNote, record) : 0;
+                            const creditNote = creditNotesData?.data?.find((cn) => cn.id === receipt.created_from_credit_note_id);
+                            const renewal = renewalsData?.data?.find((r) => r.id === receipt.created_from_renewal_id);
+                            const theNote =  creditNote ?? renewal??debitNote;
+                            if (theNote?.insurer_id === id) {
+                                const premium = theNote ? getInsurerPayment(receipt, theNote as TDebitNote, record) : 0;
+                                if(creditNote){
+                                    return acc - premium;
+                                }
                                 return acc + premium;
                             }
                             return acc;
@@ -130,6 +142,9 @@ export const ListView: React.FC = () => {
                             const theNote =  creditNote ?? renewal??debitNote;
                             if (theNote?.insurer_id === id) {
                                 const premium = theNote ? getInsurerPayment(receipt, theNote as TDebitNote, record) : 0;
+                                if(creditNote){
+                                    return acc - premium;
+                                }
                                 return acc + premium;
                             }
                             return acc;
