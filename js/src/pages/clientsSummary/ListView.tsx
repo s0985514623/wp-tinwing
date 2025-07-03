@@ -48,26 +48,26 @@ const termOptions = {
         operator: 'eq',
         value: '=',
       },
-      {
-        field: 'meta_query[1][key]',
-        operator: 'eq',
-        value: 'period_of_insurance_to',
-      },
-      {
-        field: 'meta_query[1][value]',
-        operator: 'eq',
-        value: dayjs('2022-01-01').unix(),
-      },
-      {
-        field: 'meta_query[1][compare]',
-        operator: 'eq',
-        value: '>',
-      },
-      {
-        field: 'meta_query[1][type]',
-        operator: 'eq',
-        value: 'NUMERIC',
-      },
+      // {
+      //   field: 'meta_query[1][key]',
+      //   operator: 'eq',
+      //   value: 'period_of_insurance_to',
+      // },
+      // {
+      //   field: 'meta_query[1][value]',
+      //   operator: 'eq',
+      //   value: dayjs('2022-01-01').unix(),
+      // },
+      // {
+      //   field: 'meta_query[1][compare]',
+      //   operator: 'eq',
+      //   value: '>',
+      // },
+      // {
+      //   field: 'meta_query[1][type]',
+      //   operator: 'eq',
+      //   value: 'NUMERIC',
+      // },
     ] as CrudFilters,
   },
   onSearch: (values: any) => {
@@ -346,7 +346,7 @@ export const ListView: React.FC = () => {
           render={(period_of_insurance_from: number) =>
             period_of_insurance_from
               ? dayjs.unix(period_of_insurance_from).format('YYYY-MM-DD')
-              : ''
+              : 'N/A'
           }
           {...getSortProps<DataType>('period_of_insurance_from')}
         />
@@ -356,7 +356,7 @@ export const ListView: React.FC = () => {
           render={(period_of_insurance_to: number) =>
             period_of_insurance_to
               ? dayjs.unix(period_of_insurance_to).format('YYYY-MM-DD')
-              : ''
+              : 'N/A'
           }
           {...getSortProps<DataType>('period_of_insurance_to')}
         />

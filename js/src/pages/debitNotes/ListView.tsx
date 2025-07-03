@@ -85,26 +85,26 @@ export const ListView: React.FC = () => {
         // 	operator: 'eq',
         // 	value: '=',
         // },
-        {
-          field: 'meta_query[1][key]',
-          operator: 'eq',
-          value: 'period_of_insurance_to',
-        },
-        {
-          field: 'meta_query[1][value]',
-          operator: 'eq',
-          value: dayjs('2022-01-01').unix(),
-        },
-        {
-          field: 'meta_query[1][compare]',
-          operator: 'eq',
-          value: '>',
-        },
-        {
-          field: 'meta_query[1][type]',
-          operator: 'eq',
-          value: 'NUMERIC',
-        },
+        // {
+        //   field: 'meta_query[1][key]',
+        //   operator: 'eq',
+        //   value: 'period_of_insurance_to',
+        // },
+        // {
+        //   field: 'meta_query[1][value]',
+        //   operator: 'eq',
+        //   value: dayjs('2022-01-01').unix(),
+        // },
+        // {
+        //   field: 'meta_query[1][compare]',
+        //   operator: 'eq',
+        //   value: '>',
+        // },
+        // {
+        //   field: 'meta_query[1][type]',
+        //   operator: 'eq',
+        //   value: 'NUMERIC',
+        // },
       ] as CrudFilters,
     },
     onSearch: (values: any) => {
