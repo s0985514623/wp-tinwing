@@ -1,6 +1,6 @@
 import React from 'react'
 import { Create, useForm, useSelect } from '@refinedev/antd'
-import { Form, Row, Col, Input, Select, DatePicker,Switch } from 'antd'
+import { Form, Row, Col, Input, Select, DatePicker,Switch, InputNumber } from 'antd'
 import { DataType as TTerms } from 'pages/terms/types'
 import dayjs from 'dayjs'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
@@ -78,7 +78,7 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
                   <div className="th">Category</div>
                   <div className="td">
                     <Form.Item noStyle name={['term_id']}>
-                      <Select className="w-1/2" {...termsProps} allowClear />
+                      <Select className="w-full" {...termsProps} allowClear />
                     </Form.Item>
                   </div>
                 </div>
@@ -87,7 +87,7 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
                 <div className="th">Amount</div>
                 <div className="td">
                   <Form.Item name={['amount']}>
-                    <Input />
+                    <InputNumber className="w-full" min={0} stringMode step="0.01" />
                   </Form.Item>
                 </div>
               </div>
@@ -101,7 +101,6 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
                       </Form.Item>
                     </div>
                   </div>
-                  <ReceiptBankSelect className="table table_td-flex-1 w-full" />
                 </>
               )}
 							<ReceiptBankSelect

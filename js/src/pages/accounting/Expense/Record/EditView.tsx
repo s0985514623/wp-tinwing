@@ -1,7 +1,7 @@
 import React from 'react'
 import { useOne } from '@refinedev/core'
 import { Edit, useForm, useSelect } from '@refinedev/antd'
-import { Form, Row, Col, Spin, Input, Select } from 'antd'
+import { Form, Row, Col, Spin, Input, Select, InputNumber } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import { DataType } from '../types'
 import { DataType as TTerms } from 'pages/terms/types'
@@ -81,7 +81,7 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
                         name={['term_id']}
                         initialValue={category}
                       >
-                        <Select className="w-1/2" {...termsProps} allowClear />
+                        <Select className="w-full" {...termsProps} allowClear />
                       </Form.Item>
                     </div>
                   </div>
@@ -90,7 +90,7 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
                   <div className="th">Amount</div>
                   <div className="td">
                     <Form.Item name={['amount']} initialValue={amount}>
-                      <Input />
+                      <InputNumber className="w-full" min={0} stringMode step="0.01" />
                     </Form.Item>
                   </div>
                 </div>

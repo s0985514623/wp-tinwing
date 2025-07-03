@@ -159,7 +159,13 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
         Date: dayjs.unix(item.date).format('YYYY-MM-DD'),
         Category: termsData?.data?.find((term) => term.id === item.term_id)
           ?.name,
-        Amount: item.amount.toLocaleString(),
+        Amount: Number(item.amount).toLocaleString(
+          'en-US',
+          {
+            minimumFractionDigits: 2, // 最少小數點後兩位
+            maximumFractionDigits: 2, // 最多小數點後兩位
+          },
+        ),
         Remark: item.remark,
         'Cheque No': item.cheque_no,
         'Bank': item.payment_receiver_account,
@@ -237,7 +243,13 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
             width={120}
             dataIndex="amount"
             title="Amount"
-            render={(amount) => amount.toLocaleString()}
+            render={(amount) => Number(amount).toLocaleString(
+              'en-US',
+              {
+                minimumFractionDigits: 2, // 最少小數點後兩位
+                maximumFractionDigits: 2, // 最多小數點後兩位
+              },
+            )}
           />
           {!is_adjust_balance && (
             <>
