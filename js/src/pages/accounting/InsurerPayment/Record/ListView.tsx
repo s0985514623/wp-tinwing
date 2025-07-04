@@ -193,20 +193,18 @@ export const ListView: React.FC = () => {
   const disabledBtn = parsedTableProps.dataSource?.length == 0 ? true : false
   //Export CSV
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
-    filters: dateRange
-      ? [
-        {
-          field: 'date[0]',
-          operator: 'eq',
-          value: dateRange[0].startOf('day').unix(),
-        },
-        {
-          field: 'date[1]',
-          operator: 'eq',
-          value: dateRange[1].startOf('day').unix(),
-        },
-      ]
-      : undefined,
+    filters: [
+      {
+        field: 'date[0]',
+        operator: 'eq',
+        value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
+      },
+      {
+        field: 'date[1]',
+        operator: 'eq',
+        value: dateRange ? dateRange[1].startOf('day').unix() : undefined,
+      },
+    ],
     mapData: (item) => {
       if (!item) return
       const note_no =

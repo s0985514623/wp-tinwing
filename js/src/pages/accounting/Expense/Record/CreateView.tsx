@@ -1,11 +1,14 @@
 import React from 'react'
 import { Create, useForm, useSelect } from '@refinedev/antd'
-import { Form, Row, Col, Input, Select, DatePicker,Switch, InputNumber } from 'antd'
+import { Form, Row, Col, Input, Select, DatePicker, Switch } from 'antd'
 import { DataType as TTerms } from 'pages/terms/types'
 import dayjs from 'dayjs'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
+import { AmountInput } from 'components/AmountInput'
 
 const { TextArea } = Input
+
+
 export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
   is_adjust_balance = false,
 }) => {
@@ -45,10 +48,19 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
   // console.log('🚀 ~ selectProps:', termsProps)
   //重新定義onFinish函數
   const newOnFinish = (values: any) => {
-    formProps?.onFinish?.({
+    // 處理 amount 值，將符號和數值組合
+    const processedValues = {
       ...values,
       date: values.date.unix(),
-    })
+    };
+
+    // 如果 amount 是對象（包含 sign 和 amount），則進行處理
+    if (values.amount && typeof values.amount === 'object') {
+      const { sign, amount } = values.amount;
+      processedValues.amount = sign === 'minus' ? -amount : amount;
+    }
+
+    formProps?.onFinish?.(processedValues);
   }
   return (
     <Create saveButtonProps={saveButtonProps}>
@@ -58,7 +70,7 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
             <div className="table table_td-flex-1 w-full">
               <Form.Item
                 noStyle
-								hidden
+                hidden
                 name={['is_adjust_balance']}
                 initialValue={is_adjust_balance}
                 valuePropName="checked"
@@ -87,7 +99,7 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
                 <div className="th">Amount</div>
                 <div className="td">
                   <Form.Item name={['amount']}>
-                    <InputNumber className="w-full" min={0} stringMode step="0.01" />
+                    <AmountInput className="w-full" />
                   </Form.Item>
                 </div>
               </div>
@@ -103,9 +115,9 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
                   </div>
                 </>
               )}
-							<ReceiptBankSelect
-                  className="table table_td-flex-1 w-full"
-                />
+              <ReceiptBankSelect
+                className="table table_td-flex-1 w-full"
+              />
             </div>
           </Col>
           <Col span={12}>

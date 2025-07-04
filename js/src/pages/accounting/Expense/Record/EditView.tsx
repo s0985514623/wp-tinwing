@@ -1,12 +1,13 @@
 import React from 'react'
 import { useOne } from '@refinedev/core'
 import { Edit, useForm, useSelect } from '@refinedev/antd'
-import { Form, Row, Col, Spin, Input, Select, InputNumber } from 'antd'
+import { Form, Row, Col, Spin, Input, Select } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import { DataType } from '../types'
 import { DataType as TTerms } from 'pages/terms/types'
 import dayjs from 'dayjs'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
+import { AmountInput } from 'components/AmountInput'
 
 const { TextArea } = Input
 export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
@@ -56,9 +57,24 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
   const remark = expenseData?.remark || ''
   const cheque_no = expenseData?.cheque_no || ''
 
+  //重新定義onFinish函數
+  const newOnFinish = (values: any) => {
+    // 處理 amount 值，將符號和數值組合
+    const processedValues = {
+      ...values,
+    };
+
+    // 如果 amount 是對象（包含 sign 和 amount），則進行處理
+    if (values.amount && typeof values.amount === 'object') {
+      const { sign, amount } = values.amount;
+      processedValues.amount = sign === 'minus' ? -amount : amount;
+    }
+
+    formProps?.onFinish?.(processedValues);
+  }
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <Form {...formProps} layout="vertical">
+      <Form {...formProps} layout="vertical" onFinish={newOnFinish}>
         <Spin
           indicator={<LoadingOutlined className="text-2xl" spin />}
           tip="fetching data..."
@@ -90,7 +106,7 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
                   <div className="th">Amount</div>
                   <div className="td">
                     <Form.Item name={['amount']} initialValue={amount}>
-                      <InputNumber className="w-full" min={0} stringMode step="0.01" />
+                      <AmountInput className="w-full" />
                     </Form.Item>
                   </div>
                 </div>
