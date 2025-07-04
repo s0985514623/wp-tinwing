@@ -9,6 +9,7 @@ export const ZDataType = z.object({
 	term_id:z.number(),
 	payment_receiver_account: z.string(),
 	cheque_no: z.string(),
+	payment_date: z.number(),
 
 })
 

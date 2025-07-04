@@ -34,9 +34,7 @@ export const useFormatLineGridData = ({
       //取得date
       const date = dayjs.unix(receipt?.date as number).format('YYYY-MM-DD')
       //取得value
-      const premium = receipt?.premium
-        ? Number(receipt?.premium)
-        : getTotalPremiumByDebitNote(
+      const premium = Number(receipt?.premium ?? 0)?? getTotalPremiumByDebitNote(
             (
               debitNotesData?.filter(
                 (debitNote) =>
@@ -62,7 +60,7 @@ export const useFormatLineGridData = ({
       //取得date
       const date = dayjs.unix(Number(receipt.date))?.format('YYYY-MM-DD')
       //取得value
-      const premium = receipt?.amount
+      const premium = Number(receipt?.amount ?? 0)
 
       // 尋找是否已經有該category的紀錄
       const existingDate = acc.find((item) => item.date === date)
@@ -79,7 +77,7 @@ export const useFormatLineGridData = ({
       //取得date
       const date = dayjs.unix(Number(receipt.date))?.format('YYYY-MM-DD')
       //取得value
-      const premium = receipt?.amount
+      const premium = Number(receipt?.amount ?? 0) 
 
       // 尋找是否已經有該category的紀錄
       const existingDate = acc.find((item) => item.date === date)

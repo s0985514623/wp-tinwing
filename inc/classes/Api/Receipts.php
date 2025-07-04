@@ -108,16 +108,17 @@ final class Receipts {
 		// 如果有date參數，則加入查詢條件
 		if (isset($params['date'])) {
 			// 加入時區設定
+
 			// 獲取 WordPress 設定的時區
 			$wp_timezone = wp_timezone(); // 取得 WP 設定的時區 (PHP DateTimeZone 物件)
 			// 解析傳入的 GMT 日期時間
-			$after_datetime = new \DateTime($params['date'][0], new \DateTimeZone('GMT'));
+			$after_datetime = new \DateTime('@'.$params['date'][0]);
 			// 轉換為 WordPress 設定的時區
 			$after_datetime->setTimezone($wp_timezone);
 			// 格式化為 WP_Query 可用的格式
 			$after_datetime_string = $after_datetime->format('Y-m-d');
 			// 解析傳入的 GMT 日期時間
-			$before_datetime = new \DateTime($params['date'][1], new \DateTimeZone('GMT'));
+			$before_datetime = new \DateTime('@'.$params['date'][1]);
 			// 轉換為 WordPress 設定的時區
 			$before_datetime->setTimezone($wp_timezone);
 			// 格式化為 WP_Query 可用的格式

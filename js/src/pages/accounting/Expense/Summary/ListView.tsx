@@ -117,7 +117,7 @@ export const ListView: React.FC = () => {
             const recordMonth = dayjs.unix(record?.date).month() + 1;
             //將數字轉為月份名稱
             // const recordMonthName = dayjs.unix(record?.date).format('MMMM');
-            const recordAmount = record?.amount;
+            const recordAmount = Number(record?.amount ?? 0);
             // 尋找是否已經有該日期的紀錄
             const existingDate = acc?.find((item: any) => item.year === recordYear && item.month === recordMonth);
             if (existingDate) {

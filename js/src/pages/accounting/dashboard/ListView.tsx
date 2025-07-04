@@ -397,7 +397,7 @@ export const ListView: React.FC = () => {
     adjustBalancesData?.data.forEach((adjustBalance) => {
       const bank = adjustBalance?.payment_receiver_account
       if (!bank) return
-      const amount = adjustBalance?.amount
+      const amount = Number(adjustBalance?.amount ?? 0)
       const existingBank = balance.find((item) => item.bank === bank)
       if (existingBank) {
         existingBank.income -= amount
@@ -410,7 +410,7 @@ export const ListView: React.FC = () => {
     expensesData?.data.forEach((expense) => {
       const bank = expense?.payment_receiver_account
       if (!bank) return
-      const amount = expense?.amount
+      const amount = Number(expense?.amount ?? 0)
       const existingBank = balance.find((item) => item.bank === bank)
       if (existingBank) {
         existingBank.income -= amount
@@ -483,9 +483,7 @@ export const ListView: React.FC = () => {
         const bank = receipt?.payment_receiver_account
         if (!bank) return acc
         
-        const premium = receipt?.amount
-          ? Number(receipt?.amount)
-          : 0
+        const premium = Number(receipt?.amount ?? 0)
         const existingBank = acc.find((item) => item.bank === bank)
         if (existingBank) {
           existingBank.income += premium

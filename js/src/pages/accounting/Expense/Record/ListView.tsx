@@ -140,23 +140,38 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
   const disabledBtn = parsedTableProps.dataSource?.length == 0 ? true : false
   //Export CSV
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
-    filters: dateRange
-      ? [
+    filters:  [
           {
             field: 'date',
             operator: 'gt',
-            value: dateRange[0]?.unix(),
+            value: dateRange?dateRange[0]?.unix():undefined,
           },
           {
             field: 'date',
             operator: 'lt',
-            value: dateRange[1]?.unix(),
+            value: dateRange?dateRange[1]?.unix():undefined,
+          },
+          {
+            field: 'meta_query[0][key]',
+            operator: 'eq',
+            value: 'is_adjust_balance',
+          },
+          {
+            field: 'meta_query[0][value]',
+            operator: 'eq',
+            value: 1,
+          },
+          {
+            field: 'meta_query[0][compare]',
+            operator: 'eq',
+            value: is_adjust_balance ? '=' : '!=',
           },
         ]
-      : [],
+      ,
     mapData: (item) => {
       return {
         Date: dayjs.unix(item.date).format('YYYY-MM-DD'),
+        'Payment Date': dayjs.unix(item.payment_date).format('YYYY-MM-DD'),
         Category: termsData?.data?.find((term) => term.id === item.term_id)
           ?.name,
         Amount: Number(item.amount).toLocaleString(
@@ -166,9 +181,10 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
             maximumFractionDigits: 2, // 最多小數點後兩位
           },
         ),
-        Remark: item.remark,
         'Cheque No': item.cheque_no,
         'Bank': item.payment_receiver_account,
+        Remark: item.remark,
+        
       }
     },
   })
