@@ -115,10 +115,10 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
       ]
       return filters as CrudFilters
     },
-		pagination:{
-			pageSize: -1,
-			mode: "off" as const,
-		}
+    pagination: {
+      pageSize: -1,
+      mode: "off" as const,
+    }
   })
 
   const parsedTableProps = safeParse<DataType>({
@@ -140,34 +140,44 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
   const disabledBtn = parsedTableProps.dataSource?.length == 0 ? true : false
   //Export CSV
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
-    filters:  [
-          {
-            field: 'date',
-            operator: 'gt',
-            value: dateRange?dateRange[0]?.unix():undefined,
-          },
-          {
-            field: 'date',
-            operator: 'lt',
-            value: dateRange?dateRange[1]?.unix():undefined,
-          },
-          {
-            field: 'meta_query[0][key]',
-            operator: 'eq',
-            value: 'is_adjust_balance',
-          },
-          {
-            field: 'meta_query[0][value]',
-            operator: 'eq',
-            value: 1,
-          },
-          {
-            field: 'meta_query[0][compare]',
-            operator: 'eq',
-            value: is_adjust_balance ? '=' : '!=',
-          },
-        ]
-      ,
+    filters: [
+      {
+        field: 'meta_query[0][key]',
+        operator: 'eq',
+        value: 'date',
+      },
+      {
+        field: 'meta_query[0][value][0]',
+        operator: 'eq',
+        value: dateRange ? dateRange[0].unix() : undefined,
+      },
+      {
+        field: 'meta_query[0][value][1]',
+        operator: 'eq',
+        value: dateRange ? dateRange[1].unix() : undefined,
+      },
+      {
+        field: 'meta_query[0][compare]',
+        operator: 'eq',
+        value: 'BETWEEN',
+      },
+      {
+        field: 'meta_query[1][key]',
+        operator: 'eq',
+        value: 'is_adjust_balance',
+      },
+      {
+        field: 'meta_query[1][value]',
+        operator: 'eq',
+        value: 1,
+      },
+      {
+        field: 'meta_query[1][compare]',
+        operator: 'eq',
+        value: is_adjust_balance ? '=' : '!=',
+      },
+    ]
+    ,
     mapData: (item) => {
       return {
         Date: dayjs.unix(item.date).format('YYYY-MM-DD'),
@@ -184,7 +194,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
         'Cheque No': item.cheque_no,
         'Bank': item.payment_receiver_account,
         Remark: item.remark,
-        
+
       }
     },
   })
