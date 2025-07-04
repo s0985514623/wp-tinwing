@@ -75,12 +75,12 @@ export const ListView: React.FC = () => {
         {
           field: 'date[0]',
           operator: 'eq',
-          value: values?.dateRange ? dayjs(values?.dateRange[0]) : undefined,
+          value: values?.dateRange ? values?.dateRange[0].unix() : undefined,
         },
         {
           field: 'date[1]',
           operator: 'eq',
-          value: values?.dateRange ? dayjs(values?.dateRange[1]) : undefined,
+          value: values?.dateRange ? values?.dateRange[1].unix() : undefined,
         },
         {
           field: 'meta_query[0][key]',
