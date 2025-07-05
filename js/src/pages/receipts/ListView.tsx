@@ -53,27 +53,51 @@ export const ListView: React.FC = () => {
     },
     onSearch: (values: any) => {
       const filters = [
+        // {
+        //   field: 'date[0]',
+        //   operator: 'eq',
+        //   value: values?.dateRange
+        //     ? dayjs(values?.dateRange[0]?.startOf('day')).unix()
+        //     : undefined,
+        // },
+        // {
+        //   field: 'date[1]',
+        //   operator: 'eq',
+        //   value: values?.dateRange
+        //     ? dayjs(values?.dateRange[1]?.startOf('day')).unix()
+        //     : undefined,
+        // },
         {
-          field: 'date[0]',
+          field: 'meta_query[0][key]',
+          operator: 'eq',
+          value: 'date',
+        },
+        {
+          field: 'meta_query[0][value][0]',
           operator: 'eq',
           value: values?.dateRange
             ? dayjs(values?.dateRange[0]?.startOf('day')).unix()
             : undefined,
         },
         {
-          field: 'date[1]',
+          field: 'meta_query[0][value][1]',
           operator: 'eq',
           value: values?.dateRange
             ? dayjs(values?.dateRange[1]?.startOf('day')).unix()
             : undefined,
         },
         {
-          field: 'meta_query[0][key]',
+          field: 'meta_query[0][compare]',
+          operator: 'eq',
+          value: 'BETWEEN',
+        },
+        {
+          field: 'meta_query[1][key]',
           operator: 'eq',
           value: 'motor_engine_no',
         },
         {
-          field: 'meta_query[0][value]',
+          field: 'meta_query[1][value]',
           operator: 'eq',
           value:
             values?.motor_engine_no === ''
@@ -81,7 +105,7 @@ export const ListView: React.FC = () => {
               : values?.motor_engine_no,
         },
         {
-          field: 'meta_query[0][compare]',
+          field: 'meta_query[1][compare]',
           operator: 'eq',
           value: '=',
         },

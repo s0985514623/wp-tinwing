@@ -44,27 +44,37 @@ export const ListView: React.FC = () => {
     filters: {
       initial: [
         {
-          field: 'date[0]',
+          field: 'meta_query[0][key]',
+          operator: 'eq',
+          value: 'date',
+        },
+        {
+          field: 'meta_query[0][value][0]',
           operator: 'eq',
           value: dateRange ? dateRange[0].unix() : undefined,
         },
         {
-          field: 'date[1]',
+          field: 'meta_query[0][value][1]',
           operator: 'eq',
           value: dateRange ? dateRange[1].unix() : undefined,
         },
         {
-          field: 'meta_query[0][key]',
+          field: 'meta_query[0][compare]',
+          operator: 'eq',
+          value: 'BETWEEN',
+        },
+        {
+          field: 'meta_query[1][key]',
           operator: 'eq',
           value: 'is_paid',
         },
         {
-          field: 'meta_query[0][value]',
+          field: 'meta_query[1][value]',
           operator: 'eq',
           value: 0,
         },
         {
-          field: 'meta_query[0][compare]',
+          field: 'meta_query[1][compare]',
           operator: 'eq',
           value: '=',
         },
