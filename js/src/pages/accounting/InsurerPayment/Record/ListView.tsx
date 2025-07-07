@@ -19,12 +19,13 @@ import { CheckCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons'
 import { useColumnSearch } from 'hooks'
 import { useRowSelection } from 'antd-toolkit'
 import { ModalEdit } from './ModalEdit'
+import { round } from 'lodash'
 
 export const ListView: React.FC = () => {
   const { show, close, modalProps } = useModal()
   const { getColumnSearchProps } = useColumnSearch<DataType>()
   const Link = useLink()
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | undefined>([
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]|undefined>([
     dayjs().add(-30, 'd'),
     dayjs(),
   ])
@@ -51,12 +52,12 @@ export const ListView: React.FC = () => {
         {
           field: 'meta_query[0][value][0]',
           operator: 'eq',
-          value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
+          value: dateRange ? dateRange[0]?.startOf('day').unix() : undefined,
         },
         {
           field: 'meta_query[0][value][1]',
           operator: 'eq',
-          value: dateRange ? dateRange[1].endOf('day').unix() : undefined,
+          value: dateRange ? dateRange[1]?.endOf('day').unix() : undefined,
         },
         {
           field: 'meta_query[0][compare]',
@@ -90,12 +91,12 @@ export const ListView: React.FC = () => {
         {
           field: 'meta_query[0][value][0]',
           operator: 'eq',
-          value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
+          value: values?.dateRange ? values?.dateRange[0]?.startOf('day').unix() : undefined,
         },
         {
           field: 'meta_query[0][value][1]',
           operator: 'eq',
-          value: dateRange ? dateRange[1].endOf('day').unix() : undefined,
+          value: values?.dateRange ? values?.dateRange[1]?.endOf('day').unix() : undefined,
         },
         {
           field: 'meta_query[0][compare]',
@@ -222,12 +223,12 @@ export const ListView: React.FC = () => {
       {
         field: 'meta_query[0][value][0]',
         operator: 'eq',
-        value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
+        value: dateRange ? dateRange[0]?.startOf('day').unix() : undefined,
       },
       {
         field: 'meta_query[0][value][1]',
         operator: 'eq',
-        value: dateRange ? dateRange[1].endOf('day').unix() : undefined,
+        value: dateRange ? dateRange[1]?.endOf('day').unix() : undefined,
       },
       {
         field: 'meta_query[0][compare]',
@@ -399,7 +400,7 @@ export const ListView: React.FC = () => {
                 <Table.Summary.Cell index={5}></Table.Summary.Cell>
                 <Table.Summary.Cell index={6}>總計</Table.Summary.Cell>
                 <Table.Summary.Cell index={7}>
-                  {paymentToInsurer}
+                  {round(paymentToInsurer, 2).toLocaleString()}
                 </Table.Summary.Cell>
               </Table.Summary.Row>
             )

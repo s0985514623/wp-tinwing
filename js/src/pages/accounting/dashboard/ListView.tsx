@@ -12,14 +12,12 @@ import { DataType as TInsurers } from 'pages/insurers/types'
 import { DataType as TRenewals } from '@/pages/renewals/types'
 import { getTotalPremiumByDebitNote, getInsurerPayment } from 'utils'
 import IncomeByBank from './IncomeByBank'
-import { useFormatLineGridData } from 'hooks/useFormatLineGridData'
-import { sortBy } from 'lodash-es'
 import NoDisplay from './NoDisplay'
 
 type DataType = TReceipts | TDebitNote | TQuotations
 export const ListView: React.FC = () => {
   //統一時間範圍
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]|undefined>([
+  const [dateRange, setDateRange] = useState<[Dayjs | undefined, Dayjs | undefined]>([
     dayjs().add(-30, 'd'),
     dayjs(),
   ])

@@ -22,7 +22,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
 }) => {
   const { show, close, modalProps } = useModal()
   const { selectedRowKeys, rowSelection } = useRowSelection<DataType>()
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | undefined>(undefined)
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]|undefined>(undefined)
 
   const { tableProps, searchFormProps } = useTable<DataType>({
     sorters: {
@@ -152,12 +152,12 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
       {
         field: 'meta_query[0][value][0]',
         operator: 'eq',
-        value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
+        value: dateRange ? dateRange[0]?.startOf('day').unix() : undefined,
       },
       {
         field: 'meta_query[0][value][1]',
         operator: 'eq',
-        value: dateRange ? dateRange[1].endOf('day').unix() : undefined,
+        value: dateRange ? dateRange[1]?.endOf('day').unix() : undefined,
       },
       {
         field: 'meta_query[0][compare]',

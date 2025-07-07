@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import { Form, Button, DatePicker, TimeRangePickerProps, FormProps } from 'antd';
 
 // 定义 props 的类型
 interface FilterProps {
-    dateRange: [Dayjs, Dayjs] | undefined;
-    setDateRange?: React.Dispatch<React.SetStateAction<[Dayjs, Dayjs] | undefined>>;
+    dateRange: [Dayjs , Dayjs]|undefined;
+    setDateRange?: React.Dispatch<React.SetStateAction<[Dayjs, Dayjs]|undefined>>;
     formProps?: FormProps;
 }
 const { RangePicker } = DatePicker;
@@ -19,20 +19,31 @@ const rangePresets: TimeRangePickerProps['presets'] = [
 ];
 
 const Filter: React.FC<FilterProps> = ({ dateRange, setDateRange, formProps }) => {
+    
     const [form] = Form.useForm();
+    
+    // 同步外部 dateRange 到 Form 中
+    useEffect(() => {
+        form.setFieldsValue({ dateRange });
+    }, [dateRange, form]);
+    
     const handleOnFieldsChange = (changedFields: any) => {
         if (setDateRange) setDateRange(changedFields.dateRange);
         if (formProps) formProps?.onFinish?.(changedFields);
     };
+    
     const handleShowAllTime = () => {
-        form.setFieldsValue({ dateRange: undefined });
-        if (setDateRange) setDateRange(form.getFieldValue(['dateRange']));
-        if (formProps) formProps?.onFinish?.(form.getFieldValue(['dateRange']));
+        // 直接更新状态，不依赖Form的值
+        // console.log("🚀 ~ dateRange:", dateRange)
+        if (setDateRange) setDateRange(undefined);
+        if (formProps) formProps?.onFinish?.({ dateRange: undefined });
+        // console.log("🚀 ~ handleShowAllTime ~ formProps:", formProps)
     };
+    
     return (
         <Form form={form} layout="vertical" onValuesChange={handleOnFieldsChange}>
             <div className="grid grid-cols-2 gap-x-4 gap-y-0">
-                <Form.Item label="Date" name={['dateRange']} noStyle initialValue={dateRange}>
+                <Form.Item label="Date" name={['dateRange']} noStyle>
                     <RangePicker presets={rangePresets} size="small" className="w-full" />
                 </Form.Item>
                 <div className="">
