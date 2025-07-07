@@ -10,6 +10,7 @@ import { DataType as TQuotations } from 'pages/quotations/types'
 import { DataType as TExpenses } from 'pages/accounting/Expense/types'
 import { DataType as TInsurers } from 'pages/insurers/types'
 import { DataType as TRenewals } from '@/pages/renewals/types'
+import { DataType as TCreditNote } from '@/pages/creditNotes/types'
 import { getTotalPremiumByDebitNote, getInsurerPayment } from 'utils'
 import IncomeByBank from './IncomeByBank'
 import NoDisplay from './NoDisplay'
@@ -17,7 +18,7 @@ import NoDisplay from './NoDisplay'
 type DataType = TReceipts | TDebitNote | TQuotations
 export const ListView: React.FC = () => {
   //統一時間範圍
-  const [dateRange, setDateRange] = useState<[Dayjs | undefined, Dayjs | undefined]>([
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | undefined>([
     dayjs().add(-30, 'd'),
     dayjs(),
   ])
@@ -163,14 +164,14 @@ export const ListView: React.FC = () => {
           },
         ],
     })
-  // const { data: creditNotesData, isLoading: creditNotesIsLoading } =
-  //   useList<TDebitNote>({
-  //     resource: 'credit_notes',
-  //     filters: filters as CrudFilters,
-  //     pagination: {
-  //       pageSize: -1,
-  //     },
-  //   })
+  const { data: creditNotesData, isLoading: creditNotesIsLoading } =
+    useList<TCreditNote>({
+      resource: 'credit_notes',
+      filters: filters as CrudFilters,
+      pagination: {
+        pageSize: -1,
+      },
+    })
 
   //一般expenses 費用
   const { data: expensesData, isLoading: expensesIsLoading } =
@@ -300,13 +301,13 @@ export const ListView: React.FC = () => {
         ],
     })
   //Insurers
-  const { data: insurersData, isLoading: insurersIsLoading } =
-    useList<TInsurers>({
-      resource: 'insurers',
-      pagination: {
-        pageSize: -1,
-      },
-    })
+  // const { data: insurersData, isLoading: insurersIsLoading } =
+  //   useList<TInsurers>({
+  //     resource: 'insurers',
+  //     pagination: {
+  //       pageSize: -1,
+  //     },
+  //   })
 
   //123.各種數量
   const debitNotesNo = debitNotesData?.total
@@ -328,9 +329,9 @@ export const ListView: React.FC = () => {
         //如果沒有銀行就不計算
         const bank = receipt?.payment_receiver_account
         if (!bank) return acc
-        //如果是creditNote就不計算
-        const ifCreditNote = receipt?.created_from_credit_note_id
-        if (ifCreditNote) return acc
+        const creditNote = creditNotesData?.data?.find(
+          (creditNote) => creditNote?.id === receipt?.created_from_credit_note_id,
+        )
         // 判斷該筆receipt是debitNote還是renewal
         const debitNote = debitNotesData?.data?.find(
           (debitNote) => debitNote?.id === receipt?.debit_note_id,
@@ -338,10 +339,11 @@ export const ListView: React.FC = () => {
         const renewal = renewalsData?.data?.find(
           (renewal) => renewal?.id === receipt?.created_from_renewal_id,
         )
-        const theNote = renewal ?? debitNote
+        const theNote = renewal ?? creditNote ?? debitNote
         const premium = Number(receipt?.premium ?? 0) ?? getTotalPremiumByDebitNote(
-          theNote as TDebitNote | TRenewals,
+          theNote as TDebitNote | TRenewals | TCreditNote,
         )
+
         const existingBank = acc.find((item) => item.bank === bank)
         if (existingBank) {
           existingBank.income += premium
@@ -354,7 +356,7 @@ export const ListView: React.FC = () => {
     ) || []
 
 
-  }, [receiptsData?.data, debitNotesData?.data, renewalsData?.data])
+  }, [receiptsData?.data, debitNotesData?.data, renewalsData?.data, creditNotesData?.data])
 
   /*4-3. Bank Balance 計算
   receipt能計算的只有Receipt Amount(premium)跟 Credit Note Amount
@@ -396,9 +398,9 @@ export const ListView: React.FC = () => {
       const amount = Number(adjustBalance?.amount ?? 0)
       const existingBank = profit.find((item) => item.bank === bank)
       if (existingBank) {
-        existingBank.income -= amount
+        existingBank.income += amount
       } else {
-        profit.push({ bank, income: -amount })
+        profit.push({ bank, income: amount })
       }
     })
 
@@ -513,8 +515,8 @@ export const ListView: React.FC = () => {
   }, [receiptsData?.data])
 
   const totalCreditNotes = useMemo(() => {
-    return  creditNotesFormReceipt.reduce((acc, item) => acc + Number(item.premium ?? 0), 0)
-    } ,[creditNotesFormReceipt])
+    return creditNotesFormReceipt.reduce((acc, item) => acc + Number(item.premium ?? 0), 0)
+  }, [creditNotesFormReceipt])
 
   //Expense[費用紀錄金額]
   // const totalExpense = useMemo(() => {
@@ -535,14 +537,14 @@ export const ListView: React.FC = () => {
 
   //8.Expense by Bank 按銀行計算
   //將第一位塞入totalExpense , 第二位塞入CreditNotes
-  const expenseByBankReceipt = useMemo(() => {
-    return [
-      ...formatTotalExpense,
-      { bank: 'Credit Notes', income: totalCreditNotes },
-      // { bank: 'Adjust Balances', income: totalAdjustBalances },
-      // { bank: 'Insurer Payment', income: totalInsurerPayment },
-    ]
-  }, [formatTotalExpense, totalCreditNotes])
+  // const expenseByBankReceipt = useMemo(() => {
+  //   return [
+  //     ...formatTotalExpense,
+  //     { bank: 'Credit Notes', income: totalCreditNotes },
+  //     // { bank: 'Adjust Balances', income: totalAdjustBalances },
+  //     // { bank: 'Insurer Payment', income: totalInsurerPayment },
+  //   ]
+  // }, [formatTotalExpense, totalCreditNotes])
 
 
   //是否顯示Spin
@@ -552,7 +554,6 @@ export const ListView: React.FC = () => {
     receiptsIsLoading ||
     expensesIsLoading ||
     adjustBalancesIsLoading ||
-    insurersIsLoading ||
     renewalsIsLoading ||
     InsurerPaymentIsLoading
   //顯示數據
@@ -568,7 +569,7 @@ export const ListView: React.FC = () => {
         <NoDisplay noDisplayData={noDisplayData} />
         <IncomeByBank incomeByBankReceipt={receiptsByBankToIncome} />
         <h2 className="mt-4 font-bold">Expenses</h2>
-        <IncomeByBank incomeByBankReceipt={expenseByBankReceipt} />
+        <IncomeByBank incomeByBankReceipt={formatTotalExpense} />
         <h2 className="mt-4 font-bold">Adjust Balances</h2>
         <IncomeByBank incomeByBankReceipt={formatTotalAdjustBalances} />
         {/* <LineGrid data={allData} /> */}
