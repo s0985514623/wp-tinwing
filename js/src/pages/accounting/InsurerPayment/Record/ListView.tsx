@@ -24,7 +24,7 @@ export const ListView: React.FC = () => {
   const { show, close, modalProps } = useModal()
   const { getColumnSearchProps } = useColumnSearch<DataType>()
   const Link = useLink()
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | undefined>([
     dayjs().add(-30, 'd'),
     dayjs(),
   ])
@@ -83,27 +83,37 @@ export const ListView: React.FC = () => {
     onSearch: (values: any) => {
       const filters = [
         {
-          field: 'date[0]',
-          operator: 'eq',
-          value: values?.dateRange ? values?.dateRange[0].startOf('day').unix() : undefined,
-        },
-        {
-          field: 'date[1]',
-          operator: 'eq',
-          value: values?.dateRange ? values?.dateRange[1].endOf('day').unix() : undefined,
-        },
-        {
           field: 'meta_query[0][key]',
+          operator: 'eq',
+          value: 'date',
+        },
+        {
+          field: 'meta_query[0][value][0]',
+          operator: 'eq',
+          value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
+        },
+        {
+          field: 'meta_query[0][value][1]',
+          operator: 'eq',
+          value: dateRange ? dateRange[1].endOf('day').unix() : undefined,
+        },
+        {
+          field: 'meta_query[0][compare]',
+          operator: 'eq',
+          value: 'BETWEEN',
+        },
+        {
+          field: 'meta_query[1][key]',
           operator: 'eq',
           value: 'is_paid',
         },
         {
-          field: 'meta_query[0][value]',
+          field: 'meta_query[1][value]',
           operator: 'eq',
           value: values?.is_paid === '' ? undefined : values?.is_paid,
         },
         {
-          field: 'meta_query[0][compare]',
+          field: 'meta_query[1][compare]',
           operator: 'eq',
           value: '=',
         },
@@ -205,21 +215,41 @@ export const ListView: React.FC = () => {
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
     filters: [
       {
-        field: 'date[0]',
+        field: 'meta_query[0][key]',
+        operator: 'eq',
+        value: 'date',
+      },
+      {
+        field: 'meta_query[0][value][0]',
         operator: 'eq',
         value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
       },
       {
-        field: 'date[1]',
+        field: 'meta_query[0][value][1]',
         operator: 'eq',
-        value: dateRange ? dateRange[1].startOf('day').unix() : undefined,
+        value: dateRange ? dateRange[1].endOf('day').unix() : undefined,
+      },
+      {
+        field: 'meta_query[0][compare]',
+        operator: 'eq',
+        value: 'BETWEEN',
       },
     ],
     mapData: (item) => {
       if (!item) return
-      const note_no =
-        parsedTableProps?.dataSource?.find((r) => r.id === item.id)
-          ?.receipt_no ?? item.id
+      const note_no = () => {
+        if (item?.created_from_renewal_id) {
+          const renewal = renewals.find((r) => r.id === item.created_from_renewal_id)
+          return renewal?.note_no ?? renewal?.id?.toString() ?? ''
+        } else if (item?.created_from_credit_note_id) {
+          const creditNote = creditNotes.find((cn) => cn.id === item.created_from_credit_note_id)
+          return creditNote?.note_no ?? creditNote?.id?.toString() ?? ''
+        } else if (item?.debit_note_id) {
+          const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
+          return debitNote?.note_no ?? debitNote?.id?.toString() ?? ''
+        }
+        return item?.receipt_no ?? ''
+      }
       const noteDate = dayjs.unix(item?.date as number).format('YYYY-MM-DD')
       const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
       const insurerData = insurers?.find(
@@ -265,9 +295,12 @@ export const ListView: React.FC = () => {
     const renewal = renewals.find(
       (r) => r.id === receipt?.created_from_renewal_id,
     )
+    const creditNote = creditNotes.find((cn) => cn.id === receipt?.created_from_credit_note_id)
     const insurerData = insurers?.find((insurer) => {
       if (renewal) {
         return insurer.id === renewal.insurer_id
+      } else if (creditNote) {
+        return insurer.id === creditNote.insurer_id
       } else {
         return insurer.id === debitNote?.insurer_id
       }
@@ -275,11 +308,13 @@ export const ListView: React.FC = () => {
     const paymentToInsurer = insurerData
       ? getInsurerPayment(
         receipt as DataType,
-        renewal ?? (debitNote as TDebitNote),
+        renewal ?? (creditNote as TDebitNote) ?? (debitNote as TDebitNote),
         insurerData as TInsurer,
       )
       : 0
-
+    if (creditNote) {
+      return -paymentToInsurer
+    }
     return paymentToInsurer
   })
   // console.log('🚀 ~ selectedInsurers ~ selectedInsurers:', selectedInsurers)
@@ -360,8 +395,10 @@ export const ListView: React.FC = () => {
                 <Table.Summary.Cell index={1}></Table.Summary.Cell>
                 <Table.Summary.Cell index={2}></Table.Summary.Cell>
                 <Table.Summary.Cell index={3}></Table.Summary.Cell>
-                <Table.Summary.Cell index={4}>總計</Table.Summary.Cell>
-                <Table.Summary.Cell index={5}>
+                <Table.Summary.Cell index={4}></Table.Summary.Cell>
+                <Table.Summary.Cell index={5}></Table.Summary.Cell>
+                <Table.Summary.Cell index={6}>總計</Table.Summary.Cell>
+                <Table.Summary.Cell index={7}>
                   {paymentToInsurer}
                 </Table.Summary.Cell>
               </Table.Summary.Row>
@@ -375,23 +412,49 @@ export const ListView: React.FC = () => {
         >
           <Table.Column
             width={120}
-            dataIndex="receipt_no"
             title="Note No."
+            sorter={(a: DataType, b: DataType) => {
+              const aNoteNo = a.created_from_renewal_id ? renewals.find((r) => r.id === a.created_from_renewal_id)?.note_no : a.created_from_credit_note_id ? creditNotes.find((cn) => cn.id === a.created_from_credit_note_id)?.note_no : debitNotes.find((dn) => dn.id === a.debit_note_id)?.note_no
+              const bNoteNo = b.created_from_renewal_id ? renewals.find((r) => r.id === b.created_from_renewal_id)?.note_no : b.created_from_credit_note_id ? creditNotes.find((cn) => cn.id === b.created_from_credit_note_id)?.note_no : debitNotes.find((dn) => dn.id === b.debit_note_id)?.note_no
+              return aNoteNo?.localeCompare(bNoteNo ?? '') ?? 0
+            }}
             {...getColumnSearchProps({
-              dataIndex: 'receipt_no',
+              dataIndex: 'id',
+              renderText: (_text: string | number, _record?: DataType) => {
+                //判斷是debit_note_id 還是created_from_renewal_id 還是created_from_credit_note_id
+                if (_record?.created_from_renewal_id) {
+                  const renewal = renewals.find((r) => r.id === _record.created_from_renewal_id)
+                  return renewal?.note_no ?? renewal?.id?.toString() ?? ''
+                } else if (_record?.created_from_credit_note_id) {
+                  const creditNote = creditNotes.find((cn) => cn.id === _record.created_from_credit_note_id)
+                  return creditNote?.note_no ?? creditNote?.id?.toString() ?? ''
+                } else if (_record?.debit_note_id) {
+                  const debitNote = debitNotes.find((dn) => dn.id === _record.debit_note_id)
+                  return debitNote?.note_no ?? debitNote?.id?.toString() ?? ''
+                }
+                return _record?.receipt_no ?? ''
+              }
             })}
-            {...getSortProps<DataType>('receipt_no')}
             // 複寫render方法
-            render={(renderReceiptNo: number, record: DataType) => {
-              //取得receipt_no, 如果沒有則顯示id
-              const receipt_no = parsedTableProps?.dataSource?.find(
-                (r) => r.id === record?.id,
-              )?.receipt_no
-              return (
-                <Link to={`/receipts/show/${record?.id}`}>
-                  {receipt_no ?? record?.id}
+            render={(_text: string | number, _record?: DataType) => {
+              //判斷是debit_note_id 還是created_from_renewal_id 還是created_from_credit_note_id
+              if (_record?.created_from_renewal_id) {
+                const renewal = renewals.find((r) => r.id === _record.created_from_renewal_id)
+                return <Link to={`/renewals/show/${_record.created_from_renewal_id}`}>
+                  {renewal?.note_no ?? renewal?.id}
                 </Link>
-              )
+              } else if (_record?.created_from_credit_note_id) {
+                const creditNote = creditNotes.find((cn) => cn.id === _record.created_from_credit_note_id)
+                return <Link to={`/credit_notes/show/${_record.created_from_credit_note_id}`}>
+                  {creditNote?.note_no ?? creditNote?.id}
+                </Link>
+              } else if (_record?.debit_note_id) {
+                const debitNote = debitNotes.find((dn) => dn.id === _record.debit_note_id)
+                return <Link to={`/debit_notes/show/${_record.debit_note_id}`}>
+                  {debitNote?.note_no ?? debitNote?.id}
+                </Link>
+              }
+              return _record?.receipt_no
             }}
           />
           <Table.Column
