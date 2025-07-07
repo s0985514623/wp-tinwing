@@ -332,7 +332,7 @@ final class Expenses {
 			}
 
 			// 更新文章的 meta 資料
-			foreach (PostType\Receipts::instance()->get_meta() as $key => $value) {
+			foreach (PostType\Expenses::instance()->get_meta() as $key => $value) {
 				if (isset($params[ $key ])) {
 					update_post_meta($post_id, $key, $params[ $key ]);
 				}

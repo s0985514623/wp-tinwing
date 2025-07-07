@@ -136,6 +136,12 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
       enabled: !!parsedTableProps?.dataSource && !is_adjust_balance,
     },
   })
+  // 計算已選單的  Expense 總金額
+  const selectedExpenses = selectedRowKeys.map((id) => {
+    const receipt = parsedTableProps?.dataSource?.find((r) => r.id === id)
+    return receipt?.amount
+  })
+  const totalExpense = selectedExpenses.reduce((acc, curr) => Number(acc) + Number(curr), 0)
   //如果没有数据，就禁用导出按钮
   const disabledBtn = parsedTableProps.dataSource?.length == 0 ? true : false
   //Export CSV
@@ -181,7 +187,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
     mapData: (item) => {
       return {
         Date: dayjs.unix(item.date).format('YYYY-MM-DD'),
-        'Payment Date': dayjs.unix(item.payment_date).format('YYYY-MM-DD'),
+        'Payment Date': item.payment_date ? dayjs.unix(Number(item.payment_date)).format('YYYY-MM-DD') : '',
         Category: termsData?.data?.find((term) => term.id === item.term_id)
           ?.name,
         Amount: Number(item.amount).toLocaleString(
@@ -239,109 +245,120 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
           rowKey="id"
           size="middle"
           rowSelection={!is_adjust_balance ? rowSelection : undefined}
-          pagination={{
-            pageSize: 30,
-            showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+          summary={(pageData) => {
+            return (
+              <Table.Summary.Row>
+                <Table.Summary.Cell index={0}></Table.Summary.Cell>
+                <Table.Summary.Cell index={1}></Table.Summary.Cell>
+                <Table.Summary.Cell index={2}>總計</Table.Summary.Cell>
+                <Table.Summary.Cell index={3}>{totalExpense ? Number(totalExpense).toLocaleString() : 0}</Table.Summary.Cell>
+              </Table.Summary.Row>
+            )
           }}
-        >
-          <Table.Column
-            width={120}
-            dataIndex="date"
-            title="Date"
-            render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
-            {...getSortProps<DataType>('date')}
-          />
-          {!is_adjust_balance && (
-            <Table.Column
-              width={120}
-              dataIndex="term_id"
-              title="Category"
-              render={(term_id: number) => {
-                const termData = termsData?.data?.find(
-                  (term) => term.id === term_id,
-                )
-                return termData?.name
-              }}
-              filters={termsData?.data?.map((term) => ({ text: term.name, value: term.id }))}
-              onFilter={(value, record: DataType) => {
-                return (record?.term_id || undefined) === value
-              }}
-            />
-          )}
 
+      pagination={{
+        pageSize: 30,
+        showSizeChanger: true,
+        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+      }}
+        >
+      <Table.Column
+        width={120}
+        dataIndex="date"
+        title="Date"
+        render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
+        {...getSortProps<DataType>('date')}
+      />
+      {!is_adjust_balance && (
+        <Table.Column
+          width={120}
+          dataIndex="term_id"
+          title="Category"
+          render={(term_id: number) => {
+            const termData = termsData?.data?.find(
+              (term) => term.id === term_id,
+            )
+            return termData?.name
+          }}
+          filters={termsData?.data?.map((term) => ({ text: term.name, value: term.id }))}
+          onFilter={(value, record: DataType) => {
+            return (record?.term_id || undefined) === value
+          }}
+        />
+      )}
+
+      <Table.Column
+        width={120}
+        dataIndex="amount"
+        title="Amount"
+        render={(amount) => Number(amount).toLocaleString(
+          'en-US',
+          {
+            minimumFractionDigits: 2, // 最少小數點後兩位
+            maximumFractionDigits: 2, // 最多小數點後兩位
+          },
+        )}
+        {...getSortProps<DataType>('amount')}
+      />
+      {!is_adjust_balance && (
+        <>
           <Table.Column
             width={120}
-            dataIndex="amount"
-            title="Amount"
-            render={(amount) => Number(amount).toLocaleString(
-              'en-US',
-              {
-                minimumFractionDigits: 2, // 最少小數點後兩位
-                maximumFractionDigits: 2, // 最多小數點後兩位
-              },
-            )}
-            {...getSortProps<DataType>('amount')}
+            dataIndex="cheque_no"
+            title="Cheque No"
           />
-          {!is_adjust_balance && (
+        </>
+      )}
+      <Table.Column
+        width={120}
+        dataIndex="payment_receiver_account"
+        title="Bank"
+        filters={[{ text: '上海商業銀行', value: '上海商業銀行' }, { text: '中國銀行', value: '中國銀行' }]}
+        onFilter={(value, record: DataType) => {
+          return (record?.payment_receiver_account || undefined) === value
+        }}
+      />
+      {!is_adjust_balance && (
+        <Table.Column
+          width={120}
+          dataIndex="payment_date"
+          title="Payment Date"
+          render={(date: number) =>
+            date ? dayjs.unix(date).format('YYYY-MM-DD') : ''
+          }
+        />
+      )}
+      <Table.Column width={120} dataIndex="remark" title="Remark" />
+      <Table.Column
+        width={120}
+        dataIndex="id"
+        title=""
+        render={(id) => {
+          return (
             <>
-              <Table.Column
-                width={120}
-                dataIndex="cheque_no"
-                title="Cheque No"
-              />
+              <Space>
+                <EditButton
+                  type="primary"
+                  hideText
+                  shape="circle"
+                  size="small"
+                  recordItemId={id}
+                />
+                <DeleteButton
+                  type="primary"
+                  danger
+                  hideText
+                  shape="circle"
+                  size="small"
+                  recordItemId={id}
+                />
+              </Space>
             </>
-          )}
-          <Table.Column
-            width={120}
-            dataIndex="payment_receiver_account"
-            title="Bank"
-            filters={[{ text: '上海商業銀行', value: '上海商業銀行' }, { text: '中國銀行', value: '中國銀行' }]}
-            onFilter={(value, record: DataType) => {
-              return (record?.payment_receiver_account || undefined) === value
-            }}
-          />
-          {!is_adjust_balance && (
-            <Table.Column
-              width={120}
-              dataIndex="payment_date"
-              title="Payment Date"
-              render={(date: number) =>
-                date ? dayjs.unix(date).format('YYYY-MM-DD') : ''
-              }
-            />
-          )}
-          <Table.Column width={120} dataIndex="remark" title="Remark" />
-          <Table.Column
-            width={120}
-            dataIndex="id"
-            title=""
-            render={(id) => {
-              return (
-                <>
-                  <Space>
-                    <EditButton
-                      type="primary"
-                      hideText
-                      shape="circle"
-                      size="small"
-                      recordItemId={id}
-                    />
-                    <DeleteButton
-                      type="primary"
-                      danger
-                      hideText
-                      shape="circle"
-                      size="small"
-                      recordItemId={id}
-                    />
-                  </Space>
-                </>
-              )
-            }}
-          />
-        </Table>
-      </List>
+          )
+        }}
+      />
+    </Table >
+      </List >
     </>
   )
 }

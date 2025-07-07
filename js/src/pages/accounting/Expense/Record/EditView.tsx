@@ -1,7 +1,7 @@
 import React from 'react'
 import { useOne } from '@refinedev/core'
 import { Edit, useForm, useSelect } from '@refinedev/antd'
-import { Form, Row, Col, Spin, Input, Select } from 'antd'
+import { Form, Row, Col, Spin, Input, Select, DatePicker } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import { DataType } from '../types'
 import { DataType as TTerms } from 'pages/terms/types'
@@ -10,6 +10,7 @@ import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
 import { AmountInput } from 'components/AmountInput'
 
 const { TextArea } = Input
+
 export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
   is_adjust_balance = false,
 }) => {
@@ -72,6 +73,7 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
 
     formProps?.onFinish?.(processedValues);
   }
+
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <Form {...formProps} layout="vertical" onFinish={newOnFinish}>
@@ -133,6 +135,22 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
             </Col>
             <Col span={12}>
               <div className="table table_td-flex-1 w-full">
+                <div className="tr">
+                  <div className="th">Payment Date</div>
+                  <div className="td">
+                    <Form.Item
+                      noStyle
+                      name={['payment_date']}
+                      getValueFromEvent={(value) => value}
+                      getValueProps={(value) => ({
+                        value: value ? dayjs.unix(value) : undefined
+                      })}
+                      normalize={(value) => value ? dayjs(value).unix() : undefined}
+                    >
+                      <DatePicker size="small" className="w-full" />
+                    </Form.Item>
+                  </div>
+                </div>
                 <div className="tr">
                   <div className="th">Remark:</div>
                   <div className="td">

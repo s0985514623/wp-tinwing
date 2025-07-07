@@ -1,4 +1,4 @@
-import { Modal, Form, Input, Switch, DatePicker } from 'antd'
+import { Modal, Form, Input,  DatePicker } from 'antd'
 import { useForm } from '@refinedev/antd'
 import { ModalProps } from 'antd/lib/modal'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
@@ -11,6 +11,8 @@ interface ModalEditProps {
   selectedRowKeys: Key[]
   className?: string
 }
+const { TextArea } = Input
+
 export const ModalEdit: React.FC<ModalEditProps> = ({
   close,
   modalProps,
@@ -66,6 +68,16 @@ export const ModalEdit: React.FC<ModalEditProps> = ({
         </div>
 
         <ReceiptBankSelect className={className} />
+        <div className={className}>
+          <div className="tr">
+            <div className="th">Remark</div>
+            <div className="td flex">
+              <Form.Item noStyle name={['remark']}>
+                <TextArea rows={4}/>
+              </Form.Item>
+            </div>
+          </div>
+        </div>
       </Form>
     </Modal>
   )

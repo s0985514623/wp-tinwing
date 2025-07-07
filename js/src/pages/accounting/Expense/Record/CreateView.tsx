@@ -60,6 +60,7 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
       processedValues.amount = sign === 'minus' ? -amount : amount;
     }
 
+
     formProps?.onFinish?.(processedValues);
   }
   return (
@@ -122,6 +123,22 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
           </Col>
           <Col span={12}>
             <div className="table table_td-flex-1 w-full">
+            <div className="tr">
+                <div className="th">Payment Date</div>
+                <div className="td">
+                  <Form.Item 
+                    noStyle 
+                    name={['payment_date']} 
+                    getValueFromEvent={(value) => value}
+                    getValueProps={(value) => ({
+                      value: value ? dayjs.unix(value) : undefined
+                    })}
+                    normalize={(value) => value ? dayjs(value).unix() : undefined}
+                  >
+                    <DatePicker size="small" className="w-full" />
+                  </Form.Item>
+                </div>
+              </div>
               <div className="tr">
                 <div className="th">Remark:</div>
                 <div className="td">
