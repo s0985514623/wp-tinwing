@@ -13,7 +13,7 @@ import { Space, Table, Button } from 'antd'
 import { useRowSelection } from 'antd-toolkit'
 import { DataType as TTerms } from 'pages/terms/types'
 import { DataType, ZDataType } from '../types'
-import { safeParse } from 'utils'
+import { safeParse, getSortProps } from 'utils'
 import dayjs, { Dayjs } from 'dayjs'
 import Filter from '../../dashboard/Filter'
 import { ModalEdit } from './ModalEdit'
@@ -250,6 +250,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
             dataIndex="date"
             title="Date"
             render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
+            {...getSortProps<DataType>('date')}
           />
           {!is_adjust_balance && (
             <Table.Column
@@ -261,6 +262,10 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
                   (term) => term.id === term_id,
                 )
                 return termData?.name
+              }}
+              filters={termsData?.data?.map((term) => ({ text: term.name, value: term.id }))}
+              onFilter={(value, record: DataType) => {
+                return (record?.term_id || undefined) === value
               }}
             />
           )}
@@ -276,6 +281,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
                 maximumFractionDigits: 2, // 最多小數點後兩位
               },
             )}
+            {...getSortProps<DataType>('amount')}
           />
           {!is_adjust_balance && (
             <>
@@ -290,6 +296,10 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
             width={120}
             dataIndex="payment_receiver_account"
             title="Bank"
+            filters={[{ text: '上海商業銀行', value: '上海商業銀行' }, { text: '中國銀行', value: '中國銀行' }]}
+            onFilter={(value, record: DataType) => {
+              return (record?.payment_receiver_account || undefined) === value
+            }}
           />
           {!is_adjust_balance && (
             <Table.Column
