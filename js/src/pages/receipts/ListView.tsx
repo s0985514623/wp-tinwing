@@ -213,6 +213,7 @@ export const ListView: React.FC = () => {
           render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
           {...getSortProps<DataType>('payment_date')}
         />
+        <Table.Column dataIndex="payment_method" title="Payment Method" />
         <Table.Column dataIndex="cheque_no" title="Cheque No" />
         <Table.Column
           dataIndex="premium"
@@ -226,8 +227,11 @@ export const ListView: React.FC = () => {
               : getTotalPremiumByDebitNote(debitNote).toLocaleString()
           }}
         />
-        <Table.Column dataIndex="code_no" title="Code No" />
-        <Table.Column dataIndex="payment_receiver_account" title="Bank" />
+        <Table.Column dataIndex="remark" title="Remark" />
+        <Table.Column dataIndex="payment_receiver_account" title="Bank" filters={[{ text: '上海商業銀行', value: '上海商業銀行' }, { text: '中國銀行', value: '中國銀行' }]}
+          onFilter={(value, record: DataType) => {
+            return (record?.payment_receiver_account || undefined) === value
+          }} />
         <Table.Column
           width={120}
           dataIndex="id"
