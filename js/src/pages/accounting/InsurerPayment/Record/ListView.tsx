@@ -51,12 +51,12 @@ export const ListView: React.FC = () => {
         {
           field: 'meta_query[0][value][0]',
           operator: 'eq',
-          value: dateRange ? dateRange[0].unix() : undefined,
+          value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
         },
         {
           field: 'meta_query[0][value][1]',
           operator: 'eq',
-          value: dateRange ? dateRange[1].unix() : undefined,
+          value: dateRange ? dateRange[1].endOf('day').unix() : undefined,
         },
         {
           field: 'meta_query[0][compare]',
@@ -85,12 +85,12 @@ export const ListView: React.FC = () => {
         {
           field: 'date[0]',
           operator: 'eq',
-          value: values?.dateRange ? values?.dateRange[0].unix() : undefined,
+          value: values?.dateRange ? values?.dateRange[0].startOf('day').unix() : undefined,
         },
         {
           field: 'date[1]',
           operator: 'eq',
-          value: values?.dateRange ? values?.dateRange[1].unix() : undefined,
+          value: values?.dateRange ? values?.dateRange[1].endOf('day').unix() : undefined,
         },
         {
           field: 'meta_query[0][key]',

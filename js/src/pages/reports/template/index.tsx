@@ -15,8 +15,8 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
             mode: 'off',
         },
         onSearch: (values: TSearchProps) => {
-            const start = values?.dateRange ? values?.dateRange[0]?.unix() : undefined;
-            const end = values?.dateRange ? values?.dateRange[1]?.unix() : undefined;
+            const start = values?.dateRange ? values?.dateRange[0]?.startOf('day').unix() : undefined;
+            const end = values?.dateRange ? values?.dateRange[1]?.endOf('day').unix() : undefined;
 
             const defaultFilters = start?[
                 {
