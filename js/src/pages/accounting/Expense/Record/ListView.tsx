@@ -22,10 +22,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
 }) => {
   const { show, close, modalProps } = useModal()
   const { selectedRowKeys, rowSelection } = useRowSelection<DataType>()
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
-    dayjs().add(-30, 'd'),
-    dayjs(),
-  ])
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | undefined>(undefined)
 
   const { tableProps, searchFormProps } = useTable<DataType>({
     sorters: {
@@ -38,26 +35,26 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
     },
     filters: {
       permanent: [
-        {
-          field: 'meta_query[0][key]',
-          operator: 'eq',
-          value: 'payment_date',
-        },
-        {
-          field: 'meta_query[0][value][0]',
-          operator: 'eq',
-          value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
-        },
-        {
-          field: 'meta_query[0][value][1]',
-          operator: 'eq',
-          value: dateRange ? dateRange[1].endOf('day').unix() : undefined,
-        },
-        {
-          field: 'meta_query[0][compare]',
-          operator: 'eq',
-          value: 'BETWEEN',
-        },
+        // {
+        //   field: 'meta_query[0][key]',
+        //   operator: 'eq',
+        //   value: 'payment_date',
+        // },
+        // {
+        //   field: 'meta_query[0][value][0]',
+        //   operator: 'eq',
+        //   value: dateRange ? dateRange[0].startOf('day').unix() : undefined,
+        // },
+        // {
+        //   field: 'meta_query[0][value][1]',
+        //   operator: 'eq',
+        //   value: dateRange ? dateRange[1].endOf('day').unix() : undefined,
+        // },
+        // {
+        //   field: 'meta_query[0][compare]',
+        //   operator: 'eq',
+        //   value: 'BETWEEN',
+        // },
         {
           field: 'meta_query[1][key]',
           operator: 'eq',
@@ -80,7 +77,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
         {
           field: 'meta_query[0][key]',
           operator: 'eq',
-          value: 'date',
+          value: 'payment_date',
         },
         {
           field: 'meta_query[0][value][0]',

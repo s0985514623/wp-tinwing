@@ -4,8 +4,8 @@ import { Form, Button, DatePicker, TimeRangePickerProps, FormProps } from 'antd'
 
 // 定义 props 的类型
 interface FilterProps {
-    dateRange: [Dayjs, Dayjs];
-    setDateRange?: React.Dispatch<React.SetStateAction<[Dayjs, Dayjs]>>;
+    dateRange: [Dayjs, Dayjs] | undefined;
+    setDateRange?: React.Dispatch<React.SetStateAction<[Dayjs, Dayjs] | undefined>>;
     formProps?: FormProps;
 }
 const { RangePicker } = DatePicker;

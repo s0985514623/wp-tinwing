@@ -19,7 +19,7 @@ import NoDisplay from './NoDisplay'
 type DataType = TReceipts | TDebitNote | TQuotations
 export const ListView: React.FC = () => {
   //統一時間範圍
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]|undefined>([
     dayjs().add(-30, 'd'),
     dayjs(),
   ])
