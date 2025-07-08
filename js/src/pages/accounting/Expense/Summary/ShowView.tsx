@@ -8,7 +8,7 @@ import { Table } from 'antd'
 import { DataType as TTerms } from 'pages/terms/types'
 
 export const ShowView: React.FC = () => {
-  const { year, month } = useParams()
+  const { year, month ,bank} = useParams()
   // 獲取該月的第一天（月初）
   const startOfMonth = dayjs(
     new Date(Number(year), Number(month) - 1, 1),
@@ -21,16 +21,11 @@ export const ShowView: React.FC = () => {
   const { tableProps } = useTable<DataType>({
     filters: {
       initial: [
-        // {
-        //     field: 'date',
-        //     operator: 'gt',
-        //     value: startOfMonth.unix(),
-        // },
-        // {
-        //     field: 'date',
-        //     operator: 'lt',
-        //     value: endOfMonth.unix(),
-        // },
+        {
+          field: 'meta_query[relation]',
+          operator: 'eq',
+          value: 'AND',
+        },
         {
           field: 'meta_query[0][key]',
           operator: 'eq',
@@ -50,6 +45,36 @@ export const ShowView: React.FC = () => {
           field: 'meta_query[0][compare]',
           operator: 'eq',
           value: 'BETWEEN',
+        },
+        {
+          field: 'meta_query[1][key]',
+          operator: 'eq',
+          value: 'is_adjust_balance',
+        },
+        {
+          field: 'meta_query[1][value]',
+          operator: 'eq',
+          value: 1,
+        },
+        {
+          field: 'meta_query[1][compare]',
+          operator: 'eq',
+          value: '!=',
+        },
+        {
+          field: 'meta_query[2][key]',
+          operator: 'eq',
+          value: 'payment_receiver_account',
+        },
+        {
+          field: 'meta_query[2][value]',
+          operator: 'eq',
+          value: bank,
+        },
+        {
+          field: 'meta_query[2][compare]',
+          operator: 'eq',
+          value: '=',
         },
       ],
     },
@@ -73,16 +98,11 @@ export const ShowView: React.FC = () => {
   const disabledBtn = tableProps.dataSource?.length == 0 ? true : false
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
     filters: [
-      // {
-      //     field: 'date',
-      //     operator: 'gt',
-      //     value: startOfMonth.unix(),
-      // },
-      // {
-      //     field: 'date',
-      //     operator: 'lt',
-      //     value: endOfMonth.unix(),
-      // },
+      {
+        field: 'meta_query[relation]',
+        operator: 'eq',
+        value: 'AND',
+      },
       {
         field: 'meta_query[0][key]',
         operator: 'eq',
@@ -102,6 +122,36 @@ export const ShowView: React.FC = () => {
         field: 'meta_query[0][compare]',
         operator: 'eq',
         value: 'BETWEEN',
+      },
+      {
+        field: 'meta_query[1][key]',
+        operator: 'eq',
+        value: 'is_adjust_balance',
+      },
+      {
+        field: 'meta_query[1][value]',
+        operator: 'eq',
+        value: 1,
+      },
+      {
+        field: 'meta_query[1][compare]',
+        operator: 'eq',
+        value: '!=',
+      },
+      {
+        field: 'meta_query[2][key]',
+        operator: 'eq',
+        value: 'payment_receiver_account',
+      },
+      {
+        field: 'meta_query[2][value]',
+        operator: 'eq',
+        value: bank,
+      },
+      {
+        field: 'meta_query[2][compare]',
+        operator: 'eq',
+        value: '=',
       },
     ],
     mapData: (item) => {
@@ -153,6 +203,11 @@ export const ShowView: React.FC = () => {
           dataIndex="amount"
           title="Amount"
           render={(amount) => amount.toLocaleString()}
+        />
+        <Table.Column
+          width={120}
+          dataIndex="payment_receiver_account"
+          title="Bank"
         />
         <Table.Column width={120} dataIndex="remark" title="Remark" />
       </Table>

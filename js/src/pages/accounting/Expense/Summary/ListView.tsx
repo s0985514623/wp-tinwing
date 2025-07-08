@@ -24,77 +24,97 @@ export const ListView: React.FC = () => {
         },
         filters: {
             initial: [
-                // {
-                //     field: 'date',
-                //     operator: 'gt',
-                //     value: year?.startOf('year').unix(),
-                // },
-                // {
-                //     field: 'date',
-                //     operator: 'lt',
-                //     value: year?.endOf('year').unix(),
-                // },
-								{
-									field: 'meta_query[0][key]',
-									operator: 'eq',
-									value: 'date',
-								},
-								{
-									field: 'meta_query[0][value][0]',
-									operator: 'eq',
-									value: year?.startOf('year').unix(),
-								},
-								{
-									field: 'meta_query[0][value][1]',
-									operator: 'eq',
-									value: year?.endOf('year').unix(),
-								},
-								{
-									field: 'meta_query[0][compare]',
-									operator: 'eq',
-									value: 'BETWEEN',
-								},
+                {
+                    field: 'meta_query[relation]',
+                    operator: 'eq',
+                    value: 'AND',
+                },
+                {
+                    field: 'meta_query[0][key]',
+                    operator: 'eq',
+                    value: 'date',
+                },
+                {
+                    field: 'meta_query[0][value][0]',
+                    operator: 'eq',
+                    value: year?.startOf('year').unix(),
+                },
+                {
+                    field: 'meta_query[0][value][1]',
+                    operator: 'eq',
+                    value: year?.endOf('year').unix(),
+                },
+                {
+                    field: 'meta_query[0][compare]',
+                    operator: 'eq',
+                    value: 'BETWEEN',
+                },
+                {
+                    field: 'meta_query[1][key]',
+                    operator: 'eq',
+                    value: 'is_adjust_balance',
+                },
+                {
+                    field: 'meta_query[1][value]',
+                    operator: 'eq',
+                    value: 1,
+                },
+                {
+                    field: 'meta_query[1][compare]',
+                    operator: 'eq',
+                    value: '!=',
+                },
             ],
         },
         onSearch: (values: any) => {
             const filters = [
-                // {
-                //     field: 'date',
-                //     operator: 'gt',
-                //     value: values?.year ? values?.year.startOf('year').unix() : undefined,
-                // },
-                // {
-                //     field: 'date',
-                //     operator: 'lt',
-                //     value: values?.year ? values?.year.endOf('year').unix() : undefined,
-                // },
-								{
-									field: 'meta_query[0][key]',
-									operator: 'eq',
-									value: 'date',
-								},
-								{
-									field: 'meta_query[0][value][0]',
-									operator: 'eq',
-									value: values?.year ? values?.year.startOf('year').unix() : undefined,
-								},
-								{
-									field: 'meta_query[0][value][1]',
-									operator: 'eq',
-									value: values?.year ? values?.year.endOf('year').unix() : undefined,
-								},
-								{
-									field: 'meta_query[0][compare]',
-									operator: 'eq',
-									value: 'BETWEEN',
-								},
+                {
+                    field: 'meta_query[relation]',
+                    operator: 'eq',
+                    value: 'AND',
+                },
+                {
+                    field: 'meta_query[0][key]',
+                    operator: 'eq',
+                    value: 'date',
+                },
+                {
+                    field: 'meta_query[0][value][0]',
+                    operator: 'eq',
+                    value: values?.year ? values?.year.startOf('year').unix() : undefined,
+                },
+                {
+                    field: 'meta_query[0][value][1]',
+                    operator: 'eq',
+                    value: values?.year ? values?.year.endOf('year').unix() : undefined,
+                },
+                {
+                    field: 'meta_query[0][compare]',
+                    operator: 'eq',
+                    value: 'BETWEEN',
+                },
+                {
+                    field: 'meta_query[1][key]',
+                    operator: 'eq',
+                    value: 'is_adjust_balance',
+                },
+                {
+                    field: 'meta_query[1][value]',
+                    operator: 'eq',
+                    value: 1,
+                },
+                {
+                    field: 'meta_query[1][compare]',
+                    operator: 'eq',
+                    value: '!=',
+                },
             ];
             return filters as CrudFilters;
         },
-				pagination:{
-					pageSize: -1,
-					mode: "off" as const,
-				}
+        pagination: {
+            pageSize: -1,
+            mode: "off" as const,
+        }
     });
 
     const parsedTableProps = safeParse<DataType>({
@@ -105,25 +125,28 @@ export const ListView: React.FC = () => {
     const { data: _termsData } = useMany<TTerms>({
         resource: 'terms',
         ids: parsedTableProps?.dataSource
-				?.map((r) => r?.term_id)
-				.filter((id): id is number => typeof id === 'number') ?? [],
+            ?.map((r) => r?.term_id)
+            .filter((id): id is number => typeof id === 'number') ?? [],
         queryOptions: {
             enabled: !!parsedTableProps?.dataSource,
         },
     });
     const formatDataSource =
         parsedTableProps?.dataSource?.reduce((acc, record) => {
+
             const recordYear = dayjs.unix(record?.date).year();
             const recordMonth = dayjs.unix(record?.date).month() + 1;
+            const bank = record?.payment_receiver_account;
             //將數字轉為月份名稱
             // const recordMonthName = dayjs.unix(record?.date).format('MMMM');
             const recordAmount = Number(record?.amount ?? 0);
-            // 尋找是否已經有該日期的紀錄
-            const existingDate = acc?.find((item: any) => item.year === recordYear && item.month === recordMonth);
-            if (existingDate) {
-                existingDate.amount += recordAmount;
-            } else {
-                acc.push({ year: recordYear, month: recordMonth, amount: recordAmount });
+            // 尋找是否已經有該日期以及銀行的紀錄
+            const existingSource = acc?.find((item: any) => item.year === recordYear && item.month === recordMonth && item.bank === bank);
+            if (existingSource) {
+                existingSource.amount += recordAmount;
+            }
+            else {
+                acc.push({ year: recordYear, month: recordMonth, amount: recordAmount, bank: bank });
             }
             return acc;
         }, [] as any) ?? [];
@@ -142,6 +165,7 @@ export const ListView: React.FC = () => {
             Year: item.year,
             Month: item.month,
             Expenses: item.amount.toLocaleString(),
+            Bank: item.bank,
         }));
         const csv = generateCsv(csvConfig)(exportData);
         download(csvConfig)(csv);
@@ -214,7 +238,10 @@ export const ListView: React.FC = () => {
                     }}
                 />
                 <Table.Column width={120} dataIndex="amount" title="Expenses" render={(amount) => amount.toLocaleString()} />
-
+                <Table.Column width={120} dataIndex="bank" title="Bank" filters={[{ text: '上海商業銀行', value: '上海商業銀行' }, { text: '中國銀行', value: '中國銀行' }]}
+                    onFilter={(value, record: any) => {
+                        return (record?.bank || undefined) === value
+                    }} />
                 <Table.Column
                     width={120}
                     dataIndex="month"
@@ -223,7 +250,7 @@ export const ListView: React.FC = () => {
                         return (
                             <>
                                 <Space>
-                                    <ShowButton type="primary" hideText shape="circle" size="small" recordItemId={month} meta={{ year: record.year }} />
+                                    <ShowButton type="primary" hideText shape="circle" size="small" recordItemId={month} meta={{ year: record.year, month: record.month, bank: record.bank }} />
                                 </Space>
                             </>
                         );

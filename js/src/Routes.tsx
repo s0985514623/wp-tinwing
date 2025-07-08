@@ -218,7 +218,7 @@ const AppRoutes = () => {
         </Route>
         <Route path="/otherExpenses/summary">
           <Route index element={<ExpenseSummaryList />} />
-          <Route path="show/:year/:month" element={<ExpenseSummaryShow />} />
+          <Route path="show/:year/:month/:bank" element={<ExpenseSummaryShow />} />
         </Route>
 				<Route path="/terms/expense_class">
           <Route index element={<TermList taxonomy="expense_class" />} />

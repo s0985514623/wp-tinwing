@@ -75,7 +75,7 @@ export const accounting = [
         name: 'expenses',
         identifier: 'expenses_summary',
         list: '/otherExpenses/summary',
-        show: '/otherExpenses/summary/show/:year/:id',
+        show: '/otherExpenses/summary/show/:year/:month/:bank',
         meta: {
             parent: 'expensesDropdown',
             label: 'Summary',
