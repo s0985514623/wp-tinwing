@@ -81,6 +81,11 @@ export const ListView: React.FC = () => {
     onSearch: (values: any) => {
       const filters = [
         {
+          field: 'meta_query[relation]',
+          operator: 'eq',
+          value: 'AND',
+        },
+        {
           field: 'meta_query[0][key]',
           operator: 'eq',
           value: 'period_of_insurance_to',
@@ -105,12 +110,17 @@ export const ListView: React.FC = () => {
           value: values?.dateRange ? 'BETWEEN' : '>',
         },
         {
-          field: 'meta_query[1][key]',
+          field: 'meta_query[1][relation]',
+          operator: 'eq',
+          value: 'OR',
+        },
+        {
+          field: 'meta_query[1][0][key]',
           operator: 'eq',
           value: 'motor_engine_no',
         },
         {
-          field: 'meta_query[1][value]',
+          field: 'meta_query[1][0][value]',
           operator: 'eq',
           value:
             values?.motor_engine_no === ''
@@ -118,7 +128,43 @@ export const ListView: React.FC = () => {
               : values?.motor_engine_no,
         },
         {
-          field: 'meta_query[1][compare]',
+          field: 'meta_query[1][0][compare]',
+          operator: 'eq',
+          value: '=',
+        },
+        {
+          field: 'meta_query[1][1][key]',
+          operator: 'eq',
+          value: 'motor_attr',
+        },
+        {
+          field: 'meta_query[1][1][value]',
+          operator: 'eq',
+          value:
+            values?.motor_engine_no === ''
+              ? undefined
+              : values?.motor_engine_no,
+        },
+        {
+          field: 'meta_query[1][1][compare]',
+          operator: 'eq',
+          value: 'LIKE',
+        },
+        {
+          field: 'meta_query[1][2][key]',
+          operator: 'eq',
+          value: 'chassi',
+        },
+        {
+          field: 'meta_query[1][2][value]',
+          operator: 'eq',
+          value:
+            values?.motor_engine_no === ''
+              ? undefined
+              : values?.motor_engine_no,
+        },
+        {
+          field: 'meta_query[1][2][compare]',
           operator: 'eq',
           value: '=',
         },
@@ -374,7 +420,6 @@ export const ListView: React.FC = () => {
           })}
         />
         <Table.Column
-          dataIndex="id"
           title="Client"
           {...getColumnSearchProps({
             dataIndex: 'id',

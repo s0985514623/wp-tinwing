@@ -273,7 +273,6 @@ export const ListView: React.FC = () => {
                     })}
                 />
                 <Table.Column
-                    dataIndex="id"
                     title="Client"
                     {...getColumnSearchProps({
                         dataIndex: 'id',

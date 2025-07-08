@@ -28,6 +28,9 @@ abstract class Base {
 			if (!\is_array($array)) {
 				continue;
 			}
+			if( isset($array['relation'])){
+				continue;
+			}
 			if (!isset($array['value'])) {
 				unset($meta_query[ $key ]);
 			}
