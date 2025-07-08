@@ -10,6 +10,7 @@ import dayjs from 'dayjs'
 import DetailTable from './Components/DetailTable'
 import { useColumnSearch } from 'hooks'
 import Filter from './Components/Filter'
+import { useState } from 'react';
 
 //設定排序與篩選初始化與搜尋條件
 const termOptions = {
@@ -143,6 +144,8 @@ const termOptions = {
 }
 
 export const ListView: React.FC = () => {
+  const [pageSize, setPageSize] = useState(30);
+  const [current, setCurrent] = useState(1);
   //取得renewals的資料
   const { tableProps: renewalData, searchFormProps: renewalSearchForm } =
     useTable<TRenewals, HttpError>({
@@ -232,8 +235,14 @@ export const ListView: React.FC = () => {
           },
         }}
 				pagination={{
-					pageSize: 30,
+					current: current,
+          pageSize: pageSize,
+          total: formatTableData?.length || 0,
           showSizeChanger: true,
+          onChange: (current, pageSize) => {
+            setCurrent(current);
+            setPageSize(pageSize);
+          },
           showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
 				}}
         rowKey={(record) => `${record.date}-${record.id}`}

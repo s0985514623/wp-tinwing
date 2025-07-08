@@ -12,8 +12,11 @@ import { DataType, ZDataType } from './types'
 import { safeParse } from 'utils'
 import Filter from './Filter'
 import { getSortProps } from 'utils'
+import { useState } from 'react';
 
 export const ListView: React.FC = () => {
+  const [pageSize, setPageSize] = useState(30);
+  const [current, setCurrent] = useState(1);
   const { tableProps, searchFormProps } = useTable<DataType>({
     sorters: {
       initial: [
@@ -96,8 +99,14 @@ export const ListView: React.FC = () => {
       <Filter formProps={searchFormProps} />
       <Table {...parsedTableProps} rowKey="id" size="middle"
         pagination={{
-          pageSize: 30,
+          current: current,
+          pageSize: pageSize,
+          total: parsedTableProps?.dataSource?.length || 0,
           showSizeChanger: true,
+          onChange: (current, pageSize) => {
+            setCurrent(current);
+            setPageSize(pageSize);
+          },
           showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
         }}>
         <Table.Column

@@ -15,8 +15,11 @@ import { safeParse, getSortProps, getTotalPremiumByDebitNote } from 'utils'
 import Filter from '../clientsSummary/Components/Filter'
 import dayjs from 'dayjs'
 import { useColumnSearch } from 'hooks'
+import { useState } from 'react'
 
 export const ListView: React.FC = () => {
+  const [pageSize, setPageSize] = useState(30);
+  const [current, setCurrent] = useState(1);
   //Export CSV
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
     mapData: (item) => {
@@ -268,8 +271,14 @@ export const ListView: React.FC = () => {
         rowKey="id"
         size="middle"
         pagination={{
-          pageSize: 30,
+          current: current,
+          pageSize: pageSize,
+          total: parsedTableProps?.dataSource?.length || 0,
           showSizeChanger: true,
+          onChange: (current, pageSize) => {
+            setCurrent(current);
+            setPageSize(pageSize);
+          },
           showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
         }}
       >

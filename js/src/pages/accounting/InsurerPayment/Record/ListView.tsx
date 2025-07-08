@@ -29,7 +29,8 @@ export const ListView: React.FC = () => {
     dayjs().add(-30, 'd'),
     dayjs(),
   ])
-
+  const [pageSize, setPageSize] = useState(30);
+  const [current, setCurrent] = useState(1);
   const { selectedRowKeys, rowSelection } = useRowSelection<DataType>()
 
   // Receipt 資料
@@ -406,8 +407,14 @@ export const ListView: React.FC = () => {
             )
           }}
           pagination={{
-            pageSize: 30,
+            current: current,
+            pageSize: pageSize,
+            total: parsedTableProps?.dataSource?.length || 0,
             showSizeChanger: true,
+            onChange: (current, pageSize) => {
+              setCurrent(current);
+              setPageSize(pageSize);
+            },
             showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
           }}
         >

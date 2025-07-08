@@ -4,8 +4,11 @@ import { Space, Typography, Tag, Table, Radio } from 'antd';
 import { DataType, ZDataType } from './types';
 import { safeParse } from 'utils';
 import { nanoid } from 'nanoid';
+import { useState } from 'react'
 
 export const ListView: React.FC = () => {
+    const [pageSize, setPageSize] = useState(30);
+    const [current, setCurrent] = useState(1);
     const { tableProps } = useTable<DataType>({
         pagination: {
             pageSize: -1, // 一次取得所有資料
@@ -78,8 +81,14 @@ export const ListView: React.FC = () => {
         <List createButtonProps={{ type: 'primary' }}>
             <Table {...parsedTableProps} rowKey="id" size="middle"
                 pagination={{
-                    pageSize: 30,
+                    current: current,
+                    pageSize: pageSize,
+                    total: parsedTableProps?.dataSource?.length || 0,
                     showSizeChanger: true,
+                    onChange: (current, pageSize) => {
+                        setCurrent(current);
+                        setPageSize(pageSize);
+                    },
                     showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
                 }}>
                 <Table.Column width={120} dataIndex="insurer_products_number" title="Product No." sorter={(a: DataType, b: DataType) => a.insurer_products_number.localeCompare(b.insurer_products_number)} />

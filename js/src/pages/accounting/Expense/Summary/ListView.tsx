@@ -12,7 +12,8 @@ import { mkConfig, generateCsv, download } from 'export-to-csv';
 export const ListView: React.FC = () => {
     //預設搜尋日期為今年
     const [year, setYear] = useState(dayjs());
-
+    const [pageSize, setPageSize] = useState(30);
+    const [current, setCurrent] = useState(1);
     const { tableProps, searchFormProps } = useTable<DataType>({
         sorters: {
             initial: [
@@ -223,8 +224,14 @@ export const ListView: React.FC = () => {
             )}>
             <Table {...parsedTableProps} dataSource={sortDataSource} rowKey="id" size="middle"
                 pagination={{
-                    pageSize: 30,
+                    current: current,
+                    pageSize: pageSize,
+                    total: parsedTableProps?.dataSource?.length || 0,
                     showSizeChanger: true,
+                    onChange: (current, pageSize) => {
+                        setCurrent(current);
+                        setPageSize(pageSize);
+                    },
                     showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
                 }}>
                 <Table.Column width={120} dataIndex="year" title="Year" />

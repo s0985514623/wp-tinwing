@@ -1,4 +1,4 @@
-import { useMany, CrudFilters, useExport } from '@refinedev/core';
+import { useMany, CrudFilters, useExport, } from '@refinedev/core';
 import { List, useTable, EditButton, DeleteButton, ShowButton, ExportButton } from '@refinedev/antd';
 import { Space, Table } from 'antd';
 import { DataType, ZDataType } from './types';
@@ -8,8 +8,11 @@ import { safeParse, getSortProps, getTotalPremiumByDebitNote } from 'utils';
 import Filter from '../clientsSummary/Components/Filter';
 import dayjs from 'dayjs';
 import { useColumnSearch } from 'hooks';
+import { useState } from 'react';
 
 export const ListView: React.FC = () => {
+    const [pageSize, setPageSize] = useState(30);
+    const [current, setCurrent] = useState(1);
     //Export CSV
     const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
         mapData: (item) => {
@@ -241,8 +244,14 @@ export const ListView: React.FC = () => {
                 rowKey="id"
                 size="middle"
                 pagination={{
-                    pageSize: 30,
+                    current: current,
+                    pageSize: pageSize,
+                    total: parsedTableProps?.dataSource?.length || 0,
                     showSizeChanger: true,
+                    onChange: (current, pageSize) => {
+                        setCurrent(current);
+                        setPageSize(pageSize);
+                    },
                     showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
                 }}>
                 <Table.Column width={100} dataIndex="period_of_insurance_to" title="End Date" render={(period_of_insurance_to: number) => (period_of_insurance_to ? dayjs.unix(period_of_insurance_to).format('YYYY-MM-DD') : '')} {...getSortProps<DataType>('period_of_insurance_to')} />

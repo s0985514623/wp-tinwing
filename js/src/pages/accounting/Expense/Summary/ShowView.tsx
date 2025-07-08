@@ -6,9 +6,12 @@ import { DataType } from '../types'
 import dayjs from 'dayjs'
 import { Table } from 'antd'
 import { DataType as TTerms } from 'pages/terms/types'
+import { useState } from 'react'
 
 export const ShowView: React.FC = () => {
   const { year, month ,bank} = useParams()
+  const [pageSize, setPageSize] = useState(30);
+  const [current, setCurrent] = useState(1);
   // 獲取該月的第一天（月初）
   const startOfMonth = dayjs(
     new Date(Number(year), Number(month) - 1, 1),
@@ -179,7 +182,18 @@ export const ShowView: React.FC = () => {
         </>
       )}
     >
-      <Table {...tableProps} rowKey="id" size="middle">
+      <Table {...tableProps} rowKey="id" size="middle"
+      pagination={{
+        current: current,
+        pageSize: pageSize,
+        total: tableProps?.dataSource?.length || 0,
+        showSizeChanger: true,
+        onChange: (current, pageSize) => {
+          setCurrent(current);
+          setPageSize(pageSize);
+        },
+        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+      }}>
         <Table.Column
           width={120}
           dataIndex="date"
