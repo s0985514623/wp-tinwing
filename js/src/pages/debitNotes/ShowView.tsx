@@ -203,6 +203,8 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       <RemarkTextArea data={debitNoteData} model={'show'} />
       {debitNoteData?.template === 'general' && <ShowMetaGeneral />}
       {debitNoteData?.template === 'motor' && <ShowMetaMotor />}
+      {debitNoteData?.template === 'shortTerms' && <ShowMetaGeneral />}
+      {debitNoteData?.template === 'package' && <ShowMetaGeneral />}
     </Show>
   )
 }

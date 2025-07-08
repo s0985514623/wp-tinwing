@@ -79,18 +79,21 @@ export const getInsurerPayment = (receipt:TReceipt, debitNote:TDebitNote, insure
 	//const insurerTotalFee = levyValue + round(grossPremium * (insurerPaymentRate / 100), 2);
 	const insurer_fee_percent = debitNote?.insurer_fee_percent || 0;
 	const insurerPaymentRate = insurer_fee_percent??insurer?.payment_rate;
+    const originalPremium= debitNote?.premium??0;
 	const premium = getGrossPremiumByDebitNote(debitNote) ;
 	const template=debitNote?.template;
 
 	if ('motor' === template) {
 			const mib = debitNote?.motor_attr?.mib || 0;
 			const mibValue = round(premium * (mib / 100), 2);
-			const insurerTotalFee = mibValue + round(premium * (insurerPaymentRate / 100) + 1e-10, 2);
+            const extraValue =round(originalPremium * ( Number(debitNote?.extra_field?.value??0) / 100), 2);
+			const insurerTotalFee = mibValue + extraValue + round(premium * (insurerPaymentRate / 100)  + 1e-10, 2);
 			return insurerTotalFee;
 	} else if( 'general' === template || 'shortTerms' === template || 'package' === template){
     const levy = debitNote?.levy || 0;
-		const levyValue = round(premium * (levy / 100), 2);
-		const insurerTotalFee = levyValue + round(premium * (insurerPaymentRate / 100) + 1e-10, 2);
+		const levyValue = round(premium * (levy / 100), 2); 
+        const extraValue =round(originalPremium * ( Number(debitNote?.extra_field?.value??0) / 100), 2);
+		const insurerTotalFee = levyValue + extraValue + round(premium * (insurerPaymentRate / 100)  + 1e-10, 2);
 		return insurerTotalFee;
 	}
 

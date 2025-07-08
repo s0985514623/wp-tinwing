@@ -453,12 +453,12 @@ export const ListView: React.FC = () => {
                 </Link>
               } else if (_record?.created_from_credit_note_id) {
                 const creditNote = creditNotes.find((cn) => cn.id === _record.created_from_credit_note_id)
-                return <Link to={`/credit_notes/show/${_record.created_from_credit_note_id}`}>
+                return <Link to={`/creditNotes/show/${_record.created_from_credit_note_id}`}>
                   {creditNote?.note_no ?? creditNote?.id}
                 </Link>
               } else if (_record?.debit_note_id) {
                 const debitNote = debitNotes.find((dn) => dn.id === _record.debit_note_id)
-                return <Link to={`/debit_notes/show/${_record.debit_note_id}`}>
+                return <Link to={`/debitNotes/show/${_record.debit_note_id}`}>
                   {debitNote?.note_no ?? debitNote?.id}
                 </Link>
               }
