@@ -13,6 +13,31 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
         resource,
         pagination: {
             mode: 'off',
+            pageSize: -1, // 一次取得所有資料
+        },
+        filters: {
+            initial: [
+                {
+                    field: 'meta_query[0][key]',
+                    operator: 'eq',
+                    value: 'date',
+                  },
+                  {
+                    field: 'meta_query[0][value][0]',
+                    operator: 'eq',
+                    value: dayjs().subtract(7, 'day').unix(),
+                  },
+                  {
+                    field: 'meta_query[0][value][1]',
+                    operator: 'eq',
+                    value: dayjs().unix(),
+                  },
+                  {
+                    field: 'meta_query[0][compare]',
+                    operator: 'eq',
+                    value: 'BETWEEN',
+                  },
+            ] as CrudFilters,
         },
         onSearch: (values: TSearchProps) => {
             const start = values?.dateRange ? values?.dateRange[0]?.startOf('day').unix() : undefined;
@@ -20,12 +45,12 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
 
             const defaultFilters = start?[
                 {
-                    field: 'date[0]',
+                    field: 'meta_query[0][value][0]',
                     operator: 'eq',
                     value: start,
                 },
                 {
-                    field: 'date[1]',
+                    field: 'meta_query[0][value][1]',
                     operator: 'eq',
                     value: end,
                 },
