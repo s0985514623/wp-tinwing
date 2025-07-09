@@ -9,33 +9,19 @@ import {
 } from '@refinedev/antd'
 import { Space, Table } from 'antd'
 import { DataType, ZDataType } from './types'
-import { safeParse, getTotalPremiumByDebitNote, getSortProps } from 'utils'
+import { safeParse, getTotalPremiumByDebitNote, getSortProps, getInsurerPayment } from 'utils'
 import dayjs from 'dayjs'
 import { DataType as TDebitNote } from 'pages/debitNotes/types'
 import Filter from '../clientsSummary/Components/Filter'
 import { useColumnSearch } from 'hooks'
 import { useState } from 'react'
+import { DataType as TRenewal } from 'pages/renewals/types'
+import { DataType as TInsurer } from 'pages/insurers/types'
 
 export const ListView: React.FC = () => {
   const [pageSize, setPageSize] = useState(30);
   const [current, setCurrent] = useState(1);
-  //Export CSV
-  const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
-    mapData: (item) => {
-      const sourceData = item?.created_from_credit_note_id ? creditNotes : debitNotes;
-      const id = item?.created_from_credit_note_id ? item?.created_from_credit_note_id : item?.debit_note_id;
-      const note = sourceData.find((note) => note.id === id);
-      return {
-        ...item,
-        date: dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
-        payment_date: dayjs
-          .unix(item?.payment_date as number)
-          .format('YYYY-MM-DD'),
-        'DN/CN': note?.note_no || 'N/A',
-        'Bill Date': note?.date ? dayjs.unix(note?.date as number).format('YYYY-MM-DD') : '',
-      }
-    },
-  })
+
   const { tableProps, searchFormProps } = useTable<DataType>({
     sorters: {
       initial: [
@@ -147,7 +133,74 @@ export const ListView: React.FC = () => {
     },
   })
   const creditNotes = creditNoteData?.data || []
+  const {data:renewalsData} = useMany<TRenewal>({
+    resource: 'renewals',
+    ids:
+      parsedTableProps?.dataSource?.map(
+        (theRecord) => theRecord?.created_from_renewal_id || '0',
+      ) ?? [],
+  })
+  const renewals = renewalsData?.data || []
+   //取得所有的insurer_id
+   const getInsurersIds = [...debitNotes, ...renewals, ...creditNotes]
+   // Insurer 資料
+   const { data: insurersData } = useMany<TInsurer>({
+     resource: 'insurers',
+     ids: getInsurersIds?.map((theRecord) => theRecord?.insurer_id || '0') ?? [],
+     queryOptions: {
+       enabled: !!parsedTableProps?.dataSource,
+     },
+   })
+   const insurers = insurersData?.data || []
+
   const { getColumnSearchProps } = useColumnSearch<DataType>()
+
+  
+  //Export CSV
+  const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
+    mapData: (item) => {
+      const sourceData = item?.created_from_credit_note_id ? creditNotes : debitNotes;
+      const id = item?.created_from_credit_note_id ? item?.created_from_credit_note_id : item?.debit_note_id;
+      const note = sourceData.find((note) => note.id === id);
+
+      const insurerData = insurers?.find(
+        (insurer) => insurer.id === note?.insurer_id,
+      )
+      const paymentToInsurer = note
+        ? getInsurerPayment(
+          item,
+          note as TDebitNote,
+          insurerData as TInsurer,
+        )
+        : 0
+      return {
+        'id': item?.id,
+        'DN/CN': note?.note_no || 'N/A',
+        'Bill Date': note?.date ? dayjs.unix(note?.date as number).format('YYYY-MM-DD') : 'N/A',
+        'Receipt No': item?.receipt_no,
+        'Receipt Date': dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
+        'Payment Date': dayjs
+          .unix(item?.payment_date as number)
+          .format('YYYY-MM-DD'),
+        'Payment Method': item?.payment_method || 'N/A',
+        'Remark': item?.remark || 'N/A',
+        'Premium': item?.premium || 'N/A',
+        'Payment Receiver Account': item?.payment_receiver_account || 'N/A',
+        'Is Paid': item?.is_paid ? 'Yes' : 'No',
+        'Payment to Insurer': paymentToInsurer.toLocaleString() || 'N/A',
+        'Pay to Insurer By Bank': item?.payment_receiver_account || 'N/A',
+        'Pay to Insurer By Cheque': item?.cheque_no || 'N/A',
+        'Insurer_Invoice_No': item?.pay_to_insurer_by_invoice || 'N/A',
+        'Payment Date(to Insurer)': dayjs
+          .unix(item?.pay_to_insurer_by_payment_date as number)
+          .format('YYYY-MM-DD'),
+        'Code No': item?.code_no || 'N/A',
+        'Created At': dayjs.unix(Number(item?.created_at)).format('YYYY-MM-DD HH:mm:ss'),
+        'Debit Note ID': item?.debit_note_id || 'N/A',
+        'Is Archived': item?.is_archived ? 'True' : 'False',
+      }
+    },
+  })
   return (
     <List
       headerButtons={

@@ -21,6 +21,7 @@ export const ZDataType = z.object({
 		pay_to_insurer_by_cheque: z.string().nullable(),
 		pay_to_insurer_by_invoice: z.string().nullable(),
 		pay_to_insurer_by_payment_date: z.number().nullable(),
+    is_archived: z.boolean().nullable(),
 });
 
 export type DataType = z.infer<typeof ZDataType>;

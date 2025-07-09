@@ -25,7 +25,7 @@ export const ListView: React.FC = () => {
   const { show, close, modalProps } = useModal()
   const { getColumnSearchProps } = useColumnSearch<DataType>()
   const Link = useLink()
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]|undefined>([
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | undefined>([
     dayjs().add(-30, 'd'),
     dayjs(),
   ])
@@ -277,14 +277,53 @@ export const ListView: React.FC = () => {
           insurerData as TInsurer,
         )
         : 0
+
+      const clientName = () => {
+        if (item?.created_from_renewal_id) {
+          const renewal = renewals.find((r) => r.id === item.created_from_renewal_id)
+          const client = clients.find((c) => c.id === renewal?.client_id)
+          return client?.company || client?.name_en || client?.name_zh
+        }
+        if (item?.created_from_credit_note_id) {
+          const creditNote = creditNotes.find((cn) => cn.id === item.created_from_credit_note_id)
+          const client = clients.find((c) => c.id === creditNote?.client_id)
+          return client?.company || client?.name_en || client?.name_zh
+        }
+        if (item?.debit_note_id) {
+          const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
+          const client = clients.find((c) => c.id === debitNote?.client_id)
+          return client?.company || client?.name_en || client?.name_zh
+        }
+        return 'N/A'
+      }
+
+      const policyNo = () => {
+        if (item?.created_from_renewal_id) {
+          const renewal = renewals.find((r) => r.id === item.created_from_renewal_id)
+          return renewal?.policy_no
+        }
+        if (item?.created_from_credit_note_id) {
+          const creditNote = creditNotes.find((cn) => cn.id === item.created_from_credit_note_id)
+          return creditNote?.policy_no
+        }
+        if (item?.debit_note_id) {
+          const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
+          return debitNote?.policy_no
+        }
+        return 'N/A'
+      }
       return {
-        'Note No': `'${note_no}'`, //加上單引號才不會被省略前導0
-        'Note Date': noteDate,
+        'Receipt No': item?.receipt_no,
+        'Receipt Date': dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
+        'Client Name': clientName(),
+        'Policy No': policyNo(),
         Insurer: insurerName,
         Premium: Number(premium).toLocaleString(),
         'Payment to Insurer': Number(paymentToInsurer).toLocaleString(),
         Paid: item.is_paid ? 'Yes' : 'No',
         Bank: item.payment_receiver_account,
+        'Cheque No': item.cheque_no,
+        'Invoice No': item.pay_to_insurer_by_invoice,
         Remark: item.remark,
       }
     },

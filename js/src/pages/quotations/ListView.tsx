@@ -291,7 +291,7 @@ export const ListView: React.FC = () => {
           .unix(item?.period_of_insurance_to as number)
           .format('YYYY-MM-DD'),
         'Sum Insured': item?.sum_insured || 'N/A',
-        'Is Archived': item?.is_archived ? 'Yes' : 'No',
+        'Is Archived': item?.is_archived ? 'True' : 'False',
         'Policy No.': item?.policy_no || 'N/A',
         'Created At': dayjs.unix(Number(item?.created_at)).format('YYYY-MM-DD'),
         'Template': item?.template || 'N/A',
