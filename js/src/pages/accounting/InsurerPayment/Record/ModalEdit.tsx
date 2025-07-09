@@ -29,7 +29,7 @@ export const ModalEdit: React.FC<ModalEditProps> = ({
       close()
       // invalidate
       invalidate({
-        resource: 'receipts_record',
+        resource: 'insurer_payment_record',
         invalidates: ['list'],
       })
     },

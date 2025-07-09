@@ -1,10 +1,10 @@
-import { InsuranceOutlined } from '@ant-design/icons';
+import { AccountBookOutlined } from '@ant-design/icons';
 
 export const accounting = [
     {
         name: 'accountingDropdown',
         meta: {
-            icon: <InsuranceOutlined />,
+            icon: <AccountBookOutlined />,
             label: 'Accounting',
         },
     },
@@ -37,7 +37,7 @@ export const accounting = [
     },
     {
         name: 'receipts',
-		identifier: 'receipts_record',
+		identifier: 'insurer_payment_record',
         list: '/insurerPayment/record',
         edit: '/insurerPayment/record/edit/:id',
         meta: {

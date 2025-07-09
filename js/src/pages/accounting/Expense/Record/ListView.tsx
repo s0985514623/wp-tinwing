@@ -330,6 +330,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
           render={(date: number) =>
             date ? dayjs.unix(date).format('YYYY-MM-DD') : ''
           }
+          {...getSortProps<DataType>('payment_date')}
         />
       )}
       <Table.Column width={120} dataIndex="remark" title="Remark" />

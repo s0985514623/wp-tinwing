@@ -420,49 +420,23 @@ export const ListView: React.FC = () => {
         >
           <Table.Column
             width={120}
+            dataIndex="receipt_no"
             title="Note No."
-            sorter={(a: DataType, b: DataType) => {
-              const aNoteNo = a.created_from_renewal_id ? renewals.find((r) => r.id === a.created_from_renewal_id)?.note_no : a.created_from_credit_note_id ? creditNotes.find((cn) => cn.id === a.created_from_credit_note_id)?.note_no : debitNotes.find((dn) => dn.id === a.debit_note_id)?.note_no
-              const bNoteNo = b.created_from_renewal_id ? renewals.find((r) => r.id === b.created_from_renewal_id)?.note_no : b.created_from_credit_note_id ? creditNotes.find((cn) => cn.id === b.created_from_credit_note_id)?.note_no : debitNotes.find((dn) => dn.id === b.debit_note_id)?.note_no
-              return aNoteNo?.localeCompare(bNoteNo ?? '') ?? 0
-            }}
             {...getColumnSearchProps({
-              dataIndex: 'id',
-              renderText: (_text: string | number, _record?: DataType) => {
-                //判斷是debit_note_id 還是created_from_renewal_id 還是created_from_credit_note_id
-                if (_record?.created_from_renewal_id) {
-                  const renewal = renewals.find((r) => r.id === _record.created_from_renewal_id)
-                  return renewal?.note_no ?? renewal?.id?.toString() ?? ''
-                } else if (_record?.created_from_credit_note_id) {
-                  const creditNote = creditNotes.find((cn) => cn.id === _record.created_from_credit_note_id)
-                  return creditNote?.note_no ?? creditNote?.id?.toString() ?? ''
-                } else if (_record?.debit_note_id) {
-                  const debitNote = debitNotes.find((dn) => dn.id === _record.debit_note_id)
-                  return debitNote?.note_no ?? debitNote?.id?.toString() ?? ''
-                }
-                return _record?.receipt_no ?? ''
-              }
+              dataIndex: 'receipt_no',
             })}
+            {...getSortProps<DataType>('receipt_no')}
             // 複寫render方法
-            render={(_text: string | number, _record?: DataType) => {
-              //判斷是debit_note_id 還是created_from_renewal_id 還是created_from_credit_note_id
-              if (_record?.created_from_renewal_id) {
-                const renewal = renewals.find((r) => r.id === _record.created_from_renewal_id)
-                return <Link to={`/renewals/show/${_record.created_from_renewal_id}`}>
-                  {renewal?.note_no ?? renewal?.id}
+            render={(renderReceiptNo: number, record: DataType) => {
+              //取得receipt_no, 如果沒有則顯示id
+              const receipt_no = parsedTableProps?.dataSource?.find(
+                (r) => r.id === record?.id,
+              )?.receipt_no
+              return (
+                <Link to={`/receipts/show/${record?.id}`}>
+                  {receipt_no ?? record?.id}
                 </Link>
-              } else if (_record?.created_from_credit_note_id) {
-                const creditNote = creditNotes.find((cn) => cn.id === _record.created_from_credit_note_id)
-                return <Link to={`/creditNotes/show/${_record.created_from_credit_note_id}`}>
-                  {creditNote?.note_no ?? creditNote?.id}
-                </Link>
-              } else if (_record?.debit_note_id) {
-                const debitNote = debitNotes.find((dn) => dn.id === _record.debit_note_id)
-                return <Link to={`/debitNotes/show/${_record.debit_note_id}`}>
-                  {debitNote?.note_no ?? debitNote?.id}
-                </Link>
-              }
-              return _record?.receipt_no
+              )
             }}
           />
           <Table.Column
@@ -793,7 +767,7 @@ export const ListView: React.FC = () => {
                       shape="circle"
                       size="small"
                       recordItemId={id}
-                      resource="receipts_record"
+                      resource="insurer_payment_record"
                     />
                   </Space>
                 </>
