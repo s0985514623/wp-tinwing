@@ -4,28 +4,18 @@ import { Space, Table } from 'antd';
 import { DataType, ZDataType } from './types';
 import { DataType as TClient, defaultClient } from 'pages/clients/types';
 import { DataType as TTerm } from 'pages/terms/types';
-import { safeParse, getSortProps, getTotalPremiumByDebitNote } from 'utils';
+import { safeParse, getSortProps, getTotalPremiumByDebitNote, getGrossPremium } from 'utils';
 import Filter from '../clientsSummary/Components/Filter';
 import dayjs from 'dayjs';
 import { useColumnSearch } from 'hooks';
 import { useState } from 'react'
+import { DataType as TReceipt } from 'pages/receipts/types';
+import { round } from 'lodash';
 
 export const ListView: React.FC = () => {
     const [pageSize, setPageSize] = useState(30);
     const [current, setCurrent] = useState(1);
-    //Export CSV
-    const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
-        mapData: (item) => {
-            return {
-                ...item,
-                date: dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
-                period_of_insurance_from: dayjs.unix(item?.period_of_insurance_from as number).format('YYYY-MM-DD'),
-                period_of_insurance_to: dayjs.unix(item?.period_of_insurance_to as number).format('YYYY-MM-DD'),
-                motor_attr: JSON.stringify(item?.motor_attr),
-                extra_field: JSON.stringify(item?.extra_field),
-            };
-        },
-    });
+
     const { tableProps, searchFormProps } = useTable<DataType>({
 			sorters: {
 				initial: [
@@ -189,6 +179,13 @@ export const ListView: React.FC = () => {
     });
     const clients = (clientData?.data || []) as TClient[];
 
+    const { data: receiptData, isLoading: receiptIsLoading } = useMany<TReceipt>({
+        resource: 'receipts',
+        ids: parsedTableProps?.dataSource?.map((theRecord) => theRecord?.receipt_id || '0') ?? [],
+        queryOptions: {
+            enabled: !!parsedTableProps?.dataSource,
+        },
+    });
     const { getColumnSearchProps } = useColumnSearch<DataType>();
 
     const templatesOptions = [
@@ -214,6 +211,99 @@ export const ListView: React.FC = () => {
         },
     ];
     const InsuranceClassOptions = termData?.data?.map((item) => ({ text: item.name, value: item.id }));
+
+    //Export CSV//Export CSV
+  const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
+    mapData: (item) => {
+      // 取得client資料
+      const theClient =
+        clients.find((client) => client.id === item?.client_id) ||
+        defaultClient
+      const display_nameDataIndex = theClient?.display_name || 'name_en'
+      const display_name = theClient?.[display_nameDataIndex] || 'N/A'
+      // 取得insurer資料
+      const theInsurer =
+        insurerData?.data?.find(
+          (theInsurer) => theInsurer.id === item?.insurer_id,
+        )?.name
+      const insurer_name = theInsurer || 'N/A'
+
+      let paymentToInsurer = 'N/A';
+
+      if (item?.template === 'motor') {
+        const insurerPaymentRate = Number(item?.insurer_fee_percent ?? theInsurer?.payment_rate ?? 0);
+        const extra_fieldValue = round(Number(item?.premium ?? 0) * (Number(item?.extra_field?.value ?? 0) / 100), 2);
+        const grossPremium = getGrossPremium({
+          premium: Number(item?.premium ?? 0),
+          ls: Number(item?.motor_attr?.ls ?? 0),
+          ncb: Number(item?.motor_attr?.ncb ?? 0),
+        });
+        const mibValue = round(grossPremium * (Number(item?.motor_attr?.mib ?? 0) / 100), 2);
+        const insurerTotalFee = mibValue + extra_fieldValue + round(grossPremium * (insurerPaymentRate / 100), 2);
+        paymentToInsurer = insurerTotalFee.toLocaleString(
+          'en-US',
+          {
+            minimumFractionDigits: 2, // 最少小數點後兩位
+            maximumFractionDigits: 2, // 最多小數點後兩位
+          },
+        );
+      }
+      else {
+        const insurerPaymentRate = Number(item?.insurer_fee_percent ?? theInsurer?.payment_rate ?? 0);
+        const extra_fieldValue = round(Number(item?.premium ?? 0) * (Number(item?.extra_field?.value ?? 0) / 100), 2);
+        const levyValue = round(Number(item?.premium ?? 0) * (Number(item?.levy ?? 0) / 100), 2);
+        const insurerTotalFee = levyValue + extra_fieldValue + round(Number(item?.premium ?? 0) * (insurerPaymentRate / 100), 2);
+        paymentToInsurer = insurerTotalFee.toLocaleString(
+          'en-US',
+          {
+            minimumFractionDigits: 2, // 最少小數點後兩位
+            maximumFractionDigits: 2, // 最多小數點後兩位
+          },
+        );
+      }
+
+      // 取得receipt資料
+      const theReceipt =
+        receiptData?.data?.find(
+          (theReceipt) => theReceipt.id === item?.receipt_id,
+        )
+      const receipt_no = theReceipt?.receipt_no || 'N/A'
+      const receipt_date = theReceipt?.date ? dayjs.unix(theReceipt?.date as number).format('YYYY-MM-DD') : 'N/A'
+      const payment_date = theReceipt?.payment_date ? dayjs.unix(theReceipt?.payment_date as number).format('YYYY-MM-DD') : 'N/A'
+      return {
+        id: item?.id,
+        'DN/CN': item?.note_no,
+        'Bill Date': dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
+        'Receipt No': receipt_no,
+        'Receipt Date': receipt_date,
+        'Payment Date': payment_date,
+        'Client No': theClient?.client_number || 'N/A',
+        'Client': display_name,
+        'Insurer': insurer_name,
+        'Premium': item?.premium || 'N/A',
+        'Insurer Fee Percent': item?.insurer_fee_percent || 'N/A',
+        'Payment to Insurer': paymentToInsurer,
+        'Remark': item?.remark || 'N/A',
+        'Period of Insurance From': dayjs
+          .unix(item?.period_of_insurance_from as number)
+          .format('YYYY-MM-DD'),
+        'Period of Insurance To': dayjs
+          .unix(item?.period_of_insurance_to as number)
+          .format('YYYY-MM-DD'),
+        'Sum Insured': item?.sum_insured || 'N/A',
+        'Is Archived': item?.is_archived ? 'Yes' : 'No',
+        'Policy No.': item?.policy_no || 'N/A',
+        'Created At': dayjs.unix(Number(item?.created_at)).format('YYYY-MM-DD'),
+        'Template': item?.template || 'N/A',
+        'Teem ID': item?.term_id || 'N/A',
+        'Agent ID': item?.agent_id || 'N/A',
+        'Client ID': item?.client_id || 'N/A',
+        'Insurer ID': item?.insurer_id || 'N/A',
+        'Motor Attr': JSON.stringify(item?.motor_attr),
+        'Extra Field': JSON.stringify(item?.extra_field),
+      }
+    },
+  })
     return (
         <List headerButtons={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
             <Filter formProps={searchFormProps} />

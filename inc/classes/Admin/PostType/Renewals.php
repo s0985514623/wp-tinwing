@@ -287,6 +287,12 @@ final class Renewals {
 			'meta_type'         => 'integer',
 			'sanitize_callback' => 'absint',
 		],
+		'receipt_id' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'number',
+			'meta_type'         => 'integer',
+			'sanitize_callback' => 'absint',
+		],
 	];
 	/**
 	 * 建構子

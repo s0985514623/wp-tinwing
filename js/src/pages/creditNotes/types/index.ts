@@ -84,6 +84,7 @@ export const ZDataType = z
         extra_field2: ZExtraField,
         statusFiled: z.string().nullable(),
         is_archived: z.boolean().nullable(),
+        receipt_id: z.number().nullable(),
     })
     .partial();
 

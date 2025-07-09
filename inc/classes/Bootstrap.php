@@ -22,6 +22,8 @@ final class Bootstrap {
 		// FrontEnd\Entry::instance();
 		Admin\Entry::instance();
 		Admin\CPT::instance();
+		Admin\Migration::instance(); // 添加遷移類
+		Admin\MigrationAdmin::instance(); // 添加遷移管理工具
 		Api\CreditNotes::instance();
 		Api\Quotations::instance();
 		Api\DebitNotes::instance();

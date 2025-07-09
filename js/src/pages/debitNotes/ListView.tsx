@@ -11,6 +11,7 @@ import { Space, Table } from 'antd'
 import { DataType, ZDataType } from './types'
 import { DataType as TClient, defaultClient } from 'pages/clients/types'
 import { DataType as TTerm } from 'pages/terms/types'
+import { DataType as TReceipt } from 'pages/receipts/types'
 import { safeParse, getSortProps, getTotalPremiumByDebitNote, getGrossPremium } from 'utils'
 import Filter from '../clientsSummary/Components/Filter'
 import dayjs from 'dayjs'
@@ -256,6 +257,17 @@ export const ListView: React.FC = () => {
       enabled: !!parsedTableProps?.dataSource,
     },
   })
+  const { data: receiptData, isLoading: receiptIsLoading } = useMany<TReceipt>({
+    resource: 'receipts',
+    ids:
+      parsedTableProps?.dataSource
+        ?.map((r) => r?.receipt_id)
+        .filter((id): id is number => typeof id === 'number') ?? [],
+    queryOptions: {
+      enabled: !!parsedTableProps?.dataSource,
+    },
+  })
+
   const clients = (clientData?.data || []) as TClient[]
 
   const { getColumnSearchProps } = useColumnSearch<DataType>()
@@ -290,11 +302,13 @@ export const ListView: React.FC = () => {
   //Export CSV
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
     mapData: (item) => {
+      // 取得client資料
       const theClient =
         clients.find((client) => client.id === item?.client_id) ||
         defaultClient
       const display_nameDataIndex = theClient?.display_name || 'name_en'
       const display_name = theClient?.[display_nameDataIndex] || 'N/A'
+      // 取得insurer資料
       const theInsurer =
         insurerData?.data?.find(
           (theInsurer) => theInsurer.id === item?.insurer_id,
@@ -335,23 +349,45 @@ export const ListView: React.FC = () => {
         );
       }
 
-
+      // 取得receipt資料
+      const theReceipt =
+        receiptData?.data?.find(
+          (theReceipt) => theReceipt.id === item?.receipt_id,
+        )
+      const receipt_no = theReceipt?.receipt_no || 'N/A'
+      const receipt_date = theReceipt?.date ? dayjs.unix(theReceipt?.date as number).format('YYYY-MM-DD') : 'N/A'
+      const payment_date = theReceipt?.payment_date ? dayjs.unix(theReceipt?.payment_date as number).format('YYYY-MM-DD') : 'N/A'
       return {
-        ...item,
-        date: dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
-        period_of_insurance_from: dayjs
+        id: item?.id,
+        'DN/CN': item?.note_no,
+        'Bill Date': dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
+        'Receipt No': receipt_no,
+        'Receipt Date': receipt_date,
+        'Payment Date': payment_date,
+        'Client No': theClient?.client_number || 'N/A',
+        'Client': display_name,
+        'Insurer': insurer_name,
+        'Premium': item?.premium || 'N/A',
+        'Insurer Fee Percent': item?.insurer_fee_percent || 'N/A',
+        'Payment to Insurer': paymentToInsurer,
+        'Remark': item?.remark || 'N/A',
+        'Period of Insurance From': dayjs
           .unix(item?.period_of_insurance_from as number)
           .format('YYYY-MM-DD'),
-        period_of_insurance_to: dayjs
+        'Period of Insurance To': dayjs
           .unix(item?.period_of_insurance_to as number)
           .format('YYYY-MM-DD'),
-        motor_attr: JSON.stringify(item?.motor_attr),
-        extra_field: JSON.stringify(item?.extra_field),
-        'Client no': theClient?.client_number || 'N/A',
-        Client: display_name,
-        Insurer: insurer_name,
+        'Sum Insured': item?.sum_insured || 'N/A',
+        'Is Archived': item?.is_archived ? 'Yes' : 'No',
         'Policy No.': item?.policy_no || 'N/A',
-        'Payment to Insurer': paymentToInsurer,
+        'Created At': dayjs.unix(Number(item?.created_at)).format('YYYY-MM-DD'),
+        'Template': item?.template || 'N/A',
+        'Teem ID': item?.term_id || 'N/A',
+        'Agent ID': item?.agent_id || 'N/A',
+        'Client ID': item?.client_id || 'N/A',
+        'Insurer ID': item?.insurer_id || 'N/A',
+        'Motor Attr': JSON.stringify(item?.motor_attr),
+        'Extra Field': JSON.stringify(item?.extra_field),
       }
     },
   })
