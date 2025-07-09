@@ -392,7 +392,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                   <div className="th">PREMIUM 保費</div>
                   <div className="td">
                     <Form.Item noStyle name={['premium']}>
-                      <InputNumber addonBefore="HKD" className="w-full" size="small" min={0} stringMode step="0.01" />
+                      <InputNumber addonBefore="HKD" className="w-full" size="small" stringMode step="0.01" />
                     </Form.Item>
                   </div>
                 </div>
