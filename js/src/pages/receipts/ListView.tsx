@@ -134,7 +134,7 @@ export const ListView: React.FC = () => {
     },
   })
   const creditNotes = creditNoteData?.data || []
-  const {data:renewalsData} = useMany<TRenewal>({
+  const { data: renewalsData } = useMany<TRenewal>({
     resource: 'renewals',
     ids:
       parsedTableProps?.dataSource?.map(
@@ -142,20 +142,20 @@ export const ListView: React.FC = () => {
       ) ?? [],
   })
   const renewals = renewalsData?.data || []
-  
-   //取得所有的insurer_id
-   const getInsurersIds = [...debitNotes, ...renewals, ...creditNotes]
-   // Insurer 資料
-   const { data: insurersData } = useMany<TInsurer>({
-     resource: 'insurers',
-     ids: getInsurersIds?.map((theRecord) => theRecord?.insurer_id || '0') ?? [],
-     queryOptions: {
-       enabled: !!parsedTableProps?.dataSource,
-     },
-   })
-   const insurers = insurersData?.data || []
 
-   // 取得client資料
+  //取得所有的insurer_id
+  const getInsurersIds = [...debitNotes, ...renewals, ...creditNotes]
+  // Insurer 資料
+  const { data: insurersData } = useMany<TInsurer>({
+    resource: 'insurers',
+    ids: getInsurersIds?.map((theRecord) => theRecord?.insurer_id || '0') ?? [],
+    queryOptions: {
+      enabled: !!parsedTableProps?.dataSource,
+    },
+  })
+  const insurers = insurersData?.data || []
+
+  // 取得client資料
   const { data: clientData } = useMany<TClient>({
     resource: 'clients',
     ids: getInsurersIds?.map((theRecord) => theRecord?.client_id || '0') ?? [],
@@ -164,7 +164,7 @@ export const ListView: React.FC = () => {
 
   const { getColumnSearchProps } = useColumnSearch<DataType>()
 
-  
+
   //Export CSV
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
     mapData: (item) => {
@@ -176,47 +176,50 @@ export const ListView: React.FC = () => {
         (insurer) => insurer.id === note?.insurer_id,
       )
       const insurerName = note ? insurerData?.name : ''
-      const paymentToInsurer = note
+      let paymentToInsurer = note
         ? getInsurerPayment(
           item,
           note as TDebitNote,
           insurerData as TInsurer,
         )
         : 0
-        const clientName = () => {
-          if (item?.created_from_renewal_id) {
-            const renewal = renewals.find((r) => r.id === item.created_from_renewal_id)
-            const client = clients.find((c) => c.id === renewal?.client_id)
-            return client?.company || client?.name_en || client?.name_zh
-          }
-          if (item?.created_from_credit_note_id) {
-            const creditNote = creditNotes.find((cn) => cn.id === item.created_from_credit_note_id)
-            const client = clients.find((c) => c.id === creditNote?.client_id)
-            return client?.company || client?.name_en || client?.name_zh
-          }
-          if (item?.debit_note_id) {
-            const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
-            const client = clients.find((c) => c.id === debitNote?.client_id)
-            return client?.company || client?.name_en || client?.name_zh
-          }
-          return 'N/A'
+      if (item?.created_from_credit_note_id) {
+        paymentToInsurer = -paymentToInsurer
+      }
+      const clientName = () => {
+        if (item?.created_from_renewal_id) {
+          const renewal = renewals.find((r) => r.id === item.created_from_renewal_id)
+          const client = clients.find((c) => c.id === renewal?.client_id)
+          return client?.company || client?.name_en || client?.name_zh
         }
-  
-        const policyNo = () => {
-          if (item?.created_from_renewal_id) {
-            const renewal = renewals.find((r) => r.id === item.created_from_renewal_id)
-            return renewal?.policy_no
-          }
-          if (item?.created_from_credit_note_id) {
-            const creditNote = creditNotes.find((cn) => cn.id === item.created_from_credit_note_id)
-            return creditNote?.policy_no
-          }
-          if (item?.debit_note_id) {
-            const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
-            return debitNote?.policy_no
-          }
-          return 'N/A'
+        if (item?.created_from_credit_note_id) {
+          const creditNote = creditNotes.find((cn) => cn.id === item.created_from_credit_note_id)
+          const client = clients.find((c) => c.id === creditNote?.client_id)
+          return client?.company || client?.name_en || client?.name_zh
         }
+        if (item?.debit_note_id) {
+          const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
+          const client = clients.find((c) => c.id === debitNote?.client_id)
+          return client?.company || client?.name_en || client?.name_zh
+        }
+        return 'N/A'
+      }
+
+      const policyNo = () => {
+        if (item?.created_from_renewal_id) {
+          const renewal = renewals.find((r) => r.id === item.created_from_renewal_id)
+          return renewal?.policy_no
+        }
+        if (item?.created_from_credit_note_id) {
+          const creditNote = creditNotes.find((cn) => cn.id === item.created_from_credit_note_id)
+          return creditNote?.policy_no
+        }
+        if (item?.debit_note_id) {
+          const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
+          return debitNote?.policy_no
+        }
+        return 'N/A'
+      }
       return {
         'id': item?.id,
         'DN/CN': note?.note_no || 'N/A',
