@@ -464,7 +464,7 @@ export const ListView: React.FC = () => {
             {...getColumnSearchProps({
               dataIndex: 'receipt_no',
             })}
-            {...getSortProps<DataType>('receipt_no')}
+            // {...getSortProps<DataType>('receipt_no')}
             // 複寫render方法
             render={(renderReceiptNo: number, record: DataType) => {
               //取得receipt_no, 如果沒有則顯示id
@@ -476,6 +476,11 @@ export const ListView: React.FC = () => {
                   {receipt_no ?? record?.id}
                 </Link>
               )
+            }}
+            sorter={(a: DataType, b: DataType) => {
+              const a_note = a.receipt_no ?? a.id.toString()
+              const b_note = b.receipt_no ?? b.id.toString()
+              return a_note.localeCompare(b_note)
             }}
           />
           <Table.Column
