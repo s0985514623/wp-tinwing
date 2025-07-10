@@ -239,25 +239,23 @@ export const ListView: React.FC = () => {
     ],
     mapData: (item) => {
       if (!item) return
-      const note_no = () => {
+      const fine_the_note = () => {
         if (item?.created_from_renewal_id) {
           const renewal = renewals.find((r) => r.id === item.created_from_renewal_id)
-          return renewal?.note_no ?? renewal?.id?.toString() ?? ''
+          return renewal
         } else if (item?.created_from_credit_note_id) {
           const creditNote = creditNotes.find((cn) => cn.id === item.created_from_credit_note_id)
-          return creditNote?.note_no ?? creditNote?.id?.toString() ?? ''
-        } else if (item?.debit_note_id) {
+          return creditNote
+        } else {
           const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
-          return debitNote?.note_no ?? debitNote?.id?.toString() ?? ''
+          return debitNote
         }
-        return item?.receipt_no ?? ''
       }
-      const noteDate = dayjs.unix(item?.date as number).format('YYYY-MM-DD')
-      const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
+      const the_note = fine_the_note()
       const insurerData = insurers?.find(
-        (insurer) => insurer.id === debitNote?.insurer_id,
+        (insurer) => insurer.id === the_note?.insurer_id,
       )
-      const insurerName = debitNote ? insurerData?.name : ''
+      const insurerName = the_note ? insurerData?.name : ''
       const receipt = parsedTableProps?.dataSource?.find(
         (r) => r.id === item.id,
       )
@@ -270,14 +268,16 @@ export const ListView: React.FC = () => {
             ) as TDebitNote[]
           )[0] ?? {},
         )
-      const paymentToInsurer = debitNote
+      let paymentToInsurer = the_note
         ? getInsurerPayment(
           item,
-          debitNote as TDebitNote,
+          the_note as TDebitNote,
           insurerData as TInsurer,
         )
         : 0
-
+      if (item?.created_from_credit_note_id) {
+        paymentToInsurer = -paymentToInsurer
+      }
       const clientName = () => {
         if (item?.created_from_renewal_id) {
           const renewal = renewals.find((r) => r.id === item.created_from_renewal_id)
