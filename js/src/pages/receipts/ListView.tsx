@@ -17,6 +17,7 @@ import { useColumnSearch } from 'hooks'
 import { useState } from 'react'
 import { DataType as TRenewal } from 'pages/renewals/types'
 import { DataType as TInsurer } from 'pages/insurers/types'
+import { DataType as TClient } from 'pages/clients/types'
 
 export const ListView: React.FC = () => {
   const [pageSize, setPageSize] = useState(30);
@@ -141,6 +142,7 @@ export const ListView: React.FC = () => {
       ) ?? [],
   })
   const renewals = renewalsData?.data || []
+  
    //取得所有的insurer_id
    const getInsurersIds = [...debitNotes, ...renewals, ...creditNotes]
    // Insurer 資料
@@ -152,6 +154,13 @@ export const ListView: React.FC = () => {
      },
    })
    const insurers = insurersData?.data || []
+
+   // 取得client資料
+  const { data: clientData } = useMany<TClient>({
+    resource: 'clients',
+    ids: getInsurersIds?.map((theRecord) => theRecord?.client_id || '0') ?? [],
+  })
+  const clients = clientData?.data || []
 
   const { getColumnSearchProps } = useColumnSearch<DataType>()
 
@@ -166,6 +175,7 @@ export const ListView: React.FC = () => {
       const insurerData = insurers?.find(
         (insurer) => insurer.id === note?.insurer_id,
       )
+      const insurerName = note ? insurerData?.name : ''
       const paymentToInsurer = note
         ? getInsurerPayment(
           item,
@@ -173,6 +183,40 @@ export const ListView: React.FC = () => {
           insurerData as TInsurer,
         )
         : 0
+        const clientName = () => {
+          if (item?.created_from_renewal_id) {
+            const renewal = renewals.find((r) => r.id === item.created_from_renewal_id)
+            const client = clients.find((c) => c.id === renewal?.client_id)
+            return client?.company || client?.name_en || client?.name_zh
+          }
+          if (item?.created_from_credit_note_id) {
+            const creditNote = creditNotes.find((cn) => cn.id === item.created_from_credit_note_id)
+            const client = clients.find((c) => c.id === creditNote?.client_id)
+            return client?.company || client?.name_en || client?.name_zh
+          }
+          if (item?.debit_note_id) {
+            const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
+            const client = clients.find((c) => c.id === debitNote?.client_id)
+            return client?.company || client?.name_en || client?.name_zh
+          }
+          return 'N/A'
+        }
+  
+        const policyNo = () => {
+          if (item?.created_from_renewal_id) {
+            const renewal = renewals.find((r) => r.id === item.created_from_renewal_id)
+            return renewal?.policy_no
+          }
+          if (item?.created_from_credit_note_id) {
+            const creditNote = creditNotes.find((cn) => cn.id === item.created_from_credit_note_id)
+            return creditNote?.policy_no
+          }
+          if (item?.debit_note_id) {
+            const debitNote = debitNotes.find((dn) => dn.id === item.debit_note_id)
+            return debitNote?.policy_no
+          }
+          return 'N/A'
+        }
       return {
         'id': item?.id,
         'DN/CN': note?.note_no || 'N/A',
@@ -182,14 +226,17 @@ export const ListView: React.FC = () => {
         'Payment Date': dayjs
           .unix(item?.payment_date as number)
           .format('YYYY-MM-DD'),
+        'Client Name': clientName(),
+        'Policy No': policyNo(),
+        'Insurer': insurerName,
         'Payment Method': item?.payment_method || 'N/A',
         'Remark': item?.remark || 'N/A',
         'Premium': item?.premium || 'N/A',
         'Payment Receiver Account': item?.payment_receiver_account || 'N/A',
         'Is Paid': item?.is_paid ? 'Yes' : 'No',
         'Payment to Insurer': paymentToInsurer.toLocaleString() || 'N/A',
-        'Pay to Insurer By Bank': item?.payment_receiver_account || 'N/A',
-        'Pay to Insurer By Cheque': item?.cheque_no || 'N/A',
+        'Pay to Insurer By Bank': item?.pay_to_insurer_by_bank || 'N/A',
+        'Pay to Insurer By Cheque': item?.pay_to_insurer_by_cheque || 'N/A',
         'Insurer_Invoice_No': item?.pay_to_insurer_by_invoice || 'N/A',
         'Payment Date(to Insurer)': dayjs
           .unix(item?.pay_to_insurer_by_payment_date as number)
