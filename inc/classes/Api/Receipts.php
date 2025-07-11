@@ -245,6 +245,13 @@ final class Receipts {
 		if ( is_wp_error( $post_id ) ) {
 			return new \WP_Error( 'error_creating_post', 'Unable to create post', [ 'status' => 500 ] );
 		}
+		//創建成功後根據debit_note_id或renewal_id更新debit_note 或renewal的receipt_id
+		if($params['debit_note_id']&& empty($params['created_from_renewal_id'])){
+			update_post_meta($params['debit_note_id'], 'receipt_id', $post_id);
+		}
+		if($params['created_from_renewal_id']){
+			update_post_meta($params['created_from_renewal_id'], 'receipt_id', $post_id);
+		}
 		// 更新文章的 meta 資料
 		foreach (PostType\Receipts::instance()->get_meta() as $key => $value) {
 			if (isset($params[ $key ])) {
