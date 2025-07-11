@@ -22,7 +22,7 @@ import { RemarkTextArea } from 'components/RemarkTextArea'
 import { round } from 'lodash-es'
 
 export const ShowView: React.FC<IResourceComponentsProps> = () => {
-  const toWords = new ToWords()
+  const toWords = new ToWords({localeCode:'en-US'})
   const { queryResult } = useShow<DataType>()
   const receiptData = queryResult?.data?.data as DataType
   const isLoading = queryResult?.isLoading

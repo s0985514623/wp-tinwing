@@ -40,7 +40,7 @@ import { RemarkTextArea } from 'components/RemarkTextArea'
 
 export const CreateView: React.FC<IResourceComponentsProps> = () => {
   const navigate = useNavigate()
-  const toWords = new ToWords()
+  const toWords = new ToWords({localeCode:'en-US'})
   const { formProps, saveButtonProps, form, onFinish } = useForm({
     //使新增後跳轉到clientsSummary
     redirect: false,

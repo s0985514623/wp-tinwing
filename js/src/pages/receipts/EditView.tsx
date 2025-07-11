@@ -39,7 +39,7 @@ import { RemarkTextArea } from 'components/RemarkTextArea'
 import { round } from 'lodash-es'
 
 export const EditView: React.FC<IResourceComponentsProps> = () => {
-  const toWords = new ToWords()
+  const toWords = new ToWords({localeCode:'en-US'})
   const { formProps, saveButtonProps, form, queryResult } = useForm()
   const receiptData = queryResult?.data?.data as DataType
   const isFromDebitNote = Boolean(receiptData?.debit_note_id)
