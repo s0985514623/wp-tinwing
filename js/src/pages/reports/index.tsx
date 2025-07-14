@@ -14,7 +14,7 @@ const items: TabsProps['items'] = [
     {
         key: '2',
         label: 'Monthly Outstanding Payment',
-        children: <Template<TQuotation & TRequiredProps> resource="quotations" />,
+        children: <Template<TQuotation & TRequiredProps> resource="debit_notes/not_receipt" />,
     },
     {
         key: '3',
