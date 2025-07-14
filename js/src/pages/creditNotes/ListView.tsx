@@ -311,6 +311,9 @@ export const ListView: React.FC = () => {
       const receipt_no = theReceipt?.receipt_no || 'N/A'
       const receipt_date = theReceipt?.date ? dayjs.unix(theReceipt?.date as number).format('YYYY-MM-DD') : 'N/A'
       const payment_date = theReceipt?.payment_date ? dayjs.unix(theReceipt?.payment_date as number).format('YYYY-MM-DD') : 'N/A'
+
+      // 取得totalPremium
+      const totalPremium = getTotalPremiumByDebitNote(item)
       return {
         id: item?.id,
         'DN/CN': item?.note_no,
@@ -321,7 +324,7 @@ export const ListView: React.FC = () => {
         'Client No': theClient?.client_number || 'N/A',
         'Client': display_name,
         'Insurer': insurer_name,
-        'Premium': item?.premium || 'N/A',
+        'Premium': totalPremium || 'N/A',
         'Insurer Fee Percent': item?.insurer_fee_percent || 'N/A',
         'Payment to Insurer': paymentToInsurer,
         'Remark': item?.remark || 'N/A',
