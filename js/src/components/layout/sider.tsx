@@ -44,9 +44,9 @@ export const Sider: React.FC<RefineLayoutSiderProps> = ({ Title: TitleFromProps,
         return tree.map((item: ITreeMenu) => {
             const { icon, label, route, key, name, children, parentName, meta: theMeta, options } = item;
             // TODO : 未完成先隱藏reportsDropdown
-            if(name === 'reportsDropdown'){
-                return <></>
-            }
+            // if(name === 'reportsDropdown'){
+            //     return <></>
+            // }
             if (children.length > 0) {
                 return (
                     <CanAccess
