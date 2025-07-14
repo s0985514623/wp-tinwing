@@ -15,7 +15,7 @@ export const getTemplateText = (
         case 'general':
             return {
                 zh: '一般保險',
-                en: 'Insurance',
+                en: 'General Insurance',
             };
         case 'shortTerms':
             return {
@@ -30,7 +30,7 @@ export const getTemplateText = (
         default:
             return {
                 zh: '一般保險',
-                en: 'Insurance',
+                en: 'General Insurance',
             };
     }
 };
