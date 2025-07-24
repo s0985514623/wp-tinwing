@@ -6,7 +6,7 @@ import { round } from 'lodash-es';
 const EditMetaMotor = () => {
     const [insurerFee, setInsurerFee] = useState(0);
     const form = Form.useFormInstance();
-    const watchPremium = Form.useWatch(['premium'], form) || 0;
+    const watchPremium = Number(Form.useWatch(['premium'], form)) || 0;
     const watchLs = Form.useWatch(['motor_attr', 'ls'], form) || 0;
     const watchNcb = Form.useWatch(['motor_attr', 'ncb'], form) || 0;
     const watchMib = Form.useWatch(['motor_attr', 'mib'], form) || 0;
@@ -39,7 +39,7 @@ const EditMetaMotor = () => {
     // const insurerFee = round(grossPremium * (watchInsurerFeePercent / 100), 2);
     const insurerTotalFee = mibValue + watchExtraValue + round(grossPremium * (watchInsurerFeePercent / 100), 2);
     useEffect(() => {
-        setInsurerFee(round(grossPremium * (watchInsurerFeePercent / 100),2));
+        setInsurerFee(round(watchPremium * (watchInsurerFeePercent / 100),2));
     }, [watchInsurerFeePercent]);
 
     const handleChange = (value: number | null) => {
