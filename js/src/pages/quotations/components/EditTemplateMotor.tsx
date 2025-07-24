@@ -166,7 +166,13 @@ const EditTemplateMotor = () => {
                             <div className="th">保障範圍 Coverage</div>
                             <div className="td">
                                 <Form.Item noStyle name={['motor_attr', 'coverage']}>
-                                    <Input size="small" />
+                                    <Select
+                                        options={[{ label: 'COMPREHENSIVE', value: 'COMPREHENSIVE' },
+                                        { label: 'THIRD PARTY ONLY', value: 'THIRD PARTY ONLY' },
+                                        { label: 'OTHERS', value: 'OTHERS' }]}
+                                        size="small"
+                                        className="w-full"
+                                    />
                                 </Form.Item>
                             </div>
                         </div>

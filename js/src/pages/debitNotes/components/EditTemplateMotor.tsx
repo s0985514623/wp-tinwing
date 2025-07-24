@@ -21,7 +21,7 @@ const EditTemplateMotor = () => {
     const form = Form.useFormInstance();
     const [currency, setCurrency] = useState<string>('HKD');
     const [sumInsuredAmount, setSumInsuredAmount] = useState<number | null>(null);
-    
+
     const watchPremium = Form.useWatch(['premium'], form) || 0;
     const watchLs = Form.useWatch(['motor_attr', 'ls'], form) || 0;
     const watchNcb = Form.useWatch(['motor_attr', 'ncb'], form) || 0;
@@ -78,7 +78,7 @@ const EditTemplateMotor = () => {
 
     // 監聽 sum_insured 欄位變化來解析現有值
     const watchSumInsured = Form.useWatch(['sum_insured'], form);
-    
+
     // 解析現有的 sum_insured 值
     useEffect(() => {
         if (watchSumInsured && typeof watchSumInsured === 'string') {
@@ -166,11 +166,17 @@ const EditTemplateMotor = () => {
                             <div className="th">保障範圍 Coverage</div>
                             <div className="td">
                                 <Form.Item noStyle name={['motor_attr', 'coverage']}>
-                                    <Input size="small" />
+                                    <Select
+                                        options={[{ label: 'COMPREHENSIVE', value: 'COMPREHENSIVE' },
+                                        { label: 'THIRD PARTY ONLY', value: 'THIRD PARTY ONLY' },
+                                        { label: 'OTHERS', value: 'OTHERS' }]}
+                                        size="small"
+                                        className="w-full"
+                                    />
                                 </Form.Item>
                             </div>
                         </div>
-                        
+
                         <div className="tr">
                             <div className="th">製造年份 Manufacturing Year</div>
                             <div className="td">
