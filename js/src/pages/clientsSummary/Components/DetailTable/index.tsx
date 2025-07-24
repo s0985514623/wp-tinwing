@@ -21,6 +21,9 @@ const DetailTable: FC<{ record: ClientsSummaryType; term?: TTerm; renewals?: TRe
   const postType = rawRecord?.post_type
   const rawRecordId = rawRecord?.id
 
+  //取得路徑
+  const postTypePath = postType === 'debit_notes' ? 'debitNotes' : postType === 'renewals' ? 'renewals' : 'creditNotes'
+
   //確認這個rawRecordId有沒有創建過renewals
   const isCreatedRenewal = Boolean(renewals)
 
@@ -241,7 +244,7 @@ const DetailTable: FC<{ record: ClientsSummaryType; term?: TTerm; renewals?: TRe
               )}
               <Link
                 to={
-                  `/${postType}/show/${rawRecordId}`
+                  `/${postTypePath}/show/${rawRecordId}`
                 }
               >
                 <Button type="default" size="small" className="mr-2">
