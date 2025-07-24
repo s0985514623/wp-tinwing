@@ -26,6 +26,7 @@ import logo from 'assets/images/logo.jpg'
 import ShowDebitNoteHeader from './components/ShowDebitNoteHeader'
 import { RemarkTextArea } from 'components/RemarkTextArea'
 import { useNavigate } from 'react-router-dom'
+import ShowTemplateMarine from './components/ShowTemplateMarine'
 
 export const ShowView: React.FC<IResourceComponentsProps> = () => {
   const navigate = useNavigate()
@@ -223,6 +224,9 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
         {debitNoteData?.template === 'package' && (
           <ShowTemplatePackage data={debitNoteData} />
         )}
+        {debitNoteData?.template === 'marineInsurance' && (
+          <ShowTemplateMarine data={debitNoteData} />
+        )}
         <DetailFooter />
       </div>
       <Alert
@@ -234,6 +238,9 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       <RemarkTextArea data={debitNoteData} model={'show'} />
       {debitNoteData?.template === 'general' && <ShowMetaGeneral />}
       {debitNoteData?.template === 'motor' && <ShowMetaMotor />}
+      {debitNoteData?.template === 'shortTerms' && <ShowMetaGeneral />}
+      {debitNoteData?.template === 'package' && <ShowMetaGeneral />}
+      {debitNoteData?.template === 'marineInsurance' && <ShowMetaGeneral />}
     </Show>
   )
 }

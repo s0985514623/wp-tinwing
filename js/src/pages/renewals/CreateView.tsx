@@ -7,7 +7,8 @@ import EditTemplateGeneral from './components/EditTemplateGeneral'
 import EditTemplateMotor from './components/EditTemplateMotor'
 import EditTemplateShortTerms from './components/EditTemplateShortTerms'
 import EditTemplatePackage from './components/EditTemplatePackage'
-import DebitNoteHeader from './components/EditDebitNoteHeader'
+import EditTemplateMarine from './components/EditTemplateMarine'
+import DebitNoteHeader from './components/EditDebitNoteHeader' 
 import DetailFooter from 'components/DetailFooter'
 import EditMetaMotor from './components/EditMetaMotor'
 import EditMetaGeneral from './components/EditMetaGeneral'
@@ -179,7 +180,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
       //基本資料
       setSelectedClientId(data.data.client_id as number)
       setSelectedTemplate(
-        data.data.template as 'general' | 'motor' | 'shortTerms' | 'package',
+        data.data.template as 'general' | 'motor' | 'shortTerms' | 'package' | 'marineInsurance',
       )
       form.setFieldValue(['template'], data.data.template)
       form.setFieldValue(['client_id'], data.data.client_id)
@@ -250,7 +251,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
       //基本資料
       setSelectedClientId(debitNoteResult.data.client_id as number)
       setSelectedTemplate(
-        debitNoteResult.data.template as 'general' | 'motor' | 'shortTerms' | 'package',
+        debitNoteResult.data.template as 'general' | 'motor' | 'shortTerms' | 'package' | 'marineInsurance',
       )
       form.setFieldValue(['template'], debitNoteResult.data.template)
       form.setFieldValue(['client_id'], debitNoteResult.data.client_id)
@@ -312,6 +313,12 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
       form.setFieldValue(['package_content'], debitNoteResult.data?.package_content)
       //備註
       form.setFieldValue(['remark'], debitNoteResult.data.remark)
+      //marineInsurance
+      form.setFieldValue(['port_from'], debitNoteResult.data.port_from)
+      form.setFieldValue(['port_to'], debitNoteResult.data.port_to)
+      form.setFieldValue(['vessel'], debitNoteResult.data.vessel)
+      form.setFieldValue(['good'], debitNoteResult.data.good)
+      form.setFieldValue(['departure'], debitNoteResult.data.departure)
     }
   }, [debitNoteResult])
   //覆寫onFinish改變date的格式
@@ -449,6 +456,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         {selectedTemplate === 'motor' && <EditTemplateMotor />}
         {selectedTemplate === 'shortTerms' && <EditTemplateShortTerms />}
         {selectedTemplate === 'package' && <EditTemplatePackage />}
+        {selectedTemplate === 'marineInsurance' && <EditTemplateMarine />}
         <DetailFooter />
         <Alert
           className="my-24"
@@ -461,6 +469,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         {selectedTemplate === 'motor' && <EditMetaMotor />}
         {selectedTemplate === 'shortTerms' && <EditMetaGeneral />}
         {selectedTemplate === 'package' && <EditMetaPackage />}
+        {selectedTemplate === 'marineInsurance' && <EditMetaGeneral />}
       </Form>
     </Create>
   )

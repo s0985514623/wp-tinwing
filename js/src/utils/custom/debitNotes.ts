@@ -27,6 +27,11 @@ export const getTemplateText = (
                 zh: '',
                 en: 'Package',
             };
+        case 'marineInsurance':
+            return {
+                zh: '海上保險',
+                en: 'Marine Insurance',
+            };
         default:
             return {
                 zh: '一般保險',

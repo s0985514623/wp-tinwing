@@ -16,6 +16,7 @@ import EditTemplateGeneral from './components/EditTemplateGeneral'
 import EditTemplateMotor from './components/EditTemplateMotor'
 import EditTemplateShortTerms from './components/EditTemplateShortTerms'
 import EditTemplatePackage from './components/EditTemplatePackage'
+import EditTemplateMarine from './components/EditTemplateMarine'
 import DebitNoteHeader from './components/EditDebitNoteHeader'
 import DetailFooter from 'components/DetailFooter'
 import EditMetaMotor from './components/EditMetaMotor'
@@ -287,6 +288,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         {selectedTemplate === 'motor' && <EditTemplateMotor />}
         {selectedTemplate === 'shortTerms' && <EditTemplateShortTerms />}
         {selectedTemplate === 'package' && <EditTemplatePackage />}
+        {selectedTemplate === 'marineInsurance' && <EditTemplateMarine />}
         <DetailFooter />
         <Alert
           className="my-24"
@@ -299,6 +301,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
         {selectedTemplate === 'motor' && <EditMetaMotor />}
         {selectedTemplate === 'shortTerms' && <EditMetaGeneral />}
         {selectedTemplate === 'package' && <EditMetaPackage />}
+        {selectedTemplate === 'marineInsurance' && <EditMetaGeneral />}
       </Form>
     </Create>
   )

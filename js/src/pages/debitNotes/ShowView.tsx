@@ -7,6 +7,7 @@ import ShowTemplateGeneral from './components/ShowTemplateGeneral'
 import ShowTemplateMotor from './components/ShowTemplateMotor'
 import ShowTemplateShortTerms from './components/ShowTemplateShortTerms'
 import ShowTemplatePackage from './components/ShowTemplatePackage'
+import ShowTemplateMarine from './components/ShowTemplateMarine'
 import DetailFooter from 'components/DetailFooter'
 import ShowMetaMotor from './components/ShowMetaMotor'
 import ShowMetaGeneral from './components/ShowMetaGeneral'
@@ -192,6 +193,9 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
         {debitNoteData?.template === 'package' && (
           <ShowTemplatePackage data={debitNoteData} />
         )}
+        {debitNoteData?.template === 'marineInsurance' && (
+          <ShowTemplateMarine data={debitNoteData} />
+        )}
         <DetailFooter />
       </div>
       <Alert
@@ -205,6 +209,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       {debitNoteData?.template === 'motor' && <ShowMetaMotor />}
       {debitNoteData?.template === 'shortTerms' && <ShowMetaGeneral />}
       {debitNoteData?.template === 'package' && <ShowMetaGeneral />}
+      {debitNoteData?.template === 'marineInsurance' && <ShowMetaGeneral />}
     </Show>
   )
 }

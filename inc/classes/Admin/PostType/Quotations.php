@@ -293,6 +293,36 @@ final class Quotations {
 			'meta_type'         => 'integer',
 			'sanitize_callback' => 'absint',
 		],
+		'port_from' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
+		'port_to' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
+		'vessel' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
+		'good' =>[	
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'text',
+			'meta_type'         => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+		],
+		'departure' =>[
+			'display_function'  => 'render_meta_box',
+			'input_type'        => 'number',
+			'meta_type'         => 'integer',
+			'sanitize_callback' => 'absint',
+		],
 	];
 	/**
 	 * 建構子

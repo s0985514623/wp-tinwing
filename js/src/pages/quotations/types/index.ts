@@ -21,9 +21,14 @@ export const templates = [
         value: 'package',
         color: '#000000',
     },
+    {
+        label: 'Marine Insurance',
+        value: 'marineInsurance',
+        color: '#000000',
+    },
 ];
 
-export const ZTemplates = z.enum(['general', 'motor', 'shortTerms', 'package']);
+export const ZTemplates = z.enum(['general', 'motor', 'shortTerms', 'package', 'marineInsurance']);
 export type TTemplate = z.infer<typeof ZTemplates>;
 
 const ZMotorAttr = z
@@ -84,6 +89,11 @@ export const ZDataType = z
         extra_field2: ZExtraField,
         receipt_id: z.number().nullable(),
         is_archived: z.boolean().nullable(),
+        port_from: z.string().nullable(),
+        port_to: z.string().nullable(),
+        vessel: z.string().nullable(),
+        good: z.string().nullable(),
+        departure: z.number().nullable(),
     })
     .partial();
 

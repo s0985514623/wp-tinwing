@@ -26,6 +26,7 @@ import logo from 'assets/images/logo.jpg'
 import ShowDebitNoteHeader from './components/ShowDebitNoteHeader'
 import { RemarkTextArea } from 'components/RemarkTextArea'
 import { useNavigate } from 'react-router-dom'
+import ShowTemplateMarine from './components/ShowTemplateMarine'
 
 export const ShowView: React.FC<IResourceComponentsProps> = () => {
   const navigate = useNavigate()
@@ -124,7 +125,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       )}
     >
       <ShowDebitNoteHeader template={debitNoteData?.template || ''} />
-      <div ref={printRef} className={`${templateText.en=='Motor Insurance'?'Motor':''} w-full print:absolute print:top-0 print:left-0`}>
+      <div ref={printRef} className={`${templateText.en == 'Motor Insurance' ? 'Motor' : ''} w-full print:absolute print:top-0 print:left-0`}>
         <div className="table table_td-flex-1 w-full">
           <div className="w-full mb-4 flex justify-between border-b-2 border-solid border-black pb-6 px-4">
             <div className="w-full">
@@ -158,7 +159,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                 )) || ' '}
               </div>
             </Col>
-            <Col span={10 }>
+            <Col span={10}>
               <div className="table table_td-flex-1 w-full template64">
                 <div className="tr">
                   <div className="th">
@@ -222,6 +223,9 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
         {debitNoteData?.template === 'package' && (
           <ShowTemplatePackage data={debitNoteData} />
         )}
+        {debitNoteData?.template === 'marineInsurance' && (
+          <ShowTemplateMarine data={debitNoteData} />
+        )}
         <DetailFooter />
       </div>
       <Alert
@@ -233,6 +237,9 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       <RemarkTextArea data={debitNoteData} model={'show'} />
       {debitNoteData?.template === 'general' && <ShowMetaGeneral />}
       {debitNoteData?.template === 'motor' && <ShowMetaMotor />}
+      {debitNoteData?.template === 'shortTerms' && <ShowMetaGeneral />}
+      {debitNoteData?.template === 'package' && <ShowMetaGeneral />}
+      {debitNoteData?.template === 'marineInsurance' && <ShowMetaGeneral />}
     </Show>
   )
 }
