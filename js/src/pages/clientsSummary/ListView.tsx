@@ -1,11 +1,12 @@
-import { useMany, HttpError, CrudFilters, CrudSorting } from '@refinedev/core'
+import { useMany, HttpError, CrudFilters, CrudSorting, useList } from '@refinedev/core'
 import { useTable } from '@refinedev/antd'
 import { Table } from 'antd'
 import { DataType } from 'pages/debitNotes/types'
 import { DataType as TClient, defaultClient } from 'pages/clients/types'
 import { DataType as TTerm } from 'pages/terms/types'
 import { DataType as TRenewals } from 'pages/renewals/types'
-import { getSortProps } from 'utils'
+import { DataType as TReceipts } from 'pages/receipts/types'
+import { getSortProps, getTotalPremiumByDebitNote } from 'utils'
 import dayjs from 'dayjs'
 import DetailTable from './Components/DetailTable'
 import { useColumnSearch } from 'hooks'
@@ -137,46 +138,21 @@ const termOptions = {
     ]
     return filters as CrudFilters
   },
-	pagination:{
-		pageSize:-1,
-		mode: "off" as const,
-	}
+  pagination: {
+    pageSize: -1,
+    mode: "off" as const,
+  }
 }
+export type ClientsSummaryType = DataType & TRenewals & { post_type: string };
 
 export const ListView: React.FC = () => {
   const [pageSize, setPageSize] = useState(30);
   const [current, setCurrent] = useState(1);
-  //取得renewals的資料
-  const { tableProps: renewalData, searchFormProps: renewalSearchForm } =
-    useTable<TRenewals, HttpError>({
-      resource: 'renewals',
-      ...termOptions,
-    })
-  // console.log('🚀 ~ renewalData:', renewalData);
-  //取得debit_notes的資料
-  const { tableProps, searchFormProps } = useTable<DataType, HttpError>({
-    resource: 'debit_notes',
+  //取得clients_summary的資料
+  const { tableProps: clientsSummaryData, searchFormProps: clientsSummarySearchForm } = useTable<ClientsSummaryType, HttpError>({
+    resource: 'clients_summary',
     ...termOptions,
   })
-  // console.log('🚀 ~ tableProps:', tableProps);
-  //合併renewals 與 debit_notes資料
-  const formatTableData = [
-    ...(renewalData?.dataSource ?? []),
-    ...(tableProps?.dataSource ?? []),
-  ]
-  // console.log('🚀 ~ formatTableData:', formatTableData)
-  const formatSearchFormProps = {
-    ...renewalSearchForm,
-    ...searchFormProps,
-    onFinish: async (values: any) => {
-      if (renewalSearchForm?.onFinish && searchFormProps?.onFinish) {
-        renewalSearchForm?.onFinish(values)
-        searchFormProps?.onFinish(values)
-      }
-    },
-  }
-  const debitNotesResult = tableProps?.dataSource
-  const debitNotes = (debitNotesResult || []) as DataType[]
 
   const templatesOptions = [
     {
@@ -201,50 +177,74 @@ export const ListView: React.FC = () => {
     // },
   ]
 
-  const { data: termData, isLoading: _termIsLoading } = useMany({
+  const { data: termData, isLoading: termIsLoading } = useMany({
     resource: 'terms',
-    ids: debitNotes?.map((theRecord) => theRecord?.term_id || '0') ?? [],
+    ids: clientsSummaryData?.dataSource?.map((theRecord) => theRecord?.term_id || '0') ?? [],
     queryOptions: {
-      enabled: debitNotes.length > 0,
+      enabled: (clientsSummaryData?.dataSource?.length ?? 0) > 0,
     },
   })
   const terms = (termData?.data || []) as TTerm[]
-
+  const InsuranceClassOptions =terms?.map((item) => ({
+    text: item.name,
+    value: item.id,
+  }))
   const { data: clientData, isLoading: clientIsLoading } = useMany({
     resource: 'clients',
-    ids: formatTableData?.map((theRecord) => theRecord?.client_id || '0') ?? [],
+    ids: clientsSummaryData?.dataSource?.map((theRecord) => theRecord?.client_id || '0') ?? [],
     queryOptions: {
-      enabled: formatTableData.length > 0,
+      enabled: (clientsSummaryData?.dataSource?.length ?? 0) > 0,
     },
   })
   const clients = (clientData?.data || []) as TClient[]
+
+  const { data: renewalData, isLoading: _renewalIsLoading } = useList<TRenewals>({
+    resource: 'renewals',
+    pagination: {
+      pageSize: -1,
+    },
+  })
+  const renewals = (renewalData?.data || []) as TRenewals[]
+
+  const {data:receiptsData,isLoading:_receiptsIsLoading} = useMany({
+    resource: 'receipts',
+    ids: clientsSummaryData?.dataSource?.map((theRecord) => theRecord?.receipt_id || '0') ?? [],
+    queryOptions: {
+      enabled: (clientsSummaryData?.dataSource?.length ?? 0) > 0,
+    },
+  })
+  const receipts = (receiptsData?.data || []) as TReceipts[]
 
   const { getColumnSearchProps } = useColumnSearch<DataType>()
 
   return (
     <>
-      <Filter formProps={formatSearchFormProps} />
+      <Filter formProps={clientsSummarySearchForm} />
       <Table
         {...{
-          dataSource: formatTableData,
+          dataSource: clientsSummaryData?.dataSource,
           expandable: {
             expandedRowRender: (record: any) => {
               const theTerm = terms.find((term) => term.id === record.term_id)
-              return <DetailTable record={record} term={theTerm} />
+              const theReceipt = receipts.find((receipt) => receipt.id === record.receipt_id)
+              const theRenewal = renewals.find((renewal) => {
+                return renewal.created_from_renewal_id === record.id || renewal.debit_note_id === record.id
+              })
+              return <DetailTable record={record} term={theTerm} renewals={theRenewal} receipts={theReceipt} />
             },
           },
         }}
-				pagination={{
-					current: current,
+        pagination={{
+          current: current,
           pageSize: pageSize,
-          total: formatTableData?.length || 0,
+          total: clientsSummaryData?.dataSource?.length || 0,
           showSizeChanger: true,
           onChange: (current, pageSize) => {
             setCurrent(current);
             setPageSize(pageSize);
           },
           showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-				}}
+        }}
         rowKey={(record) => `${record.date}-${record.id}`}
         size="middle"
       >
@@ -259,21 +259,19 @@ export const ListView: React.FC = () => {
           {...getSortProps<DataType>('date')}
         />
         <Table.Column
-          dataIndex="template"
-          title="Type"
-          render={(value) =>
-            templatesOptions.find((item) => item.value === value)?.text
-          }
-          filters={templatesOptions}
+          dataIndex="term_id"
+          title="Class"
+          filters={InsuranceClassOptions}
           onFilter={(value, record: DataType) => {
-            if (value === 'others')
-              return (
-                record?.template !== 'general' &&
-                record?.template !== 'motor' &&
-                record?.template !== 'shortTerms'
-              )
-            return (record?.template || undefined) === value
+            return (record?.term_id || undefined) === value
           }}
+          render={(term_id: number) =>
+            termIsLoading ? (
+              <>Loading...</>
+            ) : (
+              termData?.data?.find((theTerm) => theTerm.id === term_id)?.name
+            )
+          }
         />
         <Table.Column
           dataIndex="note_no"
@@ -334,6 +332,15 @@ export const ListView: React.FC = () => {
             },
           })}
         />
+        <Table.Column
+          dataIndex="premium"
+          title="PREMIUM"
+          sorter={(a, b) => (Number(a?.premium) || 0) - (Number(b?.premium) || 0)}
+          render={(_id: number, record: ClientsSummaryType) => {
+            const premium = getTotalPremiumByDebitNote(record)
+            return Number(premium).toLocaleString()
+          }}
+        />
         {/* <Table.Column
                     dataIndex="statusFiled"
                     title="Status Filed"
@@ -369,7 +376,7 @@ export const ListView: React.FC = () => {
           }
           {...getSortProps<DataType>('period_of_insurance_to')}
         />
-        
+
       </Table>
     </>
   )

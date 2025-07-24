@@ -1,98 +1,85 @@
 import { FC } from 'react'
 import { Table, Button } from 'antd'
 import { getTotalPremiumByDebitNote } from 'utils'
-import { DataType } from 'pages/debitNotes/types'
-import { DataType as TRenewals } from 'pages/renewals/types'
+import { ClientsSummaryType } from 'pages/clientsSummary/ListView'
 import { DataType as TTerm } from 'pages/terms/types'
+import { DataType as TRenewals } from 'pages/renewals/types'
+import { DataType as TReceipts } from 'pages/receipts/types'
 // import dayjs from 'dayjs';
 import { Link } from 'react-router-dom'
-import { useUpdate, useDelete, useList ,useInvalidate} from '@refinedev/core'
+import { useUpdate, useDelete, useInvalidate} from '@refinedev/core'
 
-const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
+const DetailTable: FC<{ record: ClientsSummaryType; term?: TTerm; renewals?: TRenewals; receipts?: TReceipts }> = ({
   record: rawRecord,
   term,
+  renewals,
+  receipts,
 }) => {
 	// 用來手動刷新資料的 Hook
 	const invalidate = useInvalidate();
-  //確認這個rawRecord是debitNote還是renewal
-	//renewal
-  const isCreatedFromDebitNote = Boolean(rawRecord?.debit_note_id)
-  const isCreatedFromRenewal = Boolean(rawRecord?.created_from_renewal_id)
-	//debitNote
-	const isDebitNote = !isCreatedFromDebitNote&& !isCreatedFromRenewal
-  const rawRecordId = rawRecord?.id ?? 0
+  //取得文章類型
+  const postType = rawRecord?.post_type
+  const rawRecordId = rawRecord?.id
 
   //確認這個rawRecordId有沒有創建過renewals
-  const { data: createdFromRenewals } = useList({
-    resource: 'renewals',
-    pagination: {
-      pageSize: -1,
-    },
-  })
-  const createdFromRenewal =
-    createdFromRenewals?.data.filter((element) => {
-			// 當rawRecord有以下條件時，則代表本身是renewal，所以要比對的是created_from_renewal_id
-      if (isCreatedFromRenewal||isCreatedFromDebitNote) {
-        return parseInt(element?.created_from_renewal_id) == rawRecordId
-      } else {
-        return parseInt(element?.debit_note_id) == rawRecordId
-      }
-    }) || []
-
+  const isCreatedRenewal = Boolean(renewals)
 
   //確認這個rawRecordId有沒有創建過receipts
-  const { data: createdFromReceipts } = useList({
-    resource: 'receipts',
-    pagination: {
-      pageSize: -1,
-    },
-  })
-  const createdFromReceipt =
-    createdFromReceipts?.data.filter((element) => {
-			// 當rawRecord有以下條件時，則代表本身是renewal，所以要比對的是created_from_renewal_id
-      if (isCreatedFromRenewal||isCreatedFromDebitNote) {
-        return parseInt(element?.created_from_renewal_id) == rawRecordId
-      } else {
-        return parseInt(element?.debit_note_id) == rawRecordId
-      }
-    }) || []
+  const isCreatedReceipt = Boolean(receipts)
+ 
   //更新Archive方法
   const { mutate: updateArchive } = useUpdate()
   const handleArchive = async () => {
     // console.log('click archive');
     updateArchive({
-      resource: isCreatedFromDebitNote||isCreatedFromRenewal ? 'renewals' : 'debit_notes',
+      resource: postType,
       id: rawRecordId,
       values: {
         is_archived: true,
       },
-    })
+    },
+		{
+			onSuccess: (data, variables, context) => {
+				invalidate({
+					resource: 'clients_summary',
+					invalidates: ['list'],
+				})
+			},
+		})
   }
   //還原Current方法
   const { mutate: updateCurrent } = useUpdate()
   const handleCurrent = async () => {
     // console.log('click archive');
     updateCurrent({
-      resource: isCreatedFromDebitNote||isCreatedFromRenewal ? 'renewals' : 'debit_notes',
+      resource: postType,
       id: rawRecordId,
       values: {
         is_archived: false,
       },
-    })
+    },
+		{
+			onSuccess: (data, variables, context) => {
+				invalidate({
+					resource: 'clients_summary',
+					invalidates: ['list'],
+				})
+			},
+		})
   }
   //刪除方法
   const { mutate: deleteRecord } = useDelete()
   const handleDelete = async () => {
     // console.log('click delete');
     deleteRecord({
-      resource: isCreatedFromDebitNote||isCreatedFromRenewal ? 'renewals' : 'debit_notes',
-      id: rawRecordId,
+      resource: postType,
+      id: rawRecordId ?? 0,
     },
 		{
 			onSuccess: (data, variables, context) => {
 				// invalidate
 				invalidate({
-					resource: isCreatedFromDebitNote||isCreatedFromRenewal ? 'renewals' : 'debit_notes',
+					resource: 'clients_summary',
 					invalidates: ['list'],
 				})
 			},
@@ -109,7 +96,7 @@ const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
         className="mb-8"
       >
         {/* <Table.Column dataIndex="note_no" title="Note No." />*/}
-        <Table.Column
+        {/* <Table.Column
           dataIndex="term_id"
           title="Class"
           render={() => term?.name || ''}
@@ -118,11 +105,11 @@ const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
         <Table.Column
           dataIndex="premium"
           title="PREMIUM"
-          render={(_id: number, record: DataType | TRenewals) => {
+          render={(_id: number, record: ClientsSummaryType) => {
             const premium = getTotalPremiumByDebitNote(record)
             return Number(premium).toLocaleString()
-          }}
-        />
+          }} */}
+        {/* /> */}
         {/* <Table.Column dataIndex="sum_insured" title="Sum Insured" />
                 <Table.Column
                     dataIndex="motor_attr"
@@ -142,7 +129,7 @@ const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
 
         <Table.Column
           width={380}
-          align="center"
+          align="right"
           dataIndex="action"
           title=""
           render={() => (
@@ -167,22 +154,22 @@ const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
                 </Button>
               )}
               {/* 如果是debitNote情況 */}
-              {isDebitNote && createdFromRenewal?.length === 0 && (
+              {postType === 'debit_notes'&& !isCreatedRenewal && (
                 <Link to="/renewals/create" state={{ debit_note_id:rawRecordId}}>
                   <Button type="default" size="small" className="mr-2">
                     續保
                   </Button>
                 </Link>
               )}
-              {isDebitNote && createdFromRenewal?.length > 0 && (
-                <Link to={`/renewals/show/${createdFromRenewal?.[0]?.id}`}>
+              {postType === 'debit_notes'&& isCreatedRenewal && (
+                <Link to={`/renewals/show/${renewals?.id}`}>
                   <Button type="primary" size="small" className="mr-2">
                     已續保
                   </Button>
                 </Link>
               )}
               {/* 如果是renewal情況 */}
-              {(isCreatedFromDebitNote||isCreatedFromRenewal) && createdFromRenewal.length === 0 && (
+              {postType === 'renewals' && !isCreatedRenewal && (
                 <Link
                   to="/renewals/create"
                   state={{
@@ -194,15 +181,15 @@ const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
                   </Button>
                 </Link>
               )}
-              {(isCreatedFromDebitNote||isCreatedFromRenewal) && createdFromRenewal.length > 0 && (
-                <Link to={`/renewals/show/${createdFromRenewal?.[0]?.id}`}>
+              {postType === 'renewals' && isCreatedRenewal && (
+                <Link to={`/renewals/show/${renewals?.id}`}>
                   <Button type="primary" size="small" className="mr-2">
                     已續保
                   </Button>
                 </Link>
               )}
               {/* 如果是debitNote情況 */}
-              {isDebitNote && createdFromReceipt.length === 0 && (
+              {postType === 'debit_notes' && !isCreatedReceipt && (
                 <Link to="/receipts/create" state={{ debit_note_id:rawRecordId }}>
                   <Button type="default" size="small" className="mr-2">
                     開發收據
@@ -210,15 +197,15 @@ const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
                 </Link>
               )}
 
-              {isDebitNote && createdFromReceipt.length > 0 && (
-                <Link to={`/receipts/show/${createdFromReceipt?.[0]?.id}`}>
+              {postType === 'debit_notes' && isCreatedReceipt && (
+                <Link to={`/receipts/show/${receipts?.id}`}>
                   <Button type="primary" size="small" className="mr-2">
                     已開收據
                   </Button>
                 </Link>
               )}
               {/* 如果是Renewals情況 */}
-              {(isCreatedFromDebitNote||isCreatedFromRenewal) && createdFromReceipt.length === 0 && (
+              {postType === 'renewals' && !isCreatedReceipt && (
                 <Link
                   to="/receipts/create"
                   state={{
@@ -230,9 +217,23 @@ const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
                   </Button>
                 </Link>
               )}
-
-              {(isCreatedFromDebitNote||isCreatedFromRenewal) && createdFromReceipt.length > 0 && (
-                <Link to={`/receipts/show/${createdFromReceipt?.[0]?.id}`}>
+              {postType === 'renewals' && isCreatedReceipt && (
+                <Link to={`/receipts/show/${receipts?.id}`}>
+                  <Button type="primary" size="small" className="mr-2">
+                    已開收據
+                  </Button>
+                </Link>
+              )}
+              {/* 如果是credit_notes情況 */}
+              {postType === 'credit_notes' && !isCreatedReceipt && (
+                <Link to="/receipts/create" state={{ credit_note_id:rawRecordId }}>
+                  <Button type="default" size="small" className="mr-2">
+                    開發收據
+                  </Button>
+                </Link>
+              )}
+              {postType === 'credit_notes' && isCreatedReceipt && (
+                <Link to={`/receipts/show/${receipts?.id}`}>
                   <Button type="primary" size="small" className="mr-2">
                     已開收據
                   </Button>
@@ -240,9 +241,7 @@ const DetailTable: FC<{ record: DataType & TRenewals; term?: TTerm }> = ({
               )}
               <Link
                 to={
-                  (isCreatedFromDebitNote||isCreatedFromRenewal)
-                    ? `/renewals/show/${rawRecordId}`
-                    : `/debitNotes/show/${rawRecordId}`
+                  `/${postType}/show/${rawRecordId}`
                 }
               >
                 <Button type="default" size="small" className="mr-2">
