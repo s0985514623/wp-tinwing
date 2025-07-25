@@ -22,7 +22,7 @@ import { RemarkTextArea } from 'components/RemarkTextArea'
 import { round } from 'lodash-es'
 
 export const ShowView: React.FC<IResourceComponentsProps> = () => {
-  const toWords = new ToWords({localeCode:'en-US'})
+  const toWords = new ToWords({ localeCode: 'en-US' })
   const { queryResult } = useShow<DataType>()
   const receiptData = queryResult?.data?.data as DataType
   const isLoading = queryResult?.isLoading
@@ -35,8 +35,8 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
     id: isFromRenewal
       ? (receiptData?.created_from_renewal_id as number)
       : isFromCreditNote
-      ? (receiptData?.created_from_credit_note_id as number)
-      : (receiptData?.debit_note_id as number),
+        ? (receiptData?.created_from_credit_note_id as number)
+        : (receiptData?.debit_note_id as number),
     queryOptions: {
       enabled: !!receiptData,
     },
@@ -133,32 +133,43 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
             <div className="text-center font-bold mb-8 print:mb-16 print:mt-8">
               <h1 className="print:text-3xl text-xl">OFFICIAL RECEIPT</h1>
             </div>
-            <div className="tr">
-              <div className="th">To 致</div>
-              <div className="td">
-                <p>{client?.company}</p>
-                <p>{client?.name_en || client?.name_zh || ' '}</p>
-              </div>
-              <div className="th">Receipt No 號碼</div>
-              <div className="td">{receiptData?.receipt_no}</div>
-            </div>
-
-            <div className="tr">
-              <div className="th">Address 地址</div>
-              <div className="td">
-                <p>
-                  {client?.address_arr?.map((address, index) => (
-                    <p key={index}>{address}</p>
-                  )) || ' '}
-                </p>
-              </div>
-              <div className="th">Date 日期</div>
-              <div className="td">
-                {!!receiptData?.date
-                  ? dayjs.unix(receiptData?.date).format('YYYY-MM-DD')
-                  : ''}
-              </div>
-            </div>
+            <Row gutter={24}>
+              <Col span={14}>
+                <div className="table table_td-flex-1 w-full">
+                  <div className="tr">
+                    <div className="th">To 致</div>
+                    <div className="td">
+                      <p>{client?.company}</p>
+                      <p>{client?.name_en || client?.name_zh || ' '}</p>
+                    </div>
+                  </div>
+                  <div className="tr">
+                    <div className="th">Address 地址</div>
+                    <div className="td">
+                      <p>{client?.address_arr?.map((address, index) => (
+                        <p key={index}>{address}</p>
+                      )) || ' '}</p>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+              <Col span={10}>
+                <div className="table table_td-flex-1 w-full">
+                  <div className="tr">
+                    <div className="th">Receipt No 號碼</div>
+                    <div className="td">{receiptData?.receipt_no}</div>
+                  </div>
+                  <div className="tr">
+                    <div className="th">Date 日期</div>
+                    <div className="td">
+                      {!!receiptData?.date
+                        ? dayjs.unix(receiptData?.date).format('YYYY-MM-DD')
+                        : ''}
+                    </div>
+                  </div>
+                </div>
+              </Col>
+            </Row>
           </div>
 
           <Row
@@ -174,7 +185,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                 <div className="tr">
                   <div className="th w-[22rem]">THE SUM OF 款項</div>
                   <div className="td">
-                    {toWords.convert(Number(receiptPremium??0))}
+                    {toWords.convert(Number(receiptPremium ?? 0))}
                   </div>
                 </div>
                 <div className="tr">
@@ -203,8 +214,8 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                   <div className="td">
                     {!!receiptData?.payment_date
                       ? dayjs
-                          .unix(receiptData?.payment_date)
-                          .format('YYYY-MM-DD')
+                        .unix(receiptData?.payment_date)
+                        .format('YYYY-MM-DD')
                       : ''}
                   </div>
                 </div>
@@ -220,7 +231,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                   <div className="th">Code No</div>
                   <div className="td">{receiptData?.code_no}</div>
                 </div>
-                <RemarkTextArea data={receiptData} textAreaClassName="w-full" model="show"/>
+                <RemarkTextArea data={receiptData} textAreaClassName="w-full" model="show" />
               </div>
             </Col>
             <Col
@@ -235,31 +246,31 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                     {
                       round(Number(receiptPremium) ?? 0, 2).toLocaleString(
                         'en-US',
-                          {
-                            minimumFractionDigits: 2, // 最少小數點後兩位
-                            maximumFractionDigits: 2, // 最多小數點後兩位
-                          },
+                        {
+                          minimumFractionDigits: 2, // 最少小數點後兩位
+                          maximumFractionDigits: 2, // 最多小數點後兩位
+                        },
                       ) ??
-                        getTotalPremiumByDebitNote(debitNote).toLocaleString(
-                          'en-US',
-                          {
-                            minimumFractionDigits: 2, // 最少小數點後兩位
-                            maximumFractionDigits: 2, // 最多小數點後兩位
-                          },
-                        )
+                      getTotalPremiumByDebitNote(debitNote).toLocaleString(
+                        'en-US',
+                        {
+                          minimumFractionDigits: 2, // 最少小數點後兩位
+                          maximumFractionDigits: 2, // 最多小數點後兩位
+                        },
+                      )
                     }
                   </div>
                 </div>
               </div>
             </Col>
             <Col span={12} offset={12} className='print:text-xl'>
-              <div className="p-8">
+              <div className="p-8 text-[#555] font-semibold">
                 <p>For and on behalf of </p>
                 <p>POTENTIAL INSURANCE AGENCY COMPANY</p>
               </div>
-              <div className="p-8 block">
+              <div className="p-8 block text-[#555] font-semibold">
                 <div>
-                  <img src={autograph} alt="" className=" w-20" />
+                  <img src={autograph} alt="" className=" w-32" />
                 </div>
                 <span className="border-0 border-t border-solid border-black">
                   Authorized Signature

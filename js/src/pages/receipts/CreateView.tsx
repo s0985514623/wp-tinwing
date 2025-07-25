@@ -40,7 +40,7 @@ import { RemarkTextArea } from 'components/RemarkTextArea'
 
 export const CreateView: React.FC<IResourceComponentsProps> = () => {
   const navigate = useNavigate()
-  const toWords = new ToWords({localeCode:'en-US'})
+  const toWords = new ToWords({ localeCode: 'en-US' })
   const { formProps, saveButtonProps, form, onFinish } = useForm({
     //使新增後跳轉到clientsSummary
     redirect: false,
@@ -347,43 +347,45 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
             <div className="text-center font-bold mb-8 print:mb-16 print:mt-8">
               <h1 className="text-xl">OFFICIAL RECEIPT</h1>
             </div>
-            <div className="tr">
-              <div className="th">To 致</div>
-              <div className="td">
-                <p>{selectedClient?.company}</p>
-                <p>
-                  {selectedClient?.name_en || selectedClient?.name_zh || ' '}
-                </p>
-              </div>
-              <div className="th">Receipt No 號碼</div>
-              <div className="td">
-                <Form.Item noStyle name={['receipt_no']}>
-                  <Input size="small" />
-                </Form.Item>
-              </div>
-            </div>
-
-            <div className="tr">
-              <div className="th">Address 地址</div>
-              <div className="td">
-                <p>
-                  {selectedClient?.address_arr.map((address, index) => (
-                    <p key={index}>{address}</p>
-                  ))}
-                </p>
-              </div>
-              <div className="th">Date 日期</div>
-              <div className="td">
-                <DatePicker
-                  className="w-full"
-                  size="small"
-                  onChange={handleDateChange(['date'])}
-                />
-                <Form.Item hidden name={['date']}>
-                  <InputNumber />
-                </Form.Item>
-              </div>
-            </div>
+            <Row gutter={24}>
+              <Col span={14}>
+                <div className="table table_td-flex-1 w-full">
+                  <div className="tr">
+                    <div className="th">To 致</div>
+                    <div className="td">
+                      <p>{selectedClient?.company}</p>
+                      <p>{selectedClient?.name_en || selectedClient?.name_zh || ' '}</p>
+                    </div>
+                  </div>
+                  <div className="tr">
+                    <div className="th">Address 地址</div>
+                    <div className="td">
+                      <p>{selectedClient?.address_arr?.map((address, index) => (
+                        <p key={index}>{address}</p>
+                      )) || ' '}</p>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+              <Col span={10}>
+                <div className="table table_td-flex-1 w-full">
+                  <div className="tr">
+                    <div className="th">Receipt No 號碼</div>
+                    <div className="td">
+                      <Form.Item noStyle name={['receipt_no']}>
+                        <Input size="small" />
+                      </Form.Item>
+                    </div>
+                  </div>
+                  <div className="tr">
+                    <div className="th">Date 日期</div>
+                    <div className="td">
+                      <DatePicker className="w-full" size="small" onChange={handleDateChange(['date'])} />
+                    </div>
+                  </div>
+                </div>
+              </Col>
+            </Row>
           </div>
 
           <Row gutter={0} className="mt-12">

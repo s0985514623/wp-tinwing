@@ -31,7 +31,7 @@ const DebitNotesFooter = ({ model = true }: { model?: boolean }) => {
     return (
         <>
             <RowSection />
-            <div className="detailFooter grid grid-cols-3 p-4 w-full mt-12 ">
+            <div className="detailFooter grid grid-cols-3 p-4 w-full mt-12 text-[#555] font-semibold">
                 <div className="flex flex-col items-start col-span-2">
                     <div className=""><p>香港新界元朗教育路 18-24 號元朗商業中心 604 室</p></div>
                     <div className=""><p>Room 604, Yuen Long Commercial Centre 18-24 Kau Yuk Rd.,
