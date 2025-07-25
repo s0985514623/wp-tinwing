@@ -7,9 +7,12 @@ import Filter from './Filter';
 import FilterTags from 'components/FilterTags';
 import { TSearchProps, TTemplateProps, TRequiredProps } from './types';
 import { CrudFilters, useExport, BaseRecord } from '@refinedev/core';
+import { DataType as TDebitNote } from 'pages/debitNotes/types';
+import { DataType as TCreditNote } from 'pages/creditNotes/types';
 
+type DataType =TDebitNote & TCreditNote & { post_type: string }
 function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
-    const { tableProps, searchFormProps } = useTable({
+    const { tableProps, searchFormProps } = useTable<DataType>({
         resource,
         pagination: {
             mode: 'off',
@@ -21,29 +24,29 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
                     field: 'meta_query[0][key]',
                     operator: 'eq',
                     value: 'date',
-                  },
-                  {
+                },
+                {
                     field: 'meta_query[0][value][0]',
                     operator: 'eq',
                     value: dayjs().subtract(7, 'day').unix(),
-                  },
-                  {
+                },
+                {
                     field: 'meta_query[0][value][1]',
                     operator: 'eq',
                     value: dayjs().unix(),
-                  },
-                  {
+                },
+                {
                     field: 'meta_query[0][compare]',
                     operator: 'eq',
                     value: 'BETWEEN',
-                  },
+                },
             ] as CrudFilters,
         },
-        onSearch: (values: TSearchProps) => {
+        onSearch: (values: any) => {
             const start = values?.dateRange ? values?.dateRange[0]?.startOf('day').unix() : undefined;
             const end = values?.dateRange ? values?.dateRange[1]?.endOf('day').unix() : undefined;
 
-            const defaultFilters = start?[
+            const defaultFilters = start ? [
                 {
                     field: 'meta_query[0][value][0]',
                     operator: 'eq',
@@ -54,7 +57,7 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
                     operator: 'eq',
                     value: end,
                 },
-            ]:[];
+            ] : [];
             return defaultFilters as CrudFilters;
         },
 
@@ -112,7 +115,10 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
                                 ...rowSelection,
                             }}
                             summary={(pageData) => {
-                                const totalPremium = pageData.reduce((acc, cur) => acc + Number(cur.premium ?? 0), 0);
+                                const totalPremium = pageData.reduce((acc, cur) => {
+                                    const premium = cur.post_type === 'credit_notes' ? (cur?.premium as number) * -1 : cur?.premium
+                                    return acc + Number(premium ?? 0)
+                                }, 0);
 
                                 return (
                                     <>
@@ -129,7 +135,13 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
                             <Table.Column width={120} dataIndex={resource === 'receipts' ? 'receipt_no' : 'note_no'} title="Note No." sorter={(a: T, b: T) => a?.note_no.localeCompare(b.note_no || '')} />
                             <Table.Column key="date" dataIndex="date" title="Date" render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')} sorter={(a: T, b: T) => a.date - b.date} />
                             <Table.Column key="payment_date" dataIndex="date" title="Payment Date" render={(date: number) => dayjs.unix(date).add(1, 'month').format('YYYY-MM-DD')} />
-                            <Table.Column dataIndex="premium" title="Premium" render={(premium: number) => getPrice(premium)} sorter={(a: T, b: T) => a.premium - b.premium} />
+                            <Table.Column dataIndex="premium" title="Premium" render={(premium: number, record: T) => {
+                                if ((record as any).post_type === 'credit_notes') {
+                                    return getPrice(premium * -1)
+                                }
+
+                                return getPrice(premium) //debit_notes
+                            }} sorter={(a: T, b: T) => a.premium - b.premium} />
                         </Table>
                         <hr className="my-8" />
                     </Card>

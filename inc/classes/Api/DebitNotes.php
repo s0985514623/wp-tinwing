@@ -392,12 +392,14 @@ final class DebitNotes {
 				// 獲取文章的所有 meta 資料
 				$all_meta = get_post_meta(get_the_ID(), '', true);
 				$all_meta = Base::sanitize_post_meta_array($all_meta);
-
+				//取得文章的post_type
+				$post_type = get_post_type();
 				$posts_data[] = [
 					'id'         => get_the_ID(),
 					'created_at' => strtotime(get_the_date('Y-m-d')),
 					'date'       => strtotime(get_the_date('Y-m-d')),
 					'note_no'    => html_entity_decode(get_the_title()),
+					'post_type'  => $post_type,
 				];
 				// 取得最後一個索引 (即剛剛推入的那個項目)
 				$last_index = count($posts_data) - 1;
