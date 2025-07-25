@@ -97,6 +97,10 @@ final class Clients {
 			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
 			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 		];
+		// 如果有meta_key 參數，則加入查詢條件
+		if (isset($params['meta_key'])) {
+			$args['meta_key'] = $params['meta_key'];
+		}
 		if (isset($params['s']) && $params['s']) {
 			$args['s'] = $params['s'];
 		}

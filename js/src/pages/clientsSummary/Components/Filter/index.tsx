@@ -4,7 +4,7 @@ import { Form, Button, DatePicker, FormProps, Input, Radio } from 'antd'
 // import type { RadioChangeEvent } from 'antd';
 const { RangePicker } = DatePicker
 
-const Filter: React.FC<{ formProps: FormProps }> = ({ formProps }) => {
+const Filter: React.FC<{ formProps: FormProps ,isReceipts?: boolean}> = ({ formProps ,isReceipts=false}) => {
   const IsArchivedFormItem = () => {
     if (window.location.hash === '#/clientsSummary') {
       return (
@@ -26,16 +26,16 @@ const Filter: React.FC<{ formProps: FormProps }> = ({ formProps }) => {
   }
   return (
     <Form {...formProps} layout="vertical">
-      <div className="grid grid-cols-3 gap-x-4 gap-y-0">
+      <div className={`grid grid-cols-${isReceipts ? '2' : '3'} gap-x-4 gap-y-0`}>
         <IsArchivedFormItem />
         <Form.Item
-          label="END DATE"
+          label="Bill DATE"
           name={['dateRange']}
           //  initialValue={[dayjs('2022-01-01'), dayjs()]}
         >
           <RangePicker size="small" className="w-full" />
         </Form.Item>
-        <Form.Item label="Engine" name={['motor_engine_no']}>
+        <Form.Item label="Engine" name={['motor_engine_no']} className={isReceipts ? 'tw-hidden' : ''}>
           <Input className="w-full" size="small" allowClear={true} />
         </Form.Item>
         <Form.Item className="self-end">

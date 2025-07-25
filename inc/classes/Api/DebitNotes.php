@@ -99,6 +99,10 @@ final class DebitNotes {
 			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
 			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 		];
+		// 如果有meta_key 參數，則加入查詢條件
+		if (isset($params['meta_key'])) {
+			$args['meta_key'] = $params['meta_key'];
+		}
 		// 如果有meta_query 參數，則加入查詢條件
 		if (isset($params['meta_query'])) {
 			$meta_query         = Base::sanitize_meta_query($params['meta_query']);
@@ -349,6 +353,10 @@ final class DebitNotes {
 			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
 			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 		];
+		// 如果有meta_key 參數，則加入查詢條件
+		if (isset($params['meta_key'])) {
+			$args['meta_key'] = $params['meta_key'];
+		}
 		// 如果有meta_query 參數，則加入查詢條件
 		if (isset($params['meta_query'])) {
 			$meta_query         = Base::sanitize_meta_query($params['meta_query']);

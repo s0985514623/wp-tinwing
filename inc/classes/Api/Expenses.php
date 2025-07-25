@@ -107,7 +107,10 @@ final class Expenses {
 			$meta_query         = Base::sanitize_meta_query($params['meta_query']);
 			$args['meta_query'] = $meta_query;
 		}
-
+		// 如果有meta_key 參數，則加入查詢條件
+		if (isset($params['meta_key'])) {
+			$args['meta_key'] = $params['meta_key'];
+		}
 		// 兼容舊版的查詢條件(當is_adjust_balance不存在時)，如果有 is_adjust_balance 且不等於的條件，則加入查詢條件
 		foreach ($args['meta_query'] as $key => $value) {
 			if (!is_array($value)) {

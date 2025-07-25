@@ -102,6 +102,10 @@ final class Agents {
 			$meta_query         = Base::sanitize_meta_query($params['meta_query']);
 			$args['meta_query'] = $meta_query;
 		}
+		// 如果有meta_key 參數，則加入查詢條件
+		if (isset($params['meta_key'])) {
+			$args['meta_key'] = $params['meta_key'];
+		}
 		// 如果有date參數，則加入查詢條件
 		if (isset($params['date'])) {
 			$args['date_query'] = [

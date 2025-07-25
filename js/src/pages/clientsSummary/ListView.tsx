@@ -18,13 +18,18 @@ const termOptions = {
   sorters: {
     initial: [
       {
-        field: 'date',
+        field: 'meta_value_num',
         order: 'desc',
       },
     ] as CrudSorting,
   },
   filters: {
     initial: [
+      {
+        field: 'meta_key',
+        operator: 'eq',
+        value: 'date',
+      },
       {
         field: 'meta_query[relation]',
         operator: 'eq',
@@ -98,7 +103,7 @@ const termOptions = {
       {
         field: 'meta_query[1][key]',
         operator: 'eq',
-        value: 'period_of_insurance_to',
+        value: 'date',
       },
       {
         field: 'meta_query[1][value][0]',
@@ -111,7 +116,7 @@ const termOptions = {
         field: 'meta_query[1][value][1]',
         operator: 'eq',
         value: values?.dateRange
-          ? dayjs(values?.dateRange[1]?.startOf('day')).unix()
+          ? dayjs(values?.dateRange[1]?.endOf('day')).unix()
           : undefined,
       },
       {

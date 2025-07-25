@@ -25,17 +25,26 @@ abstract class Base {
 	 */
 	public static function sanitize_meta_query( $meta_query ) {
 		foreach ($meta_query as $key => $array) {
+			// 不是陣列就跳過
 			if (!\is_array($array)) {
 				continue;
 			}
-			if( isset($array['relation'])){
+			// 如果有 relation，表示是群組，遞迴處理
+			if ( isset( $array['relation'] ) ) {
+				$meta_query[ $key ] = self::sanitize_meta_query( $array );
+	
+				// 如果 relation 底下沒有有效條件，刪掉這個群組
+				if ( count( $meta_query[ $key ] ) === 1 && isset( $meta_query[ $key ]['relation'] ) ) {
+					unset( $meta_query[ $key ] );
+				}
 				continue;
 			}
+			// 如果沒有 value，刪掉這個條件
 			if (!isset($array['value'])) {
 				unset($meta_query[ $key ]);
 			}
 		}
-		return array_values($meta_query);
+		return $meta_query;
 	}
 	/**
 	 * 將post meta返回的陣列轉成key string

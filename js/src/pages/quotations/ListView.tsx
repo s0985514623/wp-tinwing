@@ -20,13 +20,18 @@ export const ListView: React.FC = () => {
 			sorters: {
 				initial: [
 					{
-						field: 'id',
+						field: 'meta_value_num',
 						order: 'desc',
 					},
 				],
 			},
 			filters: {
 				initial: [
+					{
+						field: 'meta_key',
+						operator: 'eq',
+						value: 'date',
+					},
 					{
 						field: 'meta_query[relation]',
 						operator: 'eq',
@@ -80,7 +85,7 @@ export const ListView: React.FC = () => {
 					{
 						field: 'meta_query[0][key]',
 						operator: 'eq',
-						value: 'period_of_insurance_to',
+						value: 'date',
 					},
 					{
 						field: 'meta_query[0][value][0]',
@@ -93,7 +98,7 @@ export const ListView: React.FC = () => {
 						field: 'meta_query[0][value][1]',
 						operator: 'eq',
 						value: values?.dateRange
-							? dayjs(values?.dateRange[1]?.startOf('day')).unix()
+							? dayjs(values?.dateRange[1]?.endOf('day')).unix()
 							: undefined,
 					},
 					{
@@ -102,23 +107,64 @@ export const ListView: React.FC = () => {
 						value: values?.dateRange ? 'BETWEEN' : '>',
 					},
 					{
-						field: 'meta_query[1][key]',
-						operator: 'eq',
-						value: 'motor_engine_no',
-					},
-					{
-						field: 'meta_query[1][value]',
-						operator: 'eq',
-						value:
-							values?.motor_engine_no === ''
-								? undefined
-								: values?.motor_engine_no,
-					},
-					{
-						field: 'meta_query[1][compare]',
-						operator: 'eq',
-						value: '=',
-					},
+                        field: 'meta_query[1][relation]',
+                        operator: 'eq',
+                        value: 'OR',
+                      },
+                      {
+                        field: 'meta_query[1][0][key]',
+                        operator: 'eq',
+                        value: 'motor_engine_no',
+                      },
+                      {
+                        field: 'meta_query[1][0][value]',
+                        operator: 'eq',
+                        value:
+                          values?.motor_engine_no === ''
+                            ? undefined
+                            : values?.motor_engine_no,
+                      },
+                      {
+                        field: 'meta_query[1][0][compare]',
+                        operator: 'eq',
+                        value: '=',
+                      },
+                      {
+                        field: 'meta_query[1][1][key]',
+                        operator: 'eq',
+                        value: 'motor_attr',
+                      },
+                      {
+                        field: 'meta_query[1][1][value]',
+                        operator: 'eq',
+                        value:
+                          values?.motor_engine_no === ''
+                            ? undefined
+                            : values?.motor_engine_no,
+                      },
+                      {
+                        field: 'meta_query[1][1][compare]',
+                        operator: 'eq',
+                        value: 'LIKE',
+                      },
+                      {
+                        field: 'meta_query[1][2][key]',
+                        operator: 'eq',
+                        value: 'chassi',
+                      },
+                      {
+                        field: 'meta_query[1][2][value]',
+                        operator: 'eq',
+                        value:
+                          values?.motor_engine_no === ''
+                            ? undefined
+                            : values?.motor_engine_no,
+                      },
+                      {
+                        field: 'meta_query[1][2][compare]',
+                        operator: 'eq',
+                        value: '=',
+                      },
 				]
 				return filters as CrudFilters
 			},
@@ -328,7 +374,7 @@ export const ListView: React.FC = () => {
                     },
                     showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
                 }}>
-                <Table.Column width={100} dataIndex="period_of_insurance_to" title="End Date" render={(period_of_insurance_to: number) => (period_of_insurance_to ? dayjs.unix(period_of_insurance_to).format('YYYY-MM-DD') : '')} {...getSortProps<DataType>('period_of_insurance_to')} />
+                <Table.Column width={100} dataIndex="date" title="Bill Date" render={(date: number) => (date ? dayjs.unix(date).format('YYYY-MM-DD') : '')} {...getSortProps<DataType>('date')} />
                 <Table.Column
                     width={100}
                     dataIndex="note_no"

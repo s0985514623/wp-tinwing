@@ -99,7 +99,10 @@ final class Receipts {
 			'orderby'        => isset($params['orderby'])?$params['orderby']:'id',   // 排序方式
 			'order'          => isset($params['order'])?$params['order']:'desc',    // 排序順序（DESC: 新到舊，ASC: 舊到新）
 		];
-
+		// 如果有meta_key 參數，則加入查詢條件
+		if (isset($params['meta_key'])) {
+			$args['meta_key'] = $params['meta_key'];
+		}
 		// 如果有meta_query 參數，則加入查詢條件
 		if (isset($params['meta_query'])) {
 			$meta_query         = Base::sanitize_meta_query($params['meta_query']);
@@ -136,7 +139,7 @@ final class Receipts {
 		if (isset($params['id'])) {
 			$args['post__in'] = $params['id'];
 		}
-		// Log::debug(print_r($args, true));
+		// error_log(print_r($args, true));
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {

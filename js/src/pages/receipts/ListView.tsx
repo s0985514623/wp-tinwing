@@ -27,13 +27,18 @@ export const ListView: React.FC = () => {
     sorters: {
       initial: [
         {
-          field: 'id',
+          field: 'meta_value_num',
           order: 'desc',
         },
       ],
     },
     filters: {
       initial: [
+        {
+          field: 'meta_key',
+          operator: 'eq',
+          value: 'date',
+        },
         {
           field: 'meta_query[relation]',
           operator: 'eq',
@@ -73,32 +78,73 @@ export const ListView: React.FC = () => {
           field: 'meta_query[0][value][1]',
           operator: 'eq',
           value: values?.dateRange
-            ? dayjs(values?.dateRange[1]?.startOf('day')).unix()
+            ? dayjs(values?.dateRange[1]?.endOf('day')).unix()
             : undefined,
         },
         {
           field: 'meta_query[0][compare]',
           operator: 'eq',
-          value: 'BETWEEN',
+          value: values?.dateRange ? 'BETWEEN' : '>',
         },
-        {
-          field: 'meta_query[1][key]',
-          operator: 'eq',
-          value: 'motor_engine_no',
-        },
-        {
-          field: 'meta_query[1][value]',
-          operator: 'eq',
-          value:
-            values?.motor_engine_no === ''
-              ? undefined
-              : values?.motor_engine_no,
-        },
-        {
-          field: 'meta_query[1][compare]',
-          operator: 'eq',
-          value: '=',
-        },
+        // {
+        //   field: 'meta_query[1][relation]',
+        //   operator: 'eq',
+        //   value: 'OR',
+        // },
+        // {
+        //   field: 'meta_query[1][0][key]',
+        //   operator: 'eq',
+        //   value: 'motor_engine_no',
+        // },
+        // {
+        //   field: 'meta_query[1][0][value]',
+        //   operator: 'eq',
+        //   value:
+        //     values?.motor_engine_no === ''
+        //       ? undefined
+        //       : values?.motor_engine_no,
+        // },
+        // {
+        //   field: 'meta_query[1][0][compare]',
+        //   operator: 'eq',
+        //   value: '=',
+        // },
+        // {
+        //   field: 'meta_query[1][1][key]',
+        //   operator: 'eq',
+        //   value: 'motor_attr',
+        // },
+        // {
+        //   field: 'meta_query[1][1][value]',
+        //   operator: 'eq',
+        //   value:
+        //     values?.motor_engine_no === ''
+        //       ? undefined
+        //       : values?.motor_engine_no,
+        // },
+        // {
+        //   field: 'meta_query[1][1][compare]',
+        //   operator: 'eq',
+        //   value: 'LIKE',
+        // },
+        // {
+        //   field: 'meta_query[1][2][key]',
+        //   operator: 'eq',
+        //   value: 'chassi',
+        // },
+        // {
+        //   field: 'meta_query[1][2][value]',
+        //   operator: 'eq',
+        //   value:
+        //     values?.motor_engine_no === ''
+        //       ? undefined
+        //       : values?.motor_engine_no,
+        // },
+        // {
+        //   field: 'meta_query[1][2][compare]',
+        //   operator: 'eq',
+        //   value: '=',
+        // },
       ]
       return filters as CrudFilters
     },
@@ -257,7 +303,7 @@ export const ListView: React.FC = () => {
         <ExportButton onClick={triggerExport} loading={exportLoading} />
       }
     >
-      <Filter formProps={searchFormProps} />
+      <Filter formProps={searchFormProps} isReceipts={true} />
       <Table
         {...parsedTableProps}
         //Refine的onChange會重新送出request,這邊複寫onChange,避免重新送出request
