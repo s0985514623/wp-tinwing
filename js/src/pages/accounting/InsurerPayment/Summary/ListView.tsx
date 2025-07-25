@@ -7,26 +7,56 @@ import { DataType as TDebitNote } from 'pages/debitNotes/types';
 import { DataType as TCreditNote } from 'pages/creditNotes/types';
 import { DataType as TRenewal } from 'pages/renewals/types';
 import { safeParse, getInsurerPayment } from 'utils';
+import Filter from '../../dashboard/Filter'
+import { useState } from 'react';
+import dayjs, { Dayjs } from 'dayjs';
 
 // import dayjs from 'dayjs';
 
-export const ListView: React.FC = () => {
-    //當前Table的props
+    export const ListView: React.FC = () => {    
+    const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | undefined>(undefined);
+    //當前Table的props resource: 'insurers',
     const { tableProps } = useTable<DataType>({
-			pagination:{
-				pageSize: -1,
-				mode: "off" as const,
-			}
-		});
+        pagination: {
+            pageSize: -1,
+            mode: "off" as const,
+        }
+    });
     const parsedTableProps = safeParse<DataType>({
         tableProps,
         ZDataType,
     });
     const { data: receiptsData } = useList<TReceipts>({
         resource: 'receipts',
+        filters: [
+            {
+                field: 'meta_query[1][key]',
+                operator: 'eq',
+                value: 'date',
+              },
+              {
+                field: 'meta_query[1][value][0]',
+                operator: 'eq',
+                value: dateRange
+                  ? dayjs(dateRange[0]?.startOf('day')).unix()
+                  : undefined,
+              },
+              {
+                field: 'meta_query[1][value][1]',
+                operator: 'eq',
+                value: dateRange
+                  ? dayjs(dateRange[1]?.endOf('day')).unix()
+                  : undefined,
+              },
+              {
+                field: 'meta_query[1][compare]',
+                operator: 'eq',
+                value: dateRange ? 'BETWEEN' : '>',
+              },
+        ],
         pagination: {
             pageSize: -1,
-          },
+        },
     });
     // console.log('🚀 ~ receiptsData:', receiptsData);
     const { data: debitNotesData } = useMany<TDebitNote>({
@@ -78,7 +108,11 @@ export const ListView: React.FC = () => {
         },
     });
     return (
-        <List headerButtons={<ExportButton onClick={triggerExport} loading={exportLoading} />}>
+        <List headerButtons={<>
+            <Filter
+                dateRange={dateRange}
+                setDateRange={setDateRange}
+            /><ExportButton onClick={triggerExport} loading={exportLoading} /></>}>
             <Table {...parsedTableProps} rowKey="id" size="middle"
                 pagination={{
                     pageSize: 30,
@@ -95,10 +129,10 @@ export const ListView: React.FC = () => {
                             const debitNote = debitNotesData?.data?.find((dn) => dn.id === receipt.debit_note_id);
                             const creditNote = creditNotesData?.data?.find((cn) => cn.id === receipt.created_from_credit_note_id);
                             const renewal = renewalsData?.data?.find((r) => r.id === receipt.created_from_renewal_id);
-                            const theNote =  creditNote ?? renewal??debitNote;
+                            const theNote = creditNote ?? renewal ?? debitNote;
                             if (theNote?.insurer_id === id) {
                                 const premium = theNote ? getInsurerPayment(receipt, theNote as TDebitNote, record) : 0;
-                                if(creditNote){
+                                if (creditNote) {
                                     return acc - premium;
                                 }
                                 return acc + premium;
@@ -117,10 +151,10 @@ export const ListView: React.FC = () => {
                             const debitNote = debitNotesData?.data?.find((dn) => dn.id === receipt.debit_note_id);
                             const creditNote = creditNotesData?.data?.find((cn) => cn.id === receipt.created_from_credit_note_id);
                             const renewal = renewalsData?.data?.find((r) => r.id === receipt.created_from_renewal_id);
-                            const theNote =  creditNote ?? renewal??debitNote;
+                            const theNote = creditNote ?? renewal ?? debitNote;
                             if (theNote?.insurer_id === id) {
                                 const premium = theNote ? getInsurerPayment(receipt, theNote as TDebitNote, record) : 0;
-                                if(creditNote){
+                                if (creditNote) {
                                     return acc - premium;
                                 }
                                 return acc + premium;
@@ -139,10 +173,10 @@ export const ListView: React.FC = () => {
                             const debitNote = debitNotesData?.data?.find((dn) => dn.id === receipt.debit_note_id);
                             const creditNote = creditNotesData?.data?.find((cn) => cn.id === receipt.created_from_credit_note_id);
                             const renewal = renewalsData?.data?.find((r) => r.id === receipt.created_from_renewal_id);
-                            const theNote =  creditNote ?? renewal??debitNote;
+                            const theNote = creditNote ?? renewal ?? debitNote;
                             if (theNote?.insurer_id === id) {
                                 const premium = theNote ? getInsurerPayment(receipt, theNote as TDebitNote, record) : 0;
-                                if(creditNote){
+                                if (creditNote) {
                                     return acc - premium;
                                 }
                                 return acc + premium;
