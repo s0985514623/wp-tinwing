@@ -9,7 +9,7 @@ const items: TabsProps['items'] = [
     {
         key: '1',
         label: 'Monthly Account Receivable',
-        children: <Template<TDebitNote & TRequiredProps> resource="debit_notes" />,
+        children: <Template<TDebitNote & TRequiredProps> resource="debit_notes/and_credit_notes" />,
     },
     {
         key: '2',
