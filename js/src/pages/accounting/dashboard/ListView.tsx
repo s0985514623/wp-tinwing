@@ -1,21 +1,21 @@
 import { useState, useMemo } from 'react'
-import { CrudFilters, useList, useExport } from '@refinedev/core'
+import { CrudFilters, useList } from '@refinedev/core'
 import Filter from './Filter'
-import { ExportButton } from '@refinedev/antd'
+// import { ExportButton } from '@refinedev/antd'
 import dayjs, { Dayjs } from 'dayjs'
 import { Spin, Empty } from 'antd'
 import { DataType as TReceipts } from 'pages/receipts/types'
 import { DataType as TDebitNote } from 'pages/debitNotes/types'
 import { DataType as TQuotations } from 'pages/quotations/types'
 import { DataType as TExpenses } from 'pages/accounting/Expense/types'
-import { DataType as TInsurers } from 'pages/insurers/types'
+// import { DataType as TInsurers } from 'pages/insurers/types'
 import { DataType as TRenewals } from '@/pages/renewals/types'
 import { DataType as TCreditNote } from '@/pages/creditNotes/types'
-import { getTotalPremiumByDebitNote, getInsurerPayment } from 'utils'
+import { getTotalPremiumByDebitNote } from 'utils'
 import IncomeByBank from './IncomeByBank'
 import NoDisplay from './NoDisplay'
 
-type DataType = TReceipts | TDebitNote | TQuotations
+// type DataType = TReceipts | TDebitNote | TQuotations
 export const ListView: React.FC = () => {
   //統一時間範圍
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | undefined>([
@@ -53,16 +53,16 @@ export const ListView: React.FC = () => {
     : []
 
   //Export CSV
-  const { triggerExport: _Export, isLoading: _exportLoading } =
-    useExport<DataType>({
-      mapData: (item) => {
-        return {
-          ...item,
-          // date: dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
-          // payment_date: dayjs.unix(item?.payment_date as number).format('YYYY-MM-DD'),
-        }
-      },
-    })
+  // const { triggerExport: _Export, isLoading: _exportLoading } =
+  //   useExport<DataType>({
+  //     mapData: (item) => {
+  //       return {
+  //         ...item,
+  //         // date: dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
+  //         // payment_date: dayjs.unix(item?.payment_date as number).format('YYYY-MM-DD'),
+  //       }
+  //     },
+  //   })
 
   //取得資料
   const { data: debitNotesData, isLoading: debitNotesIsLoading } =
@@ -97,74 +97,74 @@ export const ListView: React.FC = () => {
         pageSize: -1,
       },
     })
-  const { data: InsurerPaymentData, isLoading: InsurerPaymentIsLoading } =
-    useList<TReceipts>({
-      resource: 'receipts',
-      pagination: {
-        pageSize: -1,
-      },
-      filters: dateRange
-        ? [
-          {
-            field: 'meta_query[relation]',
-            operator: 'eq',
-            value: 'AND',
-          },
-          {
-            field: 'meta_query[0][key]',
-            operator: 'eq',
-            value: 'pay_to_insurer_by_payment_date',
-          },
-          {
-            field: 'meta_query[0][value][0]',
-            operator: 'eq',
-            value: dateRange[0]?.startOf('day').unix(),
-          },
-          {
-            field: 'meta_query[0][value][1]',
-            operator: 'eq',
-            value: dateRange[1]?.endOf('day').unix(),
-          },
-          {
-            field: 'meta_query[0][compare]',
-            operator: 'eq',
-            value: 'BETWEEN',
-          },
-          {
-            field: 'meta_query[1][key]',
-            operator: 'eq',
-            value: 'is_paid',
-          },
-          {
-            field: 'meta_query[1][value]',
-            operator: 'eq',
-            value: 1,
-          },
-          {
-            field: 'meta_query[1][compare]',
-            operator: 'eq',
-            value: '=',
-          },
-        ]
-        : [
-          {
-            field: 'meta_query[0][key]',
-            operator: 'eq',
-            value: 'is_paid',
-          },
-          {
-            field: 'meta_query[0][value]',
-            operator: 'eq',
-            value: 1,
-          },
-          {
-            field: 'meta_query[0][compare]',
-            operator: 'eq',
-            value: '=',
-          },
-        ],
-    })
-  const { data: creditNotesData, isLoading: creditNotesIsLoading } =
+  // const { data: InsurerPaymentData, isLoading: InsurerPaymentIsLoading } =
+  //   useList<TReceipts>({
+  //     resource: 'receipts',
+  //     pagination: {
+  //       pageSize: -1,
+  //     },
+  //     filters: dateRange
+  //       ? [
+  //         {
+  //           field: 'meta_query[relation]',
+  //           operator: 'eq',
+  //           value: 'AND',
+  //         },
+  //         {
+  //           field: 'meta_query[0][key]',
+  //           operator: 'eq',
+  //           value: 'pay_to_insurer_by_payment_date',
+  //         },
+  //         {
+  //           field: 'meta_query[0][value][0]',
+  //           operator: 'eq',
+  //           value: dateRange[0]?.startOf('day').unix(),
+  //         },
+  //         {
+  //           field: 'meta_query[0][value][1]',
+  //           operator: 'eq',
+  //           value: dateRange[1]?.endOf('day').unix(),
+  //         },
+  //         {
+  //           field: 'meta_query[0][compare]',
+  //           operator: 'eq',
+  //           value: 'BETWEEN',
+  //         },
+  //         {
+  //           field: 'meta_query[1][key]',
+  //           operator: 'eq',
+  //           value: 'is_paid',
+  //         },
+  //         {
+  //           field: 'meta_query[1][value]',
+  //           operator: 'eq',
+  //           value: 1,
+  //         },
+  //         {
+  //           field: 'meta_query[1][compare]',
+  //           operator: 'eq',
+  //           value: '=',
+  //         },
+  //       ]
+  //       : [
+  //         {
+  //           field: 'meta_query[0][key]',
+  //           operator: 'eq',
+  //           value: 'is_paid',
+  //         },
+  //         {
+  //           field: 'meta_query[0][value]',
+  //           operator: 'eq',
+  //           value: 1,
+  //         },
+  //         {
+  //           field: 'meta_query[0][compare]',
+  //           operator: 'eq',
+  //           value: '=',
+  //         },
+  //       ],
+  //   })
+  const { data: creditNotesData, isLoading: _creditNotesIsLoading } =
     useList<TCreditNote>({
       resource: 'credit_notes',
       filters: filters as CrudFilters,
@@ -507,16 +507,16 @@ export const ListView: React.FC = () => {
   }, [adjustBalancesData?.data])
 
   // 追加creditNotesData data
-  const creditNotesFormReceipt = useMemo(() => {
-    return receiptsData?.data.filter((receipt) => {
-      if (receipt.created_from_credit_note_id) return true
-      return false
-    }) || []
-  }, [receiptsData?.data])
+  // const creditNotesFormReceipt = useMemo(() => {
+  //   return receiptsData?.data.filter((receipt) => {
+  //     if (receipt.created_from_credit_note_id) return true
+  //     return false
+  //   }) || []
+  // }, [receiptsData?.data])
 
-  const totalCreditNotes = useMemo(() => {
-    return creditNotesFormReceipt.reduce((acc, item) => acc + Number(item.premium ?? 0), 0)
-  }, [creditNotesFormReceipt])
+  // const totalCreditNotes = useMemo(() => {
+  //   return creditNotesFormReceipt.reduce((acc, item) => acc + Number(item.premium ?? 0), 0)
+  // }, [creditNotesFormReceipt])
 
   //Expense[費用紀錄金額]
   // const totalExpense = useMemo(() => {
@@ -554,8 +554,7 @@ export const ListView: React.FC = () => {
     receiptsIsLoading ||
     expensesIsLoading ||
     adjustBalancesIsLoading ||
-    renewalsIsLoading ||
-    InsurerPaymentIsLoading
+    renewalsIsLoading
   //顯示數據
   const ShowData = () => {
     if (bankProfit.length === 0) {
@@ -583,7 +582,7 @@ export const ListView: React.FC = () => {
         <h1>Dashboard</h1>
         <div className="flex justify-center items-center gap-4">
           <Filter dateRange={dateRange} setDateRange={setDateRange} />
-          <ExportButton />
+          {/* <ExportButton /> */}
         </div>
       </div>
       <Spin spinning={isLoading}>
