@@ -9,6 +9,6 @@ import { archive } from './archive';
 import { accounting } from './accounting';
 import { creditNotes } from './creditNotes';
 
-const resources = [...clientsSummary, ...quotations, ...debitNotes, ...creditNotes, ...clients, ...archive, ...reports, ...agents, ...insurers, ...accounting];
+const resources = [...reports,...clientsSummary, ...quotations, ...debitNotes, ...creditNotes, ...clients, ...archive,  ...agents, ...insurers, ...accounting];
 
 export default resources;

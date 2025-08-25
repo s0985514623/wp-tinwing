@@ -8,17 +8,17 @@ import { TRequiredProps } from './template/types';
 const items: TabsProps['items'] = [
     {
         key: '1',
-        label: 'Monthly Account Receivable',
+        label: 'Account Receivable',
         children: <Template<TDebitNote & TRequiredProps> resource="debit_notes/and_credit_notes" />,
     },
     {
         key: '2',
-        label: 'Monthly Outstanding Payment',
+        label: 'Outstanding Payment',
         children: <Template<TQuotation & TRequiredProps> resource="debit_notes/not_receipt" />,
     },
     {
         key: '3',
-        label: 'Monthly Payment Received',
+        label: 'Payment Received',
         children: <Template<TReceipt & TRequiredProps> resource="receipts" />,
     },
 ];
