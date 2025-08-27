@@ -36,6 +36,7 @@ final class Bootstrap {
 		Api\Receipts::instance();
 		Api\InsurerProducts::instance();
 		Api\ClientsSummary::instance();
+		Api\OtherReport::instance();
 		// \add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_script' ], 99 );
 		// \add_action( 'wp_enqueue_scripts', [ $this, 'frontend_enqueue_script' ], 99 );
 	}

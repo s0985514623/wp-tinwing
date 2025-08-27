@@ -7,6 +7,7 @@ import type { RefineLayoutSiderProps } from '@refinedev/antd';
 import { useColor } from 'hooks';
 import packageJson from '../../../../package.json';
 
+
 const drawerButtonStyles: CSSProperties = {
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
@@ -35,7 +36,6 @@ export const Sider: React.FC<RefineLayoutSiderProps> = ({ Title: TitleFromProps,
     const { mutate: mutateLogout } = useLogout({
         v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
     });
-
     const isMobile = typeof breakpoint.lg === 'undefined' ? false : !breakpoint.lg;
 
     const RenderToTitle = TitleFromProps ?? TitleFromContext ?? DefaultTitle;
@@ -65,40 +65,7 @@ export const Sider: React.FC<RefineLayoutSiderProps> = ({ Title: TitleFromProps,
             const isSelected = key === theSelectedKey;
             const isRoute = !(pickNotDeprecated(theMeta?.parent, options?.parent, parentName) !== undefined && children.length === 0);
 
-            // 用 resource 的 meta.action 來判斷是不是要匯出
-            const exportHandler = (() => {
-                switch (theMeta?.action) {
-                    case "export-customer-ageing":
-                        return true;
-                    case "export-insurer-ageing":
-                        return true;
-                    case "export-agent-report":
-                        return true;
-                    default:
-                        return false;
-                }
-            })();
-
-            if (exportHandler) {
-                // 攔截：**不要渲染 <Link>**，改成 onClick 執行匯出
-                return (
-                    <CanAccess key={key} resource={name.toLowerCase()} action="list" params={{ resource: item }}>
-                        <Menu.Item
-                            key={key}
-                            style={{ fontWeight: isSelected ? "bold" : "normal" }}
-                            icon={icon ?? (isRoute && <UnorderedListOutlined />)}
-                            onClick={({ domEvent }) => {
-                                console.log('export')
-                            }}
-                        >
-                            <span>{label}</span>
-                            {!collapsed && isSelected && <div className="ant-menu-tree-arrow" />}
-                        </Menu.Item>
-                    </CanAccess>
-                );
-            }
-
-            //預設：維持原本的導頁行為
+            
             return (
                 <CanAccess
                     key={item.key}
