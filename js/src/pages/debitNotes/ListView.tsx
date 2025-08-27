@@ -18,6 +18,7 @@ import dayjs from 'dayjs'
 import { round } from 'lodash'
 import { useColumnSearch } from 'hooks'
 import { useState } from 'react'
+import { DataType as TAgent } from 'pages/agents/types'
 
 export const ListView: React.FC = () => {
   const [pageSize, setPageSize] = useState(30);
@@ -262,7 +263,7 @@ export const ListView: React.FC = () => {
       enabled: !!parsedTableProps?.dataSource,
     },
   })
-  const { data: receiptData, isLoading: receiptIsLoading } = useMany<TReceipt>({
+  const { data: receiptData,  } = useMany<TReceipt>({
     resource: 'receipts',
     ids:
       parsedTableProps?.dataSource
@@ -272,7 +273,16 @@ export const ListView: React.FC = () => {
       enabled: !!parsedTableProps?.dataSource,
     },
   })
-
+  const { data: agentData,  } = useMany<TAgent>({
+    resource: 'agents',
+    ids:
+      parsedTableProps?.dataSource
+        ?.map((r) => r?.agent_id)
+        .filter((id): id is number => typeof id === 'number') ?? [],
+    queryOptions: {
+      enabled: !!parsedTableProps?.dataSource,
+    },
+  })
   const clients = (clientData?.data || []) as TClient[]
 
   const { getColumnSearchProps } = useColumnSearch<DataType>()
@@ -321,11 +331,11 @@ export const ListView: React.FC = () => {
       const insurer_name = theInsurer || 'N/A'
 
       let paymentToInsurer = 'N/A';
-
+      let grossPremium = 0;
       if (item?.template === 'motor') {
         const insurerPaymentRate = Number(item?.insurer_fee_percent ?? theInsurer?.payment_rate ?? 0);
         const extra_fieldValue = round(Number(item?.premium ?? 0) * (Number(item?.extra_field?.value ?? 0) / 100), 2);
-        const grossPremium = getGrossPremium({
+        grossPremium = getGrossPremium({
           premium: Number(item?.premium ?? 0),
           ls: Number(item?.motor_attr?.ls ?? 0),
           ncb: Number(item?.motor_attr?.ncb ?? 0),
@@ -362,7 +372,12 @@ export const ListView: React.FC = () => {
       const receipt_no = theReceipt?.receipt_no || 'N/A'
       const receipt_date = theReceipt?.date ? dayjs.unix(theReceipt?.date as number).format('YYYY-MM-DD') : 'N/A'
       const payment_date = theReceipt?.payment_date ? dayjs.unix(theReceipt?.payment_date as number).format('YYYY-MM-DD') : 'N/A'
-
+      //取得agent資料
+      const theAgent =
+        agentData?.data?.find(
+          (theAgent) => theAgent.id === item?.agent_id,
+        )
+      const agent_number = theAgent?.agent_number || 'N/A'
       // 取得totalPremium
       const totalPremium = getTotalPremiumByDebitNote(item)
       return {
@@ -375,7 +390,12 @@ export const ListView: React.FC = () => {
         'Client No': theClient?.client_number || 'N/A',
         'Client': display_name,
         'Insurer': insurer_name,
-        'Premium': totalPremium || 'N/A',
+        'Class': termData?.data?.find((theTerm) => theTerm.id === item?.term_id)?.name || 'N/A',
+        'Agent': agent_number,
+        'Gross Premium': item?.premium || 'N/A',
+        'Gross Premium(Motor)': grossPremium || 'N/A',
+        'ECI': item?.extra_field?.label==='ECI' ? item?.extra_field?.value : 'N/A',
+        'Total Premium': totalPremium || 'N/A',
         'Insurer Fee Percent': item?.insurer_fee_percent || 'N/A',
         'Payment to Insurer': paymentToInsurer,
         'Remark': item?.remark || 'N/A',
@@ -390,7 +410,7 @@ export const ListView: React.FC = () => {
         'Policy No.': item?.policy_no || 'N/A',
         'Created At': dayjs.unix(Number(item?.created_at)).format('YYYY-MM-DD'),
         'Template': item?.template || 'N/A',
-        'Teem ID': item?.term_id || 'N/A',
+        'Term ID': item?.term_id || 'N/A',
         'Agent ID': item?.agent_id || 'N/A',
         'Client ID': item?.client_id || 'N/A',
         'Insurer ID': item?.insurer_id || 'N/A',
