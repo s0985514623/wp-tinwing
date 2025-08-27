@@ -47,12 +47,7 @@ final class OtherReport
                 'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
             ],
             [
-                'endpoint'            => 'report_by_agent_outstanding',
-                'method'              => 'get',
-                'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
-            ],
-            [
-                'endpoint'            => 'report_by_agent_paid',
+                'endpoint'            => 'report_by_agent',
                 'method'              => 'get',
                 'permission_callback' => '__return_true', // TODO 應該是特定會員才能看
             ],
@@ -292,9 +287,9 @@ final class OtherReport
             $total_premium = 0;
             while ($query->have_posts()) {
                 $query->the_post();
-                $insurer    = $insurer_map[get_post_meta(get_the_ID(), 'insurer_id', true)];
+                $insurer = $insurer_map[get_post_meta(get_the_ID(), 'insurer_id', true)];
                 //如果沒有insurer,則跳過
-                if (!$insurer) {
+                if (! $insurer) {
                     continue;
                 }
                 $insurer_id = $insurer ? $insurer->ID : '';
@@ -329,7 +324,7 @@ final class OtherReport
             ];
             $posts_data = array_values($posts_data);
             foreach ($posts_data as $key => $value) {
-                $posts_data[$key]['120Days & Over'] = number_format($value['120Days & Over'], 2, '.', ',');
+                $posts_data[$key]['120Days & Over']  = number_format($value['120Days & Over'], 2, '.', ',');
                 $posts_data[$key]['Current Balance'] = number_format($value['Current Balance'], 2, '.', ',');
             }
             wp_reset_postdata();
@@ -344,12 +339,12 @@ final class OtherReport
         return $response;
     }
     /**
-     * report_by_agent_outstanding callback
+     * report_by_agent callback
      *
      * @param \WP_REST_Request $request Request.
      * @return \WP_REST_Response
      */
-    public function get_report_by_agent_outstanding_callback($request)
+    public function get_report_by_agent_callback($request)
     {
         $params = $request->get_query_params() ?? [];
         $params = WP::sanitize_text_field_deep($params, false);
@@ -367,12 +362,31 @@ final class OtherReport
             $meta_query         = Base::sanitize_meta_query($params['meta_query']);
             $args['meta_query'] = $meta_query;
         }
-        //加入排除條件,receipt_id不存在或為空
-        $args['meta_query'][] = [
-            'key'     => 'receipt_id',
-            'value'   => '',
-            'compare' => 'NOT EXISTS',
-        ];
+        //加入agent_id條件
+        if (isset($params['agent_id'])) {
+            $args['meta_query'][] = [
+                'key'     => 'agent_id',
+                'value'   => $params['agent_id'],
+                'compare' => '=',
+            ];
+        }
+        //加入payment_status條件
+        if (isset($params['payment_status'])&&$params['payment_status']=='unpaid') {
+            //加入排除條件,receipt_id不存在或為空
+            $args['meta_query'][] = [
+                'key'     => 'receipt_id',
+                'value'   => '',
+                'compare' => 'NOT EXISTS',
+            ];
+        }
+        elseif(isset($params['payment_status'])&&$params['payment_status']=='paid'){
+            //加入條件,receipt_id存在
+            $args['meta_query'][] = [
+                'key'     => 'receipt_id',
+                'compare' => 'EXISTS',
+            ];
+        }
+        
         // error_log(print_r($args, true));
         //主查詢
         $query = new \WP_Query($args);
@@ -399,43 +413,88 @@ final class OtherReport
                 $agent_map[$agent->ID] = $agent;
             }
         }
+        //取得client ids資料
+        $client_ids = [];
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $client_ids[] = get_post_meta(get_the_ID(), 'client_id', true);
+            }
+        }
+        $client_ids = array_values(array_unique($client_ids));
+        //取得client 資料
+        $client_map = [];
+        if ($client_ids) {
+            $client_data = get_posts([
+                'post_type'              => 'clients',
+                'post__in'               => $client_ids,
+                'update_post_meta_cache' => true,
+                'fields'                 => 'all',
+            ]);
+            foreach ($client_data as $client) {
+                $client_map[$client->ID] = $client;
+            }
+        }
+        //取得receipt ids資料
+        $receipt_ids = [];
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $receipt_ids[] = get_post_meta(get_the_ID(), 'receipt_id', true);
+            }
+        }
+        $receipt_ids = array_values(array_unique($receipt_ids));
+        //取得receipt 資料
+        $receipt_map = [];
+        if ($receipt_ids) {
+            $receipt_data = get_posts([
+                'post_type'              => 'receipts',
+                'post__in'               => $receipt_ids,
+                'update_post_meta_cache' => true,
+                'fields'                 => 'all',
+            ]);
+            foreach ($receipt_data as $receipt) {
+                $receipt_map[$receipt->ID] = $receipt;
+            }
+        }
         // 整合資料
         $posts_data = [];
         if ($query->have_posts()) {
             $total_premium = 0;
             while ($query->have_posts()) {
                 $query->the_post();
-                $agent    = $agent_map[get_post_meta(get_the_ID(), 'agent_id', true)];
-                $agent_id = $agent ? $agent->ID : '';
+                $agent     = $agent_map[get_post_meta(get_the_ID(), 'agent_id', true)];
+                $client    = $client_map[get_post_meta(get_the_ID(), 'client_id', true)];
+                $receipt   = $receipt_map[get_post_meta(get_the_ID(), 'receipt_id', true)];
+                $display_name = get_post_meta($client->ID, 'display_name', true);
+                $agent_id  = $agent ? $agent->ID : '';
+                $client_id = $client ? $client->ID : '';
                 $post_type = get_post_type(get_the_ID());
-                $premium  = (float) (get_post_meta(get_the_ID(), 'premium', true) ?: 0);
+                $premium   = (float) (get_post_meta(get_the_ID(), 'premium', true) ?: 0);
                 $total_premium += $premium;
                 $posts_data[] = [
-                    'Date'        => get_post_meta(get_the_ID(), 'date', true) ?  \date_i18n('d/m/y', get_post_meta(get_the_ID(), 'date', true)) : 'N/A',
-                    'Note No'     => get_the_title(),
-                    'Post type'   => $post_type === 'debit_notes' ? 'DN' : 'CN',
-                    'Agent'       => $agent ? get_post_meta($agent->ID, 'agent_number', true) ?? '' : '',
-                    '120Days & Over'  => $premium,
-                    '90Days & Over'   => '',
-                    '60Days & Over'   => '',
-                    '30Days & Over'   => '',
-                    'Current Balance' => $premium,
+                    'Date'            => get_post_meta(get_the_ID(), 'date', true) ? \date_i18n('d/m/y', get_post_meta(get_the_ID(), 'date', true)) : 'N/A',
+                    'Note No'         => get_the_title(),
+                    'Post type'       => $post_type === 'debit_notes' ? 'DN' : 'CN',
+                    'Client Name'     => $client ? get_post_meta($client->ID, $display_name, true) ?? '' : '',
+                    'Premium'         => $premium,
+                    'Agent Code'           => $agent ? get_post_meta($agent->ID, 'agent_number', true) ?? '' : '',
+                    'Receipt No'         => $receipt ? $receipt->post_title : '',
+                    'Payment Date'        => $receipt ? \date_i18n('d/m/y', get_post_meta($receipt->ID, 'payment_date', true)) : '',
                 ];
             }
             $posts_data[] = [
-                'Date'        => '',
-                'Note No'     => 'Total',
-                'Post type'   => '',
-                'Agent'       => '',
-                '120Days & Over'  => $total_premium,
-                '90Days & Over'   => '',
-                '60Days & Over'   => '',
-                '30Days & Over'   => '',
-                'Current Balance' => $total_premium,
+                'Date'            => '',
+                'Note No'         => '',
+                'Post type'       => '',
+                'Client Name'     => 'Total',
+                'Premium'         => $total_premium,
+                'Agent Code'      => '',
+                'Receipt No'      => '',
+                'Payment Date'    => '',
             ];
             foreach ($posts_data as $key => $value) {
-                $posts_data[$key]['120Days & Over'] = number_format($value['120Days & Over'], 2, '.', ',');
-                $posts_data[$key]['Current Balance'] = number_format($value['Current Balance'], 2, '.', ',');
+                $posts_data[$key]['Premium']  = number_format($value['Premium'], 2, '.', ',');
             }
             wp_reset_postdata();
         }
@@ -508,16 +567,16 @@ final class OtherReport
             $total_premium = 0;
             while ($query->have_posts()) {
                 $query->the_post();
-                $agent    = $agent_map[get_post_meta(get_the_ID(), 'agent_id', true)];
-                $agent_id = $agent ? $agent->ID : '';
+                $agent     = $agent_map[get_post_meta(get_the_ID(), 'agent_id', true)];
+                $agent_id  = $agent ? $agent->ID : '';
                 $post_type = get_post_type(get_the_ID());
-                $premium  = (float) (get_post_meta(get_the_ID(), 'premium', true) ?: 0);
+                $premium   = (float) (get_post_meta(get_the_ID(), 'premium', true) ?: 0);
                 $total_premium += $premium;
                 $posts_data[] = [
-                    'Date'        => get_post_meta(get_the_ID(), 'date', true) ?  \date_i18n('d/m/y', get_post_meta(get_the_ID(), 'date', true)) : 'N/A',
-                    'Note No'     => get_the_title(),
-                    'Post type'   => $post_type === 'debit_notes' ? 'DN' : 'CN',
-                    'Agent'       => $agent ? get_post_meta($agent->ID, 'agent_number', true) ?? '' : '',
+                    'Date'            => get_post_meta(get_the_ID(), 'date', true) ? \date_i18n('d/m/y', get_post_meta(get_the_ID(), 'date', true)) : 'N/A',
+                    'Note No'         => get_the_title(),
+                    'Post type'       => $post_type === 'debit_notes' ? 'DN' : 'CN',
+                    'Agent'           => $agent ? get_post_meta($agent->ID, 'agent_number', true) ?? '' : '',
                     '120Days & Over'  => $premium,
                     '90Days & Over'   => '',
                     '60Days & Over'   => '',
@@ -526,10 +585,10 @@ final class OtherReport
                 ];
             }
             $posts_data[] = [
-                'Date'        => '',
-                'Note No'     => 'Total',
-                'Post type'   => '',
-                'Agent'       => '',
+                'Date'            => '',
+                'Note No'         => 'Total',
+                'Post type'       => '',
+                'Agent'           => '',
                 '120Days & Over'  => $total_premium,
                 '90Days & Over'   => '',
                 '60Days & Over'   => '',
@@ -537,7 +596,7 @@ final class OtherReport
                 'Current Balance' => $total_premium,
             ];
             foreach ($posts_data as $key => $value) {
-                $posts_data[$key]['120Days & Over'] = number_format($value['120Days & Over'], 2, '.', ',');
+                $posts_data[$key]['120Days & Over']  = number_format($value['120Days & Over'], 2, '.', ',');
                 $posts_data[$key]['Current Balance'] = number_format($value['Current Balance'], 2, '.', ',');
             }
             wp_reset_postdata();

@@ -24,4 +24,12 @@ export const reports = [
             label: 'Other Reports',
         },
     },
+    {
+        name: 'report by agent',
+        list: '/reports/report-by-agent',
+        meta: {
+            parent: 'reportsDropdown',
+            label: 'Report by Agent',
+        },
+    },
 ];

@@ -95,7 +95,7 @@ final class DebitNotes {
 	public function get_debit_notes_callback( $request ) { // phpcs:ignore
 		$params = $request->get_query_params() ?? [];
 		$params = WP::sanitize_text_field_deep( $params, false );
-
+		// error_log(print_r($params, true));
 		// 查詢 Custom Post Type 'debit_notes' 的文章
 		$args = [
 			'post_type'      => 'debit_notes',   // 自定義文章類型名稱
@@ -127,6 +127,7 @@ final class DebitNotes {
 		if (isset($params['id'])) {
 			$args['post__in'] = $params['id'];
 		}
+		// error_log(print_r($args, true));
 		$query      = new \WP_Query($args);
 		$posts_data = [];
 		if ($query->have_posts()) {

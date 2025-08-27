@@ -87,6 +87,7 @@ import { CreateView as ExpenseRecordCreate } from './pages/accounting/Expense/Re
 import { ShowView as ExpenseSummaryShow } from './pages/accounting/Expense/Summary/ShowView'
 import Reports from './pages/reports'
 import { OtherReports } from './pages/reports/otherReports'
+import { ReportByAgent } from './pages/reports/reportByAgent'
 
 const AppRoutes = () => {
   return (
@@ -153,6 +154,7 @@ const AppRoutes = () => {
         <Route path="/reports">
           <Route index element={<Reports />} />
           <Route path="other-reports" element={<OtherReports />} />
+          <Route path="report-by-agent" element={<ReportByAgent />} />
         </Route>
 
         <Route path="/insurers">
