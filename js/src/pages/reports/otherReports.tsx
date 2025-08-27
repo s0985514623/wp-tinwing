@@ -24,7 +24,7 @@ export const OtherReports: React.FC = () => {
                     <Button type='primary' onClick={() => startExport('client_ageing_report', dateRange)}>Client Ageing Report</Button>
                     <Button type='primary' onClick={() => startExport('insurer_ageing_report', dateRange)}>Insurer Ageing Report</Button>
                     <Button type='primary' onClick={() => startExport('report_by_agent_outstanding', dateRange)}>Report by Agent(Outstanding)</Button>
-                    <Button type='primary'>Report by Agent(Paid)</Button>
+                    <Button type='primary' onClick={() => startExport('report_by_agent_paid', dateRange)}>Report by Agent(Paid)</Button>
                     <Button type='primary'>Analysis by Principal and Class</Button>
                     <Button type='primary'>Profit and Loss Analysis</Button>
                     <Button type='primary'>Trial Balance</Button>

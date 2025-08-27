@@ -407,13 +407,147 @@ final class OtherReport
                 $query->the_post();
                 $agent    = $agent_map[get_post_meta(get_the_ID(), 'agent_id', true)];
                 $agent_id = $agent ? $agent->ID : '';
+                $post_type = get_post_type(get_the_ID());
                 $premium  = (float) (get_post_meta(get_the_ID(), 'premium', true) ?: 0);
                 $total_premium += $premium;
-                $posts_data[$agent_id][] = [
+                $posts_data[] = [
+                    'Date'        => get_post_meta(get_the_ID(), 'date', true) ?  \date_i18n('d/m/y', get_post_meta(get_the_ID(), 'date', true)) : 'N/A',
+                    'Note No'     => get_the_title(),
+                    'Post type'   => $post_type === 'debit_notes' ? 'DN' : 'CN',
                     'Agent'       => $agent ? get_post_meta($agent->ID, 'agent_number', true) ?? '' : '',
-                    'Outstanding' => number_format($premium, 2, '.', ','),
+                    '120Days & Over'  => $premium,
+                    '90Days & Over'   => '',
+                    '60Days & Over'   => '',
+                    '30Days & Over'   => '',
+                    'Current Balance' => $premium,
                 ];
             }
+            $posts_data[] = [
+                'Date'        => '',
+                'Note No'     => 'Total',
+                'Post type'   => '',
+                'Agent'       => '',
+                '120Days & Over'  => $total_premium,
+                '90Days & Over'   => '',
+                '60Days & Over'   => '',
+                '30Days & Over'   => '',
+                'Current Balance' => $total_premium,
+            ];
+            foreach ($posts_data as $key => $value) {
+                $posts_data[$key]['120Days & Over'] = number_format($value['120Days & Over'], 2, '.', ',');
+                $posts_data[$key]['Current Balance'] = number_format($value['Current Balance'], 2, '.', ',');
+            }
+            wp_reset_postdata();
         }
+        $response = new \WP_REST_Response($posts_data);
+        $total    = $query->found_posts !== 0 ? $query->found_posts + 1 : $query->found_posts;
+        // Set pagination in header.
+        $response->header('X-WP-Total', $total);
+        // $response->header( 'X-WP-TotalPages', $total_pages );
+
+        return $response;
+    }
+    /**
+     * report_by_agent_paid callback
+     *
+     * @param \WP_REST_Request $request Request.
+     * @return \WP_REST_Response
+     */
+    public function get_report_by_agent_paid_callback($request)
+    {
+        $params = $request->get_query_params() ?? [];
+        $params = WP::sanitize_text_field_deep($params, false);
+        // error_log(print_r($params, true));
+        // 查詢 Custom Post Type 'debit_notes' 和 'credit_notes' 的文章
+        $args = [
+            'post_type'      => ['debit_notes', 'credit_notes'],                                   // 自定義文章類型名稱
+            'posts_per_page' => isset($params['posts_per_page']) ? $params['posts_per_page'] : -1, // 每頁顯示文章數量
+            'paged'          => isset($params['page']) ? $params['page'] : 1,                      // 當前頁碼
+            'orderby'        => isset($params['orderby']) ? $params['orderby'] : 'id',             // 排序方式
+            'order'          => isset($params['order']) ? $params['order'] : 'desc',               // 排序順序（DESC: 新到舊，ASC: 舊到新）
+        ];
+        // 如果有meta_query 參數，則加入查詢條件
+        if (isset($params['meta_query'])) {
+            $meta_query         = Base::sanitize_meta_query($params['meta_query']);
+            $args['meta_query'] = $meta_query;
+        }
+        //加入條件,receipt_id存在
+        $args['meta_query'][] = [
+            'key'     => 'receipt_id',
+            'compare' => 'EXISTS',
+        ];
+        // error_log(print_r($args, true));
+        //主查詢
+        $query = new \WP_Query($args);
+
+        //取得agent ids資料
+        $agent_ids = [];
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $agent_ids[] = get_post_meta(get_the_ID(), 'agent_id', true);
+            }
+        }
+        $agent_ids = array_values(array_unique($agent_ids));
+        //取得agent 資料
+        $agent_map = [];
+        if ($agent_ids) {
+            $agent_data = get_posts([
+                'post_type'              => 'agents',
+                'post__in'               => $agent_ids,
+                'update_post_meta_cache' => true,
+                'fields'                 => 'all',
+            ]);
+            foreach ($agent_data as $agent) {
+                $agent_map[$agent->ID] = $agent;
+            }
+        }
+        // 整合資料
+        $posts_data = [];
+        if ($query->have_posts()) {
+            $total_premium = 0;
+            while ($query->have_posts()) {
+                $query->the_post();
+                $agent    = $agent_map[get_post_meta(get_the_ID(), 'agent_id', true)];
+                $agent_id = $agent ? $agent->ID : '';
+                $post_type = get_post_type(get_the_ID());
+                $premium  = (float) (get_post_meta(get_the_ID(), 'premium', true) ?: 0);
+                $total_premium += $premium;
+                $posts_data[] = [
+                    'Date'        => get_post_meta(get_the_ID(), 'date', true) ?  \date_i18n('d/m/y', get_post_meta(get_the_ID(), 'date', true)) : 'N/A',
+                    'Note No'     => get_the_title(),
+                    'Post type'   => $post_type === 'debit_notes' ? 'DN' : 'CN',
+                    'Agent'       => $agent ? get_post_meta($agent->ID, 'agent_number', true) ?? '' : '',
+                    '120Days & Over'  => $premium,
+                    '90Days & Over'   => '',
+                    '60Days & Over'   => '',
+                    '30Days & Over'   => '',
+                    'Current Balance' => $premium,
+                ];
+            }
+            $posts_data[] = [
+                'Date'        => '',
+                'Note No'     => 'Total',
+                'Post type'   => '',
+                'Agent'       => '',
+                '120Days & Over'  => $total_premium,
+                '90Days & Over'   => '',
+                '60Days & Over'   => '',
+                '30Days & Over'   => '',
+                'Current Balance' => $total_premium,
+            ];
+            foreach ($posts_data as $key => $value) {
+                $posts_data[$key]['120Days & Over'] = number_format($value['120Days & Over'], 2, '.', ',');
+                $posts_data[$key]['Current Balance'] = number_format($value['Current Balance'], 2, '.', ',');
+            }
+            wp_reset_postdata();
+        }
+        $response = new \WP_REST_Response($posts_data);
+        $total    = $query->found_posts !== 0 ? $query->found_posts + 1 : $query->found_posts;
+        // Set pagination in header.
+        $response->header('X-WP-Total', $total);
+        // $response->header( 'X-WP-TotalPages', $total_pages );
+
+        return $response;
     }
 }
