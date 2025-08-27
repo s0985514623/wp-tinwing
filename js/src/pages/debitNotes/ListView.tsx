@@ -304,6 +304,10 @@ export const ListView: React.FC = () => {
       text: 'Package',
       value: 'package',
     },
+    {
+      text: 'Marine Insurance',
+      value: 'marineInsurance',
+    },
     // {
     //   text: 'Others',
     //   value: 'others',

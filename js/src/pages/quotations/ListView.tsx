@@ -252,8 +252,8 @@ export const ListView: React.FC = () => {
             value: 'package',
         },
         {
-            text: 'Others',
-            value: 'others',
+          text: 'Marine Insurance',
+          value: 'marineInsurance',
         },
     ];
     const InsuranceClassOptions = termData?.data?.map((item) => ({ text: item.name, value: item.id }));
