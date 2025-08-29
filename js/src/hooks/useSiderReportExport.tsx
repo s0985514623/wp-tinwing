@@ -59,8 +59,11 @@ function useSiderReportExport() {
             console.log('error', error)
         },
         mapData: (data) => {
-            const safeDate = `="${data.Date}"`
-            return { ...data, Date: safeDate }
+            if(data.Date){
+                const safeDate = `="${data.Date}"`
+                return { ...data, Date: safeDate }
+            }
+            return data
         }
     })
     useEffect(() => {
