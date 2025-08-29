@@ -398,7 +398,7 @@ export const ListView: React.FC = () => {
         'Agent': agent_number,
         'Gross Premium': item?.premium || 'N/A',
         'Gross Premium(Motor)': grossPremium || 'N/A',
-        'ECI': item?.extra_field?.label==='ECI' ? item?.extra_field?.value : 'N/A',
+        'ECI': item?.extra_field?.label==='ECI' ? round(Number(item?.premium ?? grossPremium) * (Number(item?.extra_field?.value) / 100), 2) : 'N/A',
         'Total Premium': totalPremium || 'N/A',
         'Insurer Fee Percent': item?.insurer_fee_percent || 'N/A',
         'Payment to Insurer': paymentToInsurer,
