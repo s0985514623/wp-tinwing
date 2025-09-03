@@ -11,8 +11,10 @@ import { DataType as TDebitNote } from 'pages/debitNotes/types'
 import { DataType as TCreditNote } from 'pages/creditNotes/types'
 import { DataType as TClient } from 'pages/clients/types'
 import { DataType as TAgent } from 'pages/agents/types'
+import { DataType as TReceipt } from 'pages/receipts/types'
+import { DataType as TRenewal } from 'pages/renewals/types'
 
-type DataType = TDebitNote & TCreditNote & { post_type: string }
+type DataType = TDebitNote & TCreditNote & TReceipt & { post_type: string }
 function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
     const { tableProps, searchFormProps } = useTable<DataType>({
         resource,
@@ -131,6 +133,36 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
         ids: agentNames,
     })
 
+    //get credit note id
+    const creditNoteNames = [...new Set(tableProps.dataSource?.map((item) => {
+        return item.created_from_credit_note_id
+    }))] as BaseKey[]
+    const { data: creditNoteData } = useMany<TCreditNote>({
+        resource: 'credit_notes',
+        ids: creditNoteNames,
+    })
+    const creditNotes = creditNoteData?.data || []
+
+    // get debit note id
+    const debitNoteNames = [...new Set(tableProps.dataSource?.map((item) => {
+        return item.debit_note_id
+    }))] as BaseKey[]
+    const { data: debitNoteData } = useMany<TDebitNote>({
+        resource: 'debit_notes',
+        ids: debitNoteNames,
+    })
+    const debitNotes = debitNoteData?.data || []
+
+    // get renewal id
+    const renewalNames = [...new Set(tableProps.dataSource?.map((item) => {
+        return item.created_from_renewal_id
+    }))] as BaseKey[]
+    const { data: renewalData } = useMany<TRenewal>({
+        resource: 'renewals',
+        ids: renewalNames,
+    })
+    const renewals = renewalData?.data || []
+
     return (
         <>
             <Row gutter={[16, 16]}>
@@ -191,17 +223,56 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
                             <Table.Column
                                 dataIndex="client_id"
                                 title="Client No."
-                                render={(clientId: BaseKey) => {
-                                    return clientData?.data?.find((client) => client.id === clientId)?.client_number
+                                render={(clientId: BaseKey,record:DataType) => {
+                                    if(clientId){
+                                        return clientData?.data?.find((client) => client.id === clientId)?.client_number
+                                    }
+                                    if(record.created_from_credit_note_id){
+                                        const creditNote = creditNotes.find((creditNote) => creditNote.id === record.created_from_credit_note_id)
+                                        const client = clientData?.data?.find((client) => client.id === creditNote?.client_id)
+                                        return client?.client_number
+                                    }
+                                    if(record.created_from_renewal_id){
+                                        const renewal = renewals.find((renewal) => renewal.id === record.created_from_renewal_id)
+                                        const client = clientData?.data?.find((client) => client.id === renewal?.client_id)
+                                        return client?.client_number
+                                    }
+                                    if(record.debit_note_id){
+                                        const debitNote = debitNotes.find((debitNote) => debitNote.id === record.debit_note_id)
+                                        const client = clientData?.data?.find((client) => client.id === debitNote?.client_id)
+                                        return client?.client_number
+                                    }
+                                    return 'N/A'
                                 }}
                             />
                             <Table.Column
                                 dataIndex="client_id"
                                 title="Client Name"
-                                render={(clientId: BaseKey) => {
+                                render={(clientId: BaseKey,record:DataType) => {
+                                    if(clientId){
                                     const client = clientData?.data?.find((client) => client.id === clientId)
-                                    const displayNameStr = client?.display_name
-                                    return displayNameStr ? client[displayNameStr] : 'N/A'
+                                        const displayNameStr = client?.display_name
+                                        return displayNameStr ? client[displayNameStr] : 'N/A'
+                                    }
+                                    if(record.created_from_credit_note_id){
+                                        const creditNote = creditNotes.find((creditNote) => creditNote.id === record.created_from_credit_note_id)
+                                        const client = clientData?.data?.find((client) => client.id === creditNote?.client_id)
+                                        const displayNameStr = client?.display_name
+                                        return displayNameStr ? client[displayNameStr] : 'N/A'
+                                    }
+                                    if(record.created_from_renewal_id){
+                                        const renewal = renewals.find((renewal) => renewal.id === record.created_from_renewal_id)
+                                        const client = clientData?.data?.find((client) => client.id === renewal?.client_id)
+                                        const displayNameStr = client?.display_name
+                                        return displayNameStr ? client[displayNameStr] : 'N/A'
+                                    }
+                                    if(record.debit_note_id){
+                                        const debitNote = debitNotes.find((debitNote) => debitNote.id === record.debit_note_id)
+                                        const client = clientData?.data?.find((client) => client.id === debitNote?.client_id)
+                                        const displayNameStr = client?.display_name
+                                        return displayNameStr ? client[displayNameStr] : 'N/A'
+                                    }
+                                    return 'N/A'
                                 }}
                             />
                             <Table.Column
@@ -246,15 +317,20 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
                                     return client?.mobile1 || client?.mobile2 || client?.tel2 || client?.tel3
                                 }}
                             />
-                            <Table.Column
-                                dataIndex="date"
-                                title="Days Over"
-                                render={(date: number) => {
-                                    return Math.abs(
-                                        dayjs.unix(date).startOf('day').diff(dayjs().startOf('day'), 'day')
-                                    )
-                                }}
-                            />
+                            {
+                                'debit_notes/not_receipt'===resource?
+                                    <Table.Column
+                                    dataIndex="date"
+                                    title="Days Over"
+                                    render={(date: number) => {
+                                        return Math.abs(
+                                            dayjs.unix(date).startOf('day').diff(dayjs().startOf('day'), 'day')
+                                        )
+                                    }}
+                                />
+                                :''
+                            }
+                            
                         </Table>
                         <hr className="my-8" />
                     </Card>
