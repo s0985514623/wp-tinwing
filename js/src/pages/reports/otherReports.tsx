@@ -21,9 +21,8 @@ export const OtherReports: React.FC = () => {
             </div>
             <Spin spinning={isLoading}>
                 <div className='flex flex-wrap gap-4 w-2/3 mt-4'>
-                    <Button type='primary' onClick={() => startExport('client_ageing_report', dateRange)}>Client Ageing Report</Button>
-                    <Button type='primary' onClick={() => startExport('insurer_ageing_report', dateRange)}>Insurer Ageing Report</Button>
-                    <Button type='primary'>Analysis by Principal and Class</Button>
+                    <Button type='primary' onClick={() => startExport({action:'client_ageing_report', dateRange})}>Client Ageing Report</Button>
+                    <Button type='primary' onClick={() => startExport({action:'insurer_ageing_report', dateRange})}>Insurer Ageing Report</Button>
                     <Button type='primary'>Profit and Loss Analysis</Button>
                     <Button type='primary'>Trial Balance</Button>
                     <Button type='primary'>Balance Sheet</Button>

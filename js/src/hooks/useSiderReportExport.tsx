@@ -11,6 +11,7 @@ function useSiderReportExport() {
     ])
     const [agentId, setAgentId] = useState<number | undefined>()
     const [paymentStatus, setPaymentStatus] = useState<string | undefined>('paid')
+    const [insurerId, setInsurerId] = useState<number | undefined>()
     const { triggerExport, isLoading } = useExport({
         resource: resource,
         pageSize: -1,
@@ -47,19 +48,24 @@ function useSiderReportExport() {
             {
                 field: 'agent_id',
                 operator: 'eq',
-                value: agentId,
+                value: agentId??undefined,
             },
             {
                 field: 'payment_status',
                 operator: 'eq',
-                value: paymentStatus,
+                value: paymentStatus??undefined,
+            },
+            {
+                field: 'insurer_id',
+                operator: 'eq',
+                value: insurerId??undefined,
             },
         ],
         onError: (error) => {
             console.log('error', error)
         },
         mapData: (data) => {
-            if(data.Date){
+            if (data.Date) {
                 const safeDate = `="${data.Date}"`
                 return { ...data, Date: safeDate }
             }
@@ -70,13 +76,15 @@ function useSiderReportExport() {
         if (resource) {
             triggerExport()
         }
-    }, [resource, dateRange, agentId, paymentStatus])
+    }, [resource, dateRange, agentId, paymentStatus, insurerId])
     // 暴露一個能「帶 action」的啟動器
-    const startExport = (action: string, dateRange: [Dayjs, Dayjs] | undefined, agentId?: number | undefined, paymentStatus?: string | undefined) => {
+    const startExport = (
+        { action, dateRange, agentId, paymentStatus, insurerId }: { action: string, dateRange: [Dayjs, Dayjs] | undefined, agentId?: number | undefined, paymentStatus?: string | undefined, insurerId?: number | undefined }) => {
         setResource(action)
         setDateRange(dateRange)
         setAgentId(agentId)
         setPaymentStatus(paymentStatus)
+        setInsurerId(insurerId)
     };
     return { startExport, isLoading }
 }

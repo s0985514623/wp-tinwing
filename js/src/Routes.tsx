@@ -88,6 +88,7 @@ import { ShowView as ExpenseSummaryShow } from './pages/accounting/Expense/Summa
 import Reports from './pages/reports'
 import { OtherReports } from './pages/reports/otherReports'
 import { ReportByAgent } from './pages/reports/reportByAgent'
+import { ReportByPrincipalAndClass } from './pages/reports/reportByPrincipalAndClass'
 
 const AppRoutes = () => {
   return (
@@ -155,6 +156,7 @@ const AppRoutes = () => {
           <Route index element={<Reports />} />
           <Route path="other-reports" element={<OtherReports />} />
           <Route path="report-by-agent" element={<ReportByAgent />} />
+          <Route path="report-by-principal-and-class" element={<ReportByPrincipalAndClass />} />
         </Route>
 
         <Route path="/insurers">

@@ -51,7 +51,7 @@ export const ReportByAgent: React.FC = () => {
             </div>
             <Spin spinning={isLoading}>
                 <div className='flex flex-wrap gap-4 w-2/3 mt-4'>
-                    <Button type='primary' onClick={() => startExport('report_by_agent', dateRange, agentId, paymentStatus)}>Export</Button>
+                    <Button type='primary' onClick={() => startExport({action:'report_by_agent', dateRange, agentId, paymentStatus})}>Export</Button>
                 </div>
             </Spin>
         </div>
