@@ -160,7 +160,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({ data: debitNoteData 
                                 <p>{extra_fieldLabel}</p>
                             </div>
                             <div className="td text-left">
-                                <p>{extra_fieldValue}%</p>
+                                <p>{round(Number(extra_fieldValue), 2)}%</p>
                             </div>
                             <div className="td text-right">
                                 <p>{getPrice(round(grossPremium * (Number(extra_fieldValue) / 100), 2), 'w-full')}</p>

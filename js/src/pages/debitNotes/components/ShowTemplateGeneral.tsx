@@ -121,7 +121,7 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({
                 <p>{extra_fieldLabel}</p>
               </div>
               <div className="td text-left">
-                <p>{extra_fieldValue}%</p>
+                <p>{round(Number(extra_fieldValue), 2)}%</p>
               </div>
               <div className="td text-right">
                 <p>
