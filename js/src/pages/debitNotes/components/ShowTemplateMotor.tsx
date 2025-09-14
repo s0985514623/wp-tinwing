@@ -196,7 +196,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
             </div>
             <div className="tr">
               <div className="th w-[18rem]">
-                <p>額外保費 Loading {ls ? ` ${ls}%` : ''}</p>
+                <p>額外保費 Loading {ls ? ` ${round(ls, 2).toFixed(2)}%` : ''}</p>
               </div>
               {/* <div className="td text-left">
                 <p>{ls ? `${ls}%` : ''}</p>
@@ -207,7 +207,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
             </div>
             <div className="tr">
               <div className="th text-red-500 print:text-inherit w-[18rem]">
-                <p>無索償折扣 NCD {ncb ? ` ${ncb}%` : ''}</p>
+                <p>無索償折扣 NCD {ncb ? ` ${round(ncb, 2).toFixed(2)}%` : ''}</p>
               </div>
               {/* <div className="td text-left">
                 <p>{ncb ? `${ncb}%` : ''}</p>
@@ -230,7 +230,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
             </div>
             <div className="tr">
               <div className="th w-[18rem]">
-                <p>徵費 IA Levy ＋MIB {mib ? ` ${mib}%` : ''}</p>
+                <p>徵費 IA Levy ＋MIB {mib ? ` ${round(mib, 2).toFixed(2)}%` : ''}</p>
               </div>
               {/* <div className="td text-left">
                 <p>{mib ? `${mib}%` : ''}</p>
@@ -241,7 +241,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
             </div>
             <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr`}>
               <div className="th w-[18rem]">
-                <p>{extra_fieldLabel} {extra_fieldValue ? ` ${extra_fieldValue}%` : ''}</p>
+                <p>{extra_fieldLabel} {extra_fieldValue ? ` ${round(Number(extra_fieldValue), 2).toFixed(2)}%` : ''}</p>
               </div>
               {/* <div className="td text-left">
                 <p>{round(Number(extra_fieldValue), 2)}%</p>

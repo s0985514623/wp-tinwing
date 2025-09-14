@@ -131,7 +131,7 @@ const ShowTemplateMarine: React.FC<{ data?: DataType }> = ({
             </div>
             <div className="tr ">
               <div className="th w-[18rem]">
-                <p>保費徵費 IA Levy {levy ? ` ${levy}%` : ''}</p>
+                <p>保費徵費 IA Levy {levy ? ` ${round(levy, 2).toFixed(2)}%` : ''}</p>
               </div>
               {/* <div className="td text-left">
                 <p>{levy}%</p>
@@ -142,7 +142,7 @@ const ShowTemplateMarine: React.FC<{ data?: DataType }> = ({
             </div>
             <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr `}>
               <div className="th w-[18rem]">
-                <p>{extra_fieldLabel} {extra_fieldValue ? ` ${extra_fieldValue}%` : ''}</p>
+                <p>{extra_fieldLabel} {extra_fieldValue ? ` ${round(Number(extra_fieldValue), 2).toFixed(2)}%` : ''}</p>
               </div>
               {/* <div className="td text-left">
                 <p>{round(Number(extra_fieldValue), 2)}%</p>

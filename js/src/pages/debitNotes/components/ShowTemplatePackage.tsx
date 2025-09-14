@@ -46,12 +46,12 @@ const ShowTemplatePackage: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
                             <div className="td text-right">{getPrice(premium, 'w-full')}</div>
                         </div>
                         <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr`}>
-                            <div className="th w-[18rem]">{extra_fieldLabel} {extra_fieldValue ? ` ${extra_fieldValue}%` : ''}</div>
+                            <div className="th w-[18rem]">{extra_fieldLabel} {extra_fieldValue ? ` ${round(Number(extra_fieldValue), 2).toFixed(2)}%` : ''}</div>
                             {/* <div className="td text-right">{round(Number(extra_fieldValue), 2)}%</div> */}
                             <div className="td text-right">{getPrice(round(premium * (Number(extra_fieldValue) / 100), 2), 'w-full')}</div>
                         </div>
                         <div className={`${extra_field2Label ? '' : 'tw-hidden'} tr`}>
-                            <div className="th w-[18rem]">{extra_field2Label} {extra_field2Value ? ` ${extra_field2Value}%` : ''}</div>
+                            <div className="th w-[18rem]">{extra_field2Label} {extra_field2Value ? ` ${round(Number(extra_field2Value), 2).toFixed(2)}%` : ''}</div>
                             {/* <div className="td text-right">{extra_field2Value}%</div> */}
                             <div className="td text-right">{getPrice(round(premium * (Number(extra_field2Value) / 100), 2), 'w-full')}</div>
                         </div>
