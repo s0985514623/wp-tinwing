@@ -164,7 +164,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
                 <p>保險期限 Period of Insurance</p>
               </div>
               <div className="td">
-                <p>{`From ${dayjs.unix(debitNoteData?.period_of_insurance_from || dayjs().unix()).format('YYYY-MM-DD')}   To ${dayjs.unix(debitNoteData?.period_of_insurance_to || dayjs().unix()).format('YYYY-MM-DD')}`}</p>
+                <p>{`From ${dayjs.unix(debitNoteData?.period_of_insurance_from || dayjs().unix()).format('YYYY-MM-DD')}   to ${dayjs.unix(debitNoteData?.period_of_insurance_to || dayjs().unix()).format('YYYY-MM-DD')}`}</p>
               </div>
             </div>
             <div className="tr">
@@ -186,32 +186,32 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
         <Col span={10} className="border-l-2 border-solid border-black pt-2 pr-[24px]">
           <div className="table table_td-flex-1 w-full h-full relative">
             <div className="tr">
-              <div className="th">
-                <p>Premium</p>
+              <div className="th w-[18rem]">
+                <p>基本保費 Premium</p>
               </div>
-              <div className="td text-right"></div>
+              {/* <div className="td text-right"></div> */}
               <div className="td text-right">
                 <p>{getPrice(round(premium, 2), 'w-full')}</p>
               </div>
             </div>
             <div className="tr">
-              <div className="th">
-                <p>LS</p>
+              <div className="th w-[18rem]">
+                <p>額外保費 Loading {ls ? ` ${ls}%` : ''}</p>
               </div>
-              <div className="td text-left">
+              {/* <div className="td text-left">
                 <p>{ls ? `${ls}%` : ''}</p>
-              </div>
+              </div> */}
               <div className="td text-right">
                 <p>{getPrice(round(premium * (ls / 100), 2), 'w-full')}</p>
               </div>
             </div>
             <div className="tr">
-              <div className="th text-red-500 print:text-inherit">
-                <p>NCB</p>
+              <div className="th text-red-500 print:text-inherit w-[18rem]">
+                <p>無索償折扣 NCD {ncb ? ` ${ncb}%` : ''}</p>
               </div>
-              <div className="td text-left">
+              {/* <div className="td text-left">
                 <p>{ncb ? `${ncb}%` : ''}</p>
-              </div>
+              </div> */}
               <div className="td text-right">
                 <p>
                   {getPrice(round(premium * (1 + ls / 100) * (ncb / 100), 2), 'w-full')}
@@ -220,32 +220,32 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
             </div>
 
             <div className="tr mt-10">
-              <div className="th">
-                <p>Gross Premium</p>
+              <div className="th w-[18rem]">
+                <p>總保費 Gross Premium</p>
               </div>
-              <div className="td text-right"></div>
+              {/* <div className="td text-right"></div> */}
               <div className="td text-right">
                 <p>{getPrice(grossPremium, 'w-full')}</p>
               </div>
             </div>
             <div className="tr">
-              <div className="th">
-                <p>MIB</p>
+              <div className="th w-[18rem]">
+                <p>徵費 IA Levy ＋MIB {mib ? ` ${mib}%` : ''}</p>
               </div>
-              <div className="td text-left">
+              {/* <div className="td text-left">
                 <p>{mib ? `${mib}%` : ''}</p>
-              </div>
+              </div> */}
               <div className="td text-right">
                 <p>{getPrice(round(grossPremium * (mib / 100), 2), 'w-full')}</p>
               </div>
             </div>
             <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr`}>
-              <div className="th">
-                <p>{extra_fieldLabel}</p>
+              <div className="th w-[18rem]">
+                <p>{extra_fieldLabel} {extra_fieldValue ? ` ${extra_fieldValue}%` : ''}</p>
               </div>
-              <div className="td text-left">
+              {/* <div className="td text-left">
                 <p>{round(Number(extra_fieldValue), 2)}%</p>
-              </div>
+              </div> */}
               <div className="td text-right">
                 <p>
                   {getPrice(
@@ -256,19 +256,19 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
               </div>
             </div>
             <div className="tr mt-10">
-              <div className="th text-red-500 print:text-inherit">
-                <p>Less</p>
+              <div className="th text-red-500 print:text-inherit w-[18rem]">
+                <p>折扣 Less</p>
               </div>
-              <div className="td"></div>
+              {/* <div className="td"></div> */}
               <div className="td text-right">
                 <p>{getPrice(less, 'w-full')}</p>
               </div>
             </div>
             <div className="tr absolute bottom-0 border-t-2 border-solid border-black flex-wrap">
-              <div className="w-full p-2 font-bold text-xs print:text-lg">
+              <div className="w-full font-semibold p-2 text-xs print:text-lg">
                 請繳付此金額 Please pay this amount
               </div>
-              <div className="th font-bold w-[18rem]">
+              <div className="th w-[18rem]">
                 <p>總保險費 TOTAL PREMIUM</p>
               </div>
               <div className="td text-right">

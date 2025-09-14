@@ -97,32 +97,32 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({
         <Col span={10} className="border-l-2 border-solid border-black pt-2 pr-[24px]">
           <div className="table table_td-flex-1 w-full h-full relative">
             <div className="tr ">
-              <div className="th">
-                <p>Premium</p>
+              <div className="th w-[18rem]">
+                <p>保費 Premium</p>
               </div>
-              <div className="td text-right"></div>
+              {/* <div className="td text-right"></div> */}
               <div className="td text-right">
                 <p>{getPrice(round(premium, 2), 'w-full' )}</p>
               </div>
             </div>
             <div className="tr ">
-              <div className="th">
-                <p>IA Levy</p>
+              <div className="th w-[18rem]">
+                <p>保費徵費 IA Levy {levy ? ` ${levy}%` : ''}</p>
               </div>
-              <div className="td text-left">
-                <p>{levy}%</p>{' '}
-              </div>
+              {/* <div className="td text-left">
+                <p>{levy}%</p>
+              </div> */}
               <div className="td text-right">
-                <p>{getPrice(round(premium * (levy / 100), 2), 'w-full')}</p>{' '}
+                <p>{getPrice(round(premium * (levy / 100), 2), 'w-full')}</p>
               </div>
             </div>
             <div className={`${extra_fieldLabel ? '' : 'tw-hidden'} tr `}>
-              <div className="th">
-                <p>{extra_fieldLabel}</p>
+              <div className="th w-[18rem]">
+                <p>{extra_fieldLabel} {extra_fieldValue ? ` ${extra_fieldValue}%` : ''}</p>
               </div>
-              <div className="td text-left">
+              {/* <div className="td text-left">
                 <p>{round(Number(extra_fieldValue), 2)}%</p>
-              </div>
+              </div> */}
               <div className="td text-right">
                 <p>
                   {getPrice(
@@ -133,22 +133,21 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({
               </div>
             </div>
             <div className="tr mt-10">
-              <div className="th text-red-500 print:text-inherit">
-                <p>Less</p>
+              <div className="th text-red-500 print:text-inherit w-[18rem]">
+                <p>折扣 Less</p>
               </div>
-              <div className="td text-right"></div>
+              {/* <div className="td text-right"></div> */}
               <div className="td text-right">
                 <p>{getPrice(less, 'w-full')}</p>
               </div>
             </div>
             <div className="tr border-t-2 border-solid border-black flex-wrap">
-              <div className="w-full p-2 font-bold text-xs print:text-lg">
+              <div className="w-full font-semibold p-2 text-xs print:text-lg">
                 請繳付此金額 Please pay this amount
               </div>
-              <div className="th font-bold w-[18rem]">
+              <div className="th w-[18rem]">
                 <p>總保險費 TOTAL PREMIUM</p>
               </div>
-              <div className="td text-right"></div>
               <div className="td text-right">
                 <p>{getPrice(totalPremium, 'w-full')}</p>
               </div>

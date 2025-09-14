@@ -22,6 +22,7 @@ import DetailFooter from 'components/DetailFooter'
 import EditMetaMotor from './components/EditMetaMotor'
 import EditMetaGeneral from './components/EditMetaGeneral'
 import EditMetaPackage from './components/EditMetaPackage'
+import EditTemplateMarine from './components/EditTemplateMarine'
 import { TTemplate, DataType } from './types'
 import { DataType as TClient, defaultClient } from 'pages/clients/types'
 import { DataType as TAgent } from 'pages/agents/types'
@@ -318,6 +319,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
         {selectedTemplate === 'motor' && <EditTemplateMotor />}
         {selectedTemplate === 'shortTerms' && <EditTemplateShortTerms />}
         {selectedTemplate === 'package' && <EditTemplatePackage />}
+        {selectedTemplate === 'marineInsurance' && <EditTemplateMarine />}
         <DetailFooter />
         <Alert
           className="my-24"

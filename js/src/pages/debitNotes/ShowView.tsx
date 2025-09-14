@@ -95,7 +95,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
       )}
     >
       <ShowDebitNoteHeader template={debitNoteData?.template || ''} />
-      <div ref={printRef} className={`${templateText.en=='Motor Insurance'?'Motor':''} w-full print:absolute print:top-0 print:left-0`}>
+      <div ref={printRef} className={`${templateText.en == 'Motor Insurance' ? 'Motor' : ''} w-full print:absolute print:top-0 print:left-0`}>
         <div className="table table_td-flex-1 w-full">
           <div className="w-full mb-4 flex justify-between border-b-2 border-solid border-black pb-6 px-4">
             <div className="w-full">
@@ -113,8 +113,8 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
               <p>Insured / correspondence Address</p>
             </div>
             <div className="text-center text-lg font-semibold border-2 border-solid border-black py-2 px-12">
-              <p>到期通知書</p>
-              <p>Expiry Notice</p>
+              <p>保費單</p>
+              <p>Debit Note</p>
             </div>
           </div>
           <Row gutter={24}>
@@ -160,14 +160,14 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                     <p>{term?.name}</p>
                   </div>
                 </div>
-                <div className="tr">
+                {/* <div className="tr">
                   <div className="th">
                     <p>代理 Agent</p>
                   </div>
                   <div className="td">
                     <p>{agent?.agent_number}</p>
                   </div>
-                </div>
+                </div> */}
                 <div className="tr">
                   <div className="th">
                     <p>客戶編號 Client No</p>
@@ -204,6 +204,16 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
         type="warning"
         showIcon
       />
+      <div className="table table_td-flex-1 w-full">
+        <div className="tr">
+          <div className="th">
+            <p>代理 Agent</p>
+          </div>
+          <div className="td">
+            <p>{agent?.agent_number}</p>
+          </div>
+        </div>
+      </div>
       <RemarkTextArea data={debitNoteData} model={'show'} />
       {debitNoteData?.template === 'general' && <ShowMetaGeneral />}
       {debitNoteData?.template === 'motor' && <ShowMetaMotor />}
