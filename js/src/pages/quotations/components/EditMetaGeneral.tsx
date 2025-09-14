@@ -126,7 +126,7 @@ const EditMetaGeneral = () => {
             </div>
             <Row gutter={24} className="mt-12">
                 <Col span={8} className="text-center">
-                    <p className="text-[#555] font-light">AGENT FEE</p>
+                    <p className="text-[#000] font-light">AGENT FEE</p>
                     <div>
                         <Form.Item noStyle name={['agent_fee']}>
                             <InputNumber className="w-full" size="large" min={0} />
@@ -134,7 +134,7 @@ const EditMetaGeneral = () => {
                     </div>
                 </Col>
                 <Col span={8} className="text-center">
-                    <p className="text-[#555] font-light">Profit</p>
+                    <p className="text-[#000] font-light">Profit</p>
                     <p className="font-black text-4xl">
                         {profit.toLocaleString('en-US', {
                             minimumFractionDigits: 2, // 最少小數點後兩位
@@ -143,7 +143,7 @@ const EditMetaGeneral = () => {
                     </p>
                 </Col>
                 <Col span={8} className="text-center">
-                    <p className="text-[#555] font-light">Margin</p>
+                    <p className="text-[#000] font-light">Margin</p>
                     <p className="font-black text-4xl">{isNaN(margin) ? 'N/A' : `${margin}%`}</p>
                 </Col>
             </Row>

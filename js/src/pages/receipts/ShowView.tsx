@@ -20,6 +20,7 @@ import autograph from 'assets/images/autograph.jpg'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
 import { RemarkTextArea } from 'components/RemarkTextArea'
 import { round } from 'lodash-es'
+import DebitNotesFooter from 'components/DetailFooter'
 
 export const ShowView: React.FC<IResourceComponentsProps> = () => {
   const toWords = new ToWords({ localeCode: 'en-US' })
@@ -125,26 +126,26 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                 <img src={logo} className=" min-w-[400px] max-w-[600px]" />
               </div>
               <div className="print:text-3xl text-right text-xl font-semibold w-full flex flex-col justify-end">
-                <span>{templateText.zh}</span>
-                <span>{templateText.en}</span>
+                {/* <span>{templateText.zh}</span>
+                <span>{templateText.en}</span> */}
               </div>
             </div>
 
             <div className="text-center font-bold mb-8 print:mb-16 print:mt-8">
-              <h1 className="print:text-3xl text-xl">OFFICIAL RECEIPT</h1>
+              <h1 className="print:text-3xl text-xl">正式收據 OFFICIAL RECEIPT</h1>
             </div>
             <Row gutter={24}>
               <Col span={14}>
                 <div className="table table_td-flex-1 w-full">
                   <div className="tr">
-                    <div className="th">To 致</div>
+                    <div className="th">致 To</div>
                     <div className="td">
                       <p>{client?.company}</p>
                       <p>{client?.name_en || client?.name_zh || ' '}</p>
                     </div>
                   </div>
                   <div className="tr">
-                    <div className="th">Address 地址</div>
+                    <div className="th">地址 Address</div>
                     <div className="td">
                       <p>{client?.address_arr?.map((address, index) => (
                         <p key={index}>{address}</p>
@@ -156,11 +157,11 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
               <Col span={10}>
                 <div className="table table_td-flex-1 w-full">
                   <div className="tr">
-                    <div className="th">Receipt No 號碼</div>
+                    <div className="th">號碼 Receipt No</div>
                     <div className="td">{receiptData?.receipt_no}</div>
                   </div>
                   <div className="tr">
-                    <div className="th">Date 日期</div>
+                    <div className="th">日期 Date</div>
                     <div className="td">
                       {!!receiptData?.date
                         ? dayjs.unix(receiptData?.date).format('YYYY-MM-DD')
@@ -179,24 +180,24 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
             <Col span={24}>
               <div className="table table_td-flex-1 w-full">
                 <div className="tr mt-4">
-                  <div className="th w-[22rem]">Received From 茲收到</div>
+                  <div className="th w-[22rem]">茲收到 Received From</div>
                   <div className="td">{display_name}</div>
                 </div>
                 <div className="tr">
-                  <div className="th w-[22rem]">THE SUM OF 款項</div>
+                  <div className="th w-[22rem]">款項 The Sum Of</div>
                   <div className="td">
                     {toWords.convert(Number(receiptPremium ?? 0))}
                   </div>
                 </div>
                 <div className="tr">
-                  <div className="th w-[22rem]">BEING PAYMENT OF 用以支付項目</div>
+                  <div className="th w-[22rem]">用以支付項目 Being Payment Of</div>
                 </div>
                 <div className="tr">
-                  <div className="th w-[22rem]">POLICY 保單號碼</div>
+                  <div className="th w-[22rem]">保單號碼 Policy</div>
                   <div className="td">{debitNote?.policy_no}</div>
                 </div>
                 <div className="tr">
-                  <div className="th w-[22rem]">DEBIT NOTE NO. 保費單號碼</div>
+                  <div className="th w-[22rem]">保費單號碼 Debit Note No.</div>
                   <div className="td">{debitNoteNo}</div>
                 </div>
               </div>
@@ -206,11 +207,11 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
           <Row gutter={0} className="">
             <Col
               span={12}
-              className="pt-6 border-l-2 border-b-2 border-solid border-black"
+              className="pt-6 border-l-2 border-solid border-black"
             >
               <div className="table table_td-flex-1 w-full">
                 <div className="tr mt-4">
-                  <div className="th">Payment Date</div>
+                  <div className="th w-[18rem]">付款日期 Payment Date</div>
                   <div className="td">
                     {!!receiptData?.payment_date
                       ? dayjs
@@ -220,27 +221,26 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                   </div>
                 </div>
                 <div className="tr">
-                  <div className="th">Payment Method</div>
+                  <div className="th w-[18rem]">付款方法 Payment Method</div>
                   <div className="td">{receiptData?.payment_method}</div>
                 </div>
                 <div className="tr">
-                  <div className="th">Cheque No</div>
+                  <div className="th w-[18rem]">支票號碼 Cheque No</div>
                   <div className="td">{receiptData?.cheque_no}</div>
                 </div>
                 <div className="tr">
-                  <div className="th">Code No</div>
+                  <div className="th w-[18rem]">參考編號 Code No</div>
                   <div className="td">{receiptData?.code_no}</div>
-                </div>
-                <RemarkTextArea data={receiptData} textAreaClassName="w-full" model="show" />
+                </div>              
               </div>
             </Col>
             <Col
               span={12}
-              className="pt-6 border-r-2 border-b-2 border-solid border-black"
+              className="pt-6 border-r-2 border-solid border-black"
             >
               <div className="table table_td-flex-1 w-full">
                 <div className="tr mt-4">
-                  <div className="th">PREMIUM 保費</div>
+                  <div className="th">保費 Premium</div>
                   <div className="td">
                     HKD{' '}
                     {
@@ -263,12 +263,13 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                 </div>
               </div>
             </Col>
+            <RemarkTextArea data={receiptData} textAreaClassName="w-full" model="show" tableClassName="border-l-2 border-b-2 border-r-2 border-solid border-black" />
             <Col span={12} offset={12} className='print:text-xl'>
-              <div className="p-8 text-[#555] font-semibold">
+              <div className="p-8 text-[#000] font-semibold">
                 <p>For and on behalf of </p>
                 <p>POTENTIAL INSURANCE AGENCY COMPANY</p>
               </div>
-              <div className="p-8 block text-[#555] font-semibold">
+              <div className="p-8 block text-[#000] font-semibold">
                 <div>
                   <img src={autograph} alt="" className=" w-32" />
                 </div>
@@ -278,6 +279,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
               </div>
             </Col>
           </Row>
+          <DebitNotesFooter model={false} className="p-4 w-full mt-8 text-[#000] font-semibold" />
         </div>
         <Alert
           className="my-24"
