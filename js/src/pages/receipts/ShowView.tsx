@@ -174,7 +174,7 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
           </div>
 
           <Row
-            gutter={0}
+            gutter={24}
             className="mt-12 pb-6 border-2 border-solid border-black"
           >
             <Col span={24}>
@@ -200,47 +200,8 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                   <div className="th w-[22rem]">保費單號碼 Debit Note No.</div>
                   <div className="td">{debitNoteNo}</div>
                 </div>
-              </div>
-            </Col>
-          </Row>
-
-          <Row gutter={0} className="">
-            <Col
-              span={12}
-              className="pt-6 border-l-2 border-solid border-black"
-            >
-              <div className="table table_td-flex-1 w-full">
-                <div className="tr mt-4">
-                  <div className="th w-[18rem]">付款日期 Payment Date</div>
-                  <div className="td">
-                    {!!receiptData?.payment_date
-                      ? dayjs
-                        .unix(receiptData?.payment_date)
-                        .format('YYYY-MM-DD')
-                      : ''}
-                  </div>
-                </div>
-                <div className="tr">
-                  <div className="th w-[18rem]">付款方法 Payment Method</div>
-                  <div className="td">{receiptData?.payment_method}</div>
-                </div>
-                <div className="tr">
-                  <div className="th w-[18rem]">支票號碼 Cheque No</div>
-                  <div className="td">{receiptData?.cheque_no}</div>
-                </div>
-                <div className="tr">
-                  <div className="th w-[18rem]">參考編號 Code No</div>
-                  <div className="td">{receiptData?.code_no}</div>
-                </div>              
-              </div>
-            </Col>
-            <Col
-              span={12}
-              className="pt-6 border-r-2 border-solid border-black"
-            >
-              <div className="table table_td-flex-1 w-full">
-                <div className="tr mt-4">
-                  <div className="th">保費 Premium</div>
+                <div className="tr mb-4">
+                  <div className="th w-[22rem]">保費 Premium</div>
                   <div className="td">
                     HKD{' '}
                     {
@@ -263,7 +224,40 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                 </div>
               </div>
             </Col>
-            <RemarkTextArea data={receiptData} textAreaClassName="w-full" model="show" tableClassName="border-l-2 border-b-2 border-r-2 border-solid border-black" />
+          </Row>
+
+          <Row gutter={24} className="">
+            <Col
+              span={24}
+              className="pt-6 border-x-2 border-solid border-black"
+            >
+              <div className="table table_td-flex-1 w-full">
+                <div className="tr mt-4">
+                  <div className="th w-[22rem]">付款日期 Payment Date</div>
+                  <div className="td">
+                    {!!receiptData?.payment_date
+                      ? dayjs
+                        .unix(receiptData?.payment_date)
+                        .format('YYYY-MM-DD')
+                      : ''}
+                  </div>
+                </div>
+                <div className="tr">
+                  <div className="th w-[22rem]">付款方法 Payment Method</div>
+                  <div className="td">{receiptData?.payment_method}</div>
+                </div>
+                <div className="tr">
+                  <div className="th w-[22rem]">支票號碼 Cheque No</div>
+                  <div className="td">{receiptData?.cheque_no}</div>
+                </div>
+                <div className="tr">
+                  <div className="th w-[22rem]">參考編號 Code No</div>
+                  <div className="td">{receiptData?.code_no}</div>
+                </div>              
+              </div>
+            </Col>
+            
+            <RemarkTextArea data={receiptData} textAreaClassName="w-full" model="show" tableClassName="border-l-2 border-b-2 border-r-2 border-solid border-black px-3" thClassName="w-[22rem]" />
             <Col span={12} offset={12} className='print:text-xl'>
               <div className="p-8 text-[#000] font-semibold">
                 <p>For and on behalf of </p>

@@ -9,7 +9,7 @@ const DebitNotesFooter = ({ model = true, className = 'p-4 w-full mt-12 text-[#0
                     <div className="h-8 border-0 border-b-2 border-solid border-black" />
                     <Row gutter={0} className="p-4" >
                         <Col span={24}>
-                            <div className="table table_td-flex-1 w-full text-xs print:text-lg">
+                            <div className="table table_td-flex-1 w-full text-xs ">
                                 <div className="px-2">
                                     請驗明所投保之金額是否足夠，以免意外發生時蒙受捐失。<br />
                                     Please ensure the sum insured is adequate to avoid uder unsurance in the event claim
@@ -33,7 +33,7 @@ const DebitNotesFooter = ({ model = true, className = 'p-4 w-full mt-12 text-[#0
     return (
         <>
             <RowSection />
-            <div className={`detailFooter grid grid-cols-3 text-xs print:text-lg  ${className}`}>
+            <div className={`detailFooter grid grid-cols-3 text-xs   ${className}`}>
                 <div className="flex flex-col items-start col-span-2">
                     <div className="">香港新界元朗教育路 18-24 號元朗商業中心 604 室</div>
                     <div className="">Room 604, Yuen Long Commercial Centre 18-24 Kau Yuk Rd.,

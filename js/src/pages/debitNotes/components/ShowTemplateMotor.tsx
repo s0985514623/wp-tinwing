@@ -265,7 +265,7 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
               </div>
             </div>
             <div className="tr absolute bottom-0 border-t-2 border-solid border-black flex-wrap">
-              <div className="w-full font-semibold p-2 text-xs print:text-lg">
+              <div className="w-full font-semibold p-2 text-xs ">
                 請繳付此金額 Please pay this amount
               </div>
               <div className="th w-[18rem]">

@@ -410,6 +410,14 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                   <div className="th w-60">DEBIT NOTE NO. 保費單號碼</div>
                   <div className="td">{selectedData?.note_no}</div>
                 </div>
+                <div className="tr mt-4">
+                  <div className="th">PREMIUM 保費</div>
+                  <div className="td">
+                    <Form.Item noStyle name={['premium']}>
+                      <InputNumber addonBefore="HKD" className="w-full" size="small" stringMode step="0.01" />
+                    </Form.Item>
+                  </div>
+                </div>
               </div>
             </Col>
           </Row>
@@ -458,7 +466,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
               </div>
             </Col>
             <Col span={12}>
-              <div className="table table_td-flex-1 w-full">
+              {/* <div className="table table_td-flex-1 w-full">
                 <div className="tr mt-4">
                   <div className="th">PREMIUM 保費</div>
                   <div className="td">
@@ -467,7 +475,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                     </Form.Item>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </Col>
             <Col span={12} offset={12}>
               <div className="p-8">
