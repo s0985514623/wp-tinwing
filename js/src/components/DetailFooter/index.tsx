@@ -15,12 +15,12 @@ const DebitNotesFooter = ({ model = true, className = 'p-4 w-full mt-12 text-[#0
                                     Please ensure the sum insured is adequate to avoid uder unsurance in the event claim
                                 </div>
                                 <div className="tr mt-4">
-                                    <div className="th">付款方法</div>
-                                    <div className="td">畫線支票： 保誠保險代理公司</div>
+                                    <div className="th print:!text-[14px]">付款方法</div>
+                                    <div className="td print:!text-[14px]">畫線支票： 保誠保險代理公司</div>
                                 </div>
                                 <div className="tr">
-                                    <div className="th">Methods of Payment </div>
-                                    <div className="td">Crossed Cheque ： Potential Insuance Agency Co.</div>
+                                    <div className="th print:!text-[14px]">Methods of Payment </div>
+                                    <div className="td print:!text-[14px]">Crossed Cheque ： Potential Insuance Agency Co.</div>
                                 </div>
                             </div>
                         </Col>
