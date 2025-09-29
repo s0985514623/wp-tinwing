@@ -214,8 +214,8 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
               <p>Insured / correspondence Address</p>
             </div>
             <div className="text-center text-lg font-semibold border-2 border-solid border-black py-2 px-12">
-              <p>到期通知書</p>
-              <p>Expiry Notice</p>
+              <p>保費單</p>
+              <p>Debit Note</p>
             </div>
           </div>
           <Row gutter={24}>

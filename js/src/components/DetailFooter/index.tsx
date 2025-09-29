@@ -9,7 +9,7 @@ const DebitNotesFooter = ({ model = true, className = 'p-4 w-full mt-12 text-[#0
                     <div className="h-8 border-0 border-b-2 border-solid border-black" />
                     <Row gutter={0} className="p-4" >
                         <Col span={24}>
-                            <div className="table table_td-flex-1 w-full text-xs ">
+                            <div className="table table_td-flex-1 w-full text-xs print:!text-[14px]">
                                 <div className="px-2">
                                     請驗明所投保之金額是否足夠，以免意外發生時蒙受捐失。<br />
                                     Please ensure the sum insured is adequate to avoid uder unsurance in the event claim
