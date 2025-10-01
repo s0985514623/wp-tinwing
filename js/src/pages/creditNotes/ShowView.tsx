@@ -160,14 +160,14 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
                     <p>{term?.name}</p>
                   </div>
                 </div>
-                <div className="tr">
+                {/* <div className="tr">
                   <div className="th">
                     <p>代理 Agent</p>
                   </div>
                   <div className="td">
                     <p>{agent?.agent_number}</p>
                   </div>
-                </div>
+                </div> */}
                 <div className="tr">
                   <div className="th">
                     <p>客戶編號 Client No</p>
@@ -204,6 +204,16 @@ export const ShowView: React.FC<IResourceComponentsProps> = () => {
         type="warning"
         showIcon
       />
+      <div className="table table_td-flex-1 w-full">
+        <div className="tr">
+          <div className="th">
+            <p>代理 Agent</p>
+          </div>
+          <div className="td">
+            <p>{agent?.agent_number}</p>
+          </div>
+        </div>
+      </div>
       <RemarkTextArea data={debitNoteData} model={'show'} />
       {debitNoteData?.template === 'general' && <ShowMetaGeneral />}
       {debitNoteData?.template === 'motor' && <ShowMetaMotor />}

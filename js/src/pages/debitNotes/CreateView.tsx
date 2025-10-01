@@ -242,7 +242,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
             <Col span={12}>
               <div className="table table_td-flex-1 w-full">
                 <div className="tr">
-                  <div className="th">日期 Date</div>
+                  <div className="th">日期 Date<span className="text-red-500">*</span></div>
                   <div className="td">
                     <DatePicker
                       className="w-full"

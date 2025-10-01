@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react'
 import {
   IResourceComponentsProps,
   useOne,
-  useUpdate,
-  BaseRecord,
   useList,
 } from '@refinedev/core'
 import { Create, useForm, useSelect } from '@refinedev/antd'
@@ -37,6 +35,7 @@ import { DataType } from './types'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { RemarkTextArea } from 'components/RemarkTextArea'
+import { useNotification } from '@refinedev/core'
 
 export const CreateView: React.FC<IResourceComponentsProps> = () => {
   const navigate = useNavigate()
@@ -48,6 +47,27 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
       navigate('/archived_receipts')
     },
   })
+
+  //處理通知
+  const { open: notify } = useNotification();
+
+  //處理日期為空
+  const handleFinish = async (values: any) => {
+    // 範例：date 必填（即使欄位是隱藏的也可在這裡檢查）
+    if (!values?.date) {
+      notify?.({
+        type: "error",
+        message: "缺少必要欄位",
+        description: "請選擇日期（date 為必填）。",
+      });
+      return; // 阻止提交
+    }
+    // 其他自訂檢查...
+    // if (!values.title?.trim()) { ... }
+
+    // 檢查通過才真正送給 refine 的 mutation
+    await onFinish?.(values);
+  }
   const watchPremium = Number(Form.useWatch(['premium'], form)) || 0
   //取得state
   const { state } = useLocation()
@@ -232,20 +252,6 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
   }
   const display_name = getDisplayName(selectedClient)
 
-  // TODO 同步更新 debitNote.receiptId
-  const { mutate: _ } = useUpdate()
-  const handleFinish = (values: BaseRecord) => {
-    onFinish(values).catch((error) => error)
-    // if (!!values?.debit_note_id) {
-    //     mutate({
-    //         resource: 'debit_notes',
-    //         values: {
-    //             receiptId: 'New receiptId',
-    //         },
-    //         id: values?.debit_note_id,
-    //     })
-    // }
-  }
   //處理日期
   const handleDateChange =
     (namePath: string | number | (string | number)[]) =>
@@ -378,9 +384,12 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
                     </div>
                   </div>
                   <div className="tr">
-                    <div className="th">Date 日期</div>
+                    <div className="th">Date 日期<span className="text-red-500">*</span></div>
                     <div className="td">
                       <DatePicker className="w-full" size="small" onChange={handleDateChange(['date'])} />
+                      <Form.Item hidden name={['date']}>
+                        <InputNumber />
+                      </Form.Item>
                     </div>
                   </div>
                 </div>

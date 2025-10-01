@@ -23,9 +23,9 @@ export const OtherReports: React.FC = () => {
                 <div className='flex flex-wrap gap-4 w-2/3 mt-4'>
                     <Button type='primary' onClick={() => startExport({action:'client_ageing_report', dateRange})}>Client Ageing Report</Button>
                     <Button type='primary' onClick={() => startExport({action:'insurer_ageing_report', dateRange})}>Insurer Ageing Report</Button>
-                    <Button type='primary'>Profit and Loss Analysis</Button>
-                    <Button type='primary'>Trial Balance</Button>
-                    <Button type='primary'>Balance Sheet</Button>
+                    <Button type='primary' onClick={() => window.open('https://accounting.potential-insurance.com/profit-and-loss-statement/', '_blank')}>Profit and Loss Analysis</Button>
+                    <Button type='primary' onClick={() => window.open('https://accounting.potential-insurance.com/balance-sheet/', '_blank')}>Trial Balance</Button>
+                    <Button type='primary' onClick={() => window.open('https://accounting.potential-insurance.com/trial-balance/', '_blank')}>Balance Sheet</Button>
                 </div>
             </Spin>
         </div>

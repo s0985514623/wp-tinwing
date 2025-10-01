@@ -81,7 +81,7 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({
             </div>
             <div className="tr">
               <div className="th">
-                <p>Particulars</p>
+                <p>詳情 Particulars</p>
               </div>
               <div className="td">
                 <p>
@@ -102,7 +102,7 @@ const ShowTemplateGeneral: React.FC<{ data?: DataType }> = ({
               </div>
               {/* <div className="td text-right"></div> */}
               <div className="td text-right">
-                <p>{getPrice(round(premium, 2), 'w-full' )}</p>
+                <p>{getPrice(round(premium, 2), 'w-full')}</p>
               </div>
             </div>
             <div className="tr ">

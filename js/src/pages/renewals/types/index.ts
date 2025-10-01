@@ -44,6 +44,8 @@ const ZMotorAttr = z
     ncb: z.number(),
     mib: z.number(),
     chassi: z.string(),
+    coverage: z.string(),
+    particulars: z.string(),
   })
   .partial()
   .nullable()

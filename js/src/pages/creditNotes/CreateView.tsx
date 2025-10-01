@@ -16,12 +16,12 @@ import EditTemplateGeneral from './components/EditTemplateGeneral'
 import EditTemplateMotor from './components/EditTemplateMotor'
 import EditTemplateShortTerms from './components/EditTemplateShortTerms'
 import EditTemplatePackage from './components/EditTemplatePackage'
-import EditTemplateMarine from './components/EditTemplateMarine'
 import DebitNoteHeader from './components/EditDebitNoteHeader'
 import DetailFooter from 'components/DetailFooter'
 import EditMetaMotor from './components/EditMetaMotor'
 import EditMetaGeneral from './components/EditMetaGeneral'
 import EditMetaPackage from './components/EditMetaPackage'
+import EditTemplateMarine from './components/EditTemplateMarine'
 import { TTemplate } from './types'
 import { DataType as TClient, defaultClient } from 'pages/clients/types'
 import { DataType as TAgent } from 'pages/agents/types'
@@ -30,16 +30,37 @@ import logo from 'assets/images/logo.jpg'
 import { getTemplateText } from 'utils'
 import { RemarkTextArea } from 'components/RemarkTextArea'
 import { useNavigate } from 'react-router-dom'
+import { useNotification } from '@refinedev/core'
 
 export const CreateView: React.FC<IResourceComponentsProps> = () => {
   const navigate = useNavigate()
-  const { formProps, saveButtonProps, form } = useForm({
+  const { formProps, saveButtonProps, form, onFinish } = useForm({
     //使新增後跳轉到clientsSummary
     redirect: false,
     onMutationSuccess: () => {
       navigate('/clientsSummary')
     },
   })
+  //處理通知
+  const { open: notify } = useNotification();
+
+  //處理日期為空
+  const handleFinish = async (values: any) => {
+    // 範例：date 必填（即使欄位是隱藏的也可在這裡檢查）
+    if (!values?.date) {
+      notify?.({
+        type: "error",
+        message: "缺少必要欄位",
+        description: "請選擇日期（date 為必填）。",
+      });
+      return; // 阻止提交
+    }
+    // 其他自訂檢查...
+    // if (!values.title?.trim()) { ... }
+
+    // 檢查通過才真正送給 refine 的 mutation
+    await onFinish?.(values);
+  }
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null)
 
   const [selectedTemplate, setSelectedTemplate] = useState<TTemplate>('general')
@@ -165,8 +186,8 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
   })
 
   return (
-    <Create saveButtonProps={saveButtonProps}>
-      <Form {...formProps} layout="vertical">
+    <Create saveButtonProps={saveButtonProps} >
+      <Form {...formProps} onFinish={handleFinish} layout="vertical">
         <Form.Item hidden name={['is_archived']} initialValue={0} />
         <DebitNoteHeader setSelectedTemplate={setSelectedTemplate} />
         <div className="table table_td-flex-1 w-full">
@@ -220,7 +241,7 @@ export const CreateView: React.FC<IResourceComponentsProps> = () => {
             <Col span={12}>
               <div className="table table_td-flex-1 w-full">
                 <div className="tr">
-                  <div className="th">日期 Date</div>
+                  <div className="th">日期 Date<span className="text-red-500">*</span></div>
                   <div className="td">
                     <DatePicker
                       className="w-full"

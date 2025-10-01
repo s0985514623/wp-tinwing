@@ -39,7 +39,7 @@ const ShowMetaGeneral = () => {
         extraValue: Number(extra_fieldField),
     });
 
-		const insurerTotalFee = levyValue + extra_fieldValue + round(premium * (insurerPaymentRate / 100), 2);
+    const insurerTotalFee = levyValue + extra_fieldValue + round(premium * (insurerPaymentRate / 100), 2);
     const profit = totalPremium - insurerTotalFee - agent_fee;
     const margin = round(profit *100 / totalPremium, 2);
 
