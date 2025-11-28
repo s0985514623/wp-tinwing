@@ -658,8 +658,8 @@ final class OtherReport
                 $the_note = $query->post;
                 $term = $terms_map[get_post_meta(get_the_ID(), 'term_id', true)];
                 $term_id = $term ? $term->ID : '';
-                $premium = (float)get_post_meta(get_the_ID(), 'premium', true);
-                $gross_premium = (float)$this->get_gross_premium($the_note);
+                $premium =  'MOTOR'!=$term->post_title ?(float)get_post_meta(get_the_ID(), 'premium', true) : 0;
+                $gross_premium = 'MOTOR'==$term->post_title ? (float)$this->get_gross_premium($the_note) : 0;
                 $total_premium = (float)$this->get_total_premium($the_note);
                 $insurer_payment = (float)$this->get_insurer_payment($the_note, $insurer_data);
                 $ECI = maybe_unserialize(get_post_meta(get_the_ID(), 'extra_field', true));
@@ -677,8 +677,17 @@ final class OtherReport
                 $all_total_premium += $total_premium;
                 // 以term_id為key
                 if (isset($posts_data[$term_id])) {
-                    if('MOTOR'!=$term->post_title){
+                    if('MOTOR'==$term->post_title){
                         $posts_data[$term_id]['Gross Prem. Motor'] += $gross_premium;
+                        $posts_data[$term_id]['2% ECI'] += $ECI_value;
+                        $posts_data[$term_id]['Clients Net'] += $total_premium;
+                        $posts_data[$term_id]['Principal'] += $insurer_payment;
+                        $posts_data[$term_id]['Net Prem'] += $total_premium;
+                        $posts_data[$term_id]["Broker's Override"] += $total_premium - $insurer_payment;
+                        $posts_data[$term_id]['Trans'] += 1;
+                    }
+                    else{
+                        $posts_data[$term_id]['Gross Prem'] += $premium;
                         $posts_data[$term_id]['2% ECI'] += $ECI_value;
                         $posts_data[$term_id]['Clients Net'] += $total_premium;
                         $posts_data[$term_id]['Principal'] += $insurer_payment;
@@ -692,7 +701,7 @@ final class OtherReport
                     $posts_data[$term_id] = [
                         'Insurer Name' => $insurer_data ? $insurer_data->post_title : '',
                         'Class' => $term ? $term->post_title : '',
-                        'Gross Prem' => 'MOTOR'==$term->post_title? 0 : $premium,
+                        'Gross Prem' => $premium,
                         'Gross Prem. Motor' => $gross_premium,
                         '2% ECI' => $ECI_value,
                         'Clients Net' => $total_premium,
@@ -709,7 +718,7 @@ final class OtherReport
                 'Insurer Name' => '',
                 'Class'            => 'Total',
                 'Gross Prem'   => $all_premium,
-                'Gross Prem. Motor' => $all_gross_premium,
+                'Gross Prem. Motor' =>  $all_gross_premium,
                 '2% ECI' => $all_ECI_value,
                 'Clients Net' => $all_total_premium,
                 'Principal' => $all_insurer_payment,
