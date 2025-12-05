@@ -313,13 +313,14 @@ export const ListView: React.FC = () => {
   const debitNotesNo = debitNotesData?.total
   const quotationsNo = quotationsData?.total
   const receiptsNo = receiptsData?.total
-  // const creditNotesNo = creditNotesData?.total
+  const creditNotesNo = creditNotesData?.total
   const renewalsNo = renewalsData?.total
   const noDisplayData = [
     { noBy: 'No of Quotation', value: quotationsNo },
     { noBy: 'No of Debit Notes', value: debitNotesNo },
     { noBy: 'No of Receipt', value: receiptsNo },
     { noBy: 'No of Renewal', value: renewalsNo },
+    { noBy: 'No of Credit Notes', value: creditNotesNo },
   ]
 
   //4-2. 計算 Receipt 收入，分銀行來紀錄

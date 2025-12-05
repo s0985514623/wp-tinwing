@@ -266,10 +266,10 @@ const ShowTemplateMotor: React.FC<{ data?: DataType }> = ({
             </div>
             <div className="tr absolute bottom-0 border-t-2 border-solid border-black flex-wrap">
               <div className="w-full font-semibold p-2 text-xs ">
-                請繳付此金額 Please pay this amount
+                退回此金額 The amount return
               </div>
               <div className="th w-[18rem]">
-                <p>總保險費 TOTAL PREMIUM</p>
+                <p>退回保費 RETURN PREMIUM</p>
               </div>
               <div className="td text-right">
                 <p>{getPrice(totalPremium, 'w-full')}</p>

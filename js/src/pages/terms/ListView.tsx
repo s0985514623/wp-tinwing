@@ -8,6 +8,15 @@ export const ListView: React.FC<{ taxonomy: string }> = ({ taxonomy = '' }) => {
     const [pageSize, setPageSize] = useState(30);
     const [current, setCurrent] = useState(1);
     const { tableProps } = useTable<DataType>({
+        // A-Z
+        sorters: {
+            initial: [
+                {
+                    field: 'name',
+                    order: 'asc',
+                },
+            ],
+        },
         filters: {
             permanent: [
                 // {

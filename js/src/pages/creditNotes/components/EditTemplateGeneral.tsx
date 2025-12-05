@@ -226,7 +226,7 @@ const EditTemplateGeneral = () => {
                             </div>
                         </div>
                         <div className="tr absolute bottom-0">
-                            <div className="th font-bold">總保險費 TOTAL PREMIUM</div>
+                            <div className="th font-bold">退回保費 RETURN PREMIUM</div>
                             <div className="td"></div>
                             <div className="td">{getPrice(totalPremium)}</div>
                         </div>

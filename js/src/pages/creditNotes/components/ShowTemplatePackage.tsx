@@ -61,8 +61,8 @@ const ShowTemplatePackage: React.FC<{ data?: DataType }> = ({ data: debitNoteDat
                             <div className="td">{getPrice(less, 'w-full')}</div>
                         </div>
                         <div className="tr  border-t-2 border-solid border-black flex-wrap">
-                            <div className="w-full font-semibold p-2 text-xs print:text-lg">請繳付此金額 Please pay this amount</div>
-                            <div className="th w-[18rem]">總保險費 TOTAL PREMIUM</div>
+                            <div className="w-full font-semibold p-2 text-xs print:text-lg">退回此金額 The amount return</div>
+                            <div className="th w-[18rem]">退回保費 RETURN PREMIUM</div>
                             {/* <div className="td text-right"></div> */}
                             <div className="td">{getPrice(totalPremium, 'w-full')}</div>
                         </div>
