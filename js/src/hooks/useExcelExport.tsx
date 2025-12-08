@@ -20,12 +20,17 @@ export const useExcelExport = () => {
     const exportToExcel = async (params: ExportParams) => {
         setIsLoading(true)
         try {
+            
             // 準備 API 參數
             const queryParams: Record<string, any> = {}
             
-            if (params.dateRange) {
+            if (params.dateRange === undefined) {
+            } else if (params.dateRange && Array.isArray(params.dateRange) && params.dateRange.length === 2) {
                 queryParams['start_date'] = dayjs(params.dateRange[0]).format('YYYY-MM-DD')
                 queryParams['end_date'] = dayjs(params.dateRange[1]).format('YYYY-MM-DD')
+
+            } else {
+                console.log('❌ 日期參數格式無效:', params.dateRange)
             }
             
             if (params.agentId) queryParams['agent_id'] = params.agentId
@@ -69,8 +74,8 @@ export const useExcelExport = () => {
                                 dataRow = worksheet.addRow([account, '', ''])
                                 dataRow.font = { bold: true, size: 14 }
                                 dataRow.alignment = { horizontal: 'left' }
-                            } else if (account === 'As at 31/03/24') {
-                                // 副標題
+                            } else if (account.startsWith('As at ')) {
+                                // 副標題 - 動態日期
                                 dataRow = worksheet.addRow([account, '', ''])
                                 dataRow.font = { size: 12 }
                                 dataRow.alignment = { horizontal: 'left' }

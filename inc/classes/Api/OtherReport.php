@@ -946,7 +946,50 @@ final class OtherReport
         $params = $request->get_query_params() ?? [];
         $params = WP::sanitize_text_field_deep($params, false);
 
-        // 準備假資料 - Profit and Loss Statement 報表
+        // 取得日期參數，考慮 WordPress 時區
+        $wp_timezone = wp_timezone();
+        $current_wp_time = new \DateTime('now', $wp_timezone);
+        
+        // 檢查是否有提供日期參數
+        $has_date_params = isset($params['start_date']) || isset($params['end_date']);
+        
+        if ($has_date_params) {
+            // 如果有提供日期參數，使用提供的值或預設值
+            $start_date = isset($params['start_date']) ? $params['start_date'] : $current_wp_time->format('Y-m-01'); // 預設當月第一天
+            $end_date = isset($params['end_date']) ? $params['end_date'] : $current_wp_time->format('Y-m-d'); // 預設今天
+        } else {
+            // 如果沒有提供任何日期參數，設為 null，表示不限制日期
+            $start_date = null;
+            $end_date = null;
+        }
+        
+        // 計算年初至今的日期範圍
+        if ($end_date) {
+            $end_date_obj = new \DateTime($end_date, $wp_timezone);
+            $year_start = $end_date_obj->format('Y-01-01'); // 當年第一天
+        } else {
+            // 如果沒有結束日期，使用當前時間來計算年初
+            $year_start = $current_wp_time->format('Y-01-01');
+            $end_date = $current_wp_time->format('Y-m-d'); // 用於顯示標題
+            $end_date_obj = $current_wp_time;
+        }
+        
+        // 格式化報表標題日期
+        $report_date = $end_date_obj->format('d') . '/' . $end_date_obj->format('m') . '/' . $end_date_obj->format('y');
+        
+        // 計算 Income 部分 - Receipt 總金額
+        $current_period_income = $this->calculate_receipt_total($start_date, $end_date);
+        $year_to_date_income = $this->calculate_receipt_total($year_start, $end_date);
+        
+        // 計算 LESS 部分 - Insurer Payment 金額
+        $current_period_insurer_payment = $this->calculate_insurer_payment_total($start_date, $end_date);
+        $year_to_date_insurer_payment = $this->calculate_insurer_payment_total($year_start, $end_date);
+        
+        // 計算 Gross Profit (Income - LESS)
+        $current_period_gross_profit = $current_period_income - $current_period_insurer_payment;
+        $year_to_date_gross_profit = $year_to_date_income - $year_to_date_insurer_payment;
+
+        // 準備真實資料 - Profit and Loss Statement 報表
         $data = [
             // 標題行
             [
@@ -956,7 +999,7 @@ final class OtherReport
                 'Category' => 'HEADER'
             ],
             [
-                'Account' => 'As at 31/03/24',
+                'Account' => 'As at ' . $report_date,
                 'Current_Period' => '',
                 'Year_to_Date' => '',
                 'Category' => 'HEADER'
@@ -985,14 +1028,14 @@ final class OtherReport
             ],
             [
                 'Account' => 'Premium Received',
-                'Current_Period' => 211291.57,
-                'Year_to_Date' => 2534014.57,
+                'Current_Period' => $current_period_income,
+                'Year_to_Date' => $year_to_date_income,
                 'Category' => 'INCOME'
             ],
             [
                 'Account' => 'Total Income',
-                'Current_Period' => 211291.57,
-                'Year_to_Date' => 2534014.57,
+                'Current_Period' => $current_period_income,
+                'Year_to_Date' => $year_to_date_income,
                 'Category' => 'TOTAL'
             ],
             
@@ -1013,14 +1056,14 @@ final class OtherReport
             ],
             [
                 'Account' => 'Premium Paid - General',
-                'Current_Period' => 130662.92,
-                'Year_to_Date' => 2016608.86,
+                'Current_Period' => $current_period_insurer_payment,
+                'Year_to_Date' => $year_to_date_insurer_payment,
                 'Category' => 'EXPENSE'
             ],
             [
                 'Account' => '',
-                'Current_Period' => 130662.92,
-                'Year_to_Date' => 2016608.86,
+                'Current_Period' => $current_period_insurer_payment,
+                'Year_to_Date' => $year_to_date_insurer_payment,
                 'Category' => 'SUBTOTAL'
             ],
             
@@ -1063,8 +1106,8 @@ final class OtherReport
             // Gross Profit
             [
                 'Account' => 'Gross Profit :',
-                'Current_Period' => 199338.65,
-                'Year_to_Date' => 626075.14,
+                'Current_Period' => $current_period_gross_profit,
+                'Year_to_Date' => $year_to_date_gross_profit,
                 'Category' => 'TOTAL'
             ],
             
@@ -1233,10 +1276,195 @@ final class OtherReport
             ]
         ];
 
-        return new \WP_REST_Response([
+        $response = new \WP_REST_Response([
             'data' => $data,
             'total' => count($data),
             'success' => true
         ], 200);
+        
+        // 設定 JSON 編碼選項，避免斜線轉義
+        $response->set_headers(['Content-Type' => 'application/json; charset=utf-8']);
+        
+        return $response;
+    }
+
+    /**
+     * 計算 Receipt 總金額
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @return float
+     */
+    private function calculate_receipt_total($start_date, $end_date)
+    {
+        // 查詢 receipts 文章類型
+        $args = [
+            'post_type' => 'receipts',
+            'posts_per_page' => -1
+        ];
+        
+        // 只有在提供日期參數時才添加日期篩選
+        if ($start_date && $end_date) {
+            // 取得 WordPress 時區
+            $wp_timezone = wp_timezone();
+            
+            // 建立開始和結束日期時間物件
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            
+            // 轉換為 UTC 時間戳記以進行資料庫查詢
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+            
+            $args['meta_query'] = [
+                'relation' => 'AND',
+                [
+                    'key' => 'date',
+                    'value' => [$start_timestamp, $end_timestamp],
+                    'compare' => 'BETWEEN',
+                    'type' => 'NUMERIC'
+                ]
+            ];
+        }
+
+        $query = new \WP_Query($args);
+        $total = 0;
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $amount = floatval(get_post_meta(get_the_ID(), 'premium', true));
+                $total += $amount;
+            }
+        }
+        wp_reset_postdata();
+
+        return round($total, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * 計算 LESS 部分金額 (所有 Expenses - 指定的 Insurer Payment 類別)
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @return float
+     */
+    private function calculate_insurer_payment_total($start_date, $end_date)
+    {
+        // 指定的 Insurer Payment 類別 (使用 post_name 格式)
+        $target_categories = [
+            'insurer-payment-cmb',
+            'insurer-payment-msig', 
+            'insurer-payment-taiping',
+            'insurer-payment-tokio'
+        ];
+
+        // 查詢 expenses 文章類型
+        $args = [
+            'post_type' => 'expenses',
+            'posts_per_page' => -1
+        ];
+        
+        // 只有在提供日期參數時才添加日期篩選
+        if ($start_date && $end_date) {
+            // 取得 WordPress 時區
+            $wp_timezone = wp_timezone();
+            
+            // 建立開始和結束日期時間物件
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            
+            // 轉換為 UTC 時間戳記以進行資料庫查詢
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+
+            $args['meta_query'] = [
+                'relation' => 'AND',
+                [
+                    'key' => 'date',
+                    'value' => [$start_timestamp, $end_timestamp],
+                    'compare' => 'BETWEEN',
+                    'type' => 'NUMERIC'
+                ]
+            ];
+        }
+
+        $query = new \WP_Query($args);
+        $total = 0;
+
+        if ($query->have_posts()) {
+            // 先收集所有的 term_id 和對應的金額
+            $term_ids = [];
+            $expenses_data = [];
+            
+            while ($query->have_posts()) {
+                $query->the_post();
+                $term_id = get_post_meta(get_the_ID(), 'term_id', true);
+                $amount = floatval(get_post_meta(get_the_ID(), 'amount', true));
+                
+                if ($term_id) {
+                    $term_ids[] = $term_id;
+                    $expenses_data[] = [
+                        'term_id' => $term_id,
+                        'amount' => $amount
+                    ];
+                }
+            }
+            wp_reset_postdata();
+            
+            // 一次性取得所有相關的 terms
+            if (!empty($term_ids)) {
+                $terms_args = [
+                    'post_type' => 'terms',
+                    'post__in' => array_unique($term_ids),
+                    'posts_per_page' => -1,
+                    'meta_query' => [
+                        [
+                            'key' => 'taxonomy',
+                            'value' => 'expense_class',
+                            'compare' => '='
+                        ]
+                    ]
+                ];
+                
+                $terms_query = new \WP_Query($terms_args);
+                error_log('terms_query');
+                error_log(print_r($terms_query, true));
+                $terms_map = [];
+                
+                if ($terms_query->have_posts()) {
+                    while ($terms_query->have_posts()) {
+                        $terms_query->the_post();
+                        $terms_map[get_the_ID()] = get_post_field('post_name', get_the_ID());
+                    }
+                    wp_reset_postdata();
+                }
+                
+                error_log('terms_map');
+                error_log(print_r($terms_map, true));
+                // 計算總金額：排除指定的 Insurer Payment 類別
+                foreach ($expenses_data as $expense) {
+                    $term_id = $expense['term_id'];
+                    $amount = $expense['amount'];
+                    
+                    $should_include = true;
+                    
+                    if (isset($terms_map[$term_id])) {
+                        $term_name = $terms_map[$term_id];
+                        
+                        // 如果是指定的 Insurer Payment 類別，就不相加
+                        if (in_array($term_name, $target_categories)) {
+                            $should_include = false;
+                        }
+                    }
+                    
+                    if ($should_include) {
+                        $total += $amount;
+                    }
+                }
+            }
+        }
+
+        return round($total, 2, PHP_ROUND_HALF_UP);
     }
 }

@@ -83,26 +83,29 @@ function useSiderReportExport() {
     }, [resource, dateRange, agentId, paymentStatus, insurerId])
     // 暴露一個能「帶 action」的啟動器
     const startExport = (
-        { action, dateRange, agentId, paymentStatus, insurerId }: { action: string, dateRange: [Dayjs, Dayjs] | undefined, agentId?: number | undefined, paymentStatus?: string | undefined, insurerId?: number | undefined }) => {
+        { action, dateRange: inputDateRange, agentId: inputAgentId, paymentStatus: inputPaymentStatus, insurerId: inputInsurerId }: 
+        { action: string, dateRange?: [Dayjs, Dayjs] | undefined, agentId?: number | undefined, paymentStatus?: string | undefined, insurerId?: number | undefined }) => {
         
         // 針對特定報表使用 Excel 匯出
         const excelReports = ['profit_and_loss_analysis', 'trial_balance', 'balance_sheet']
         
         if (excelReports.includes(action)) {
+            
+            // 對於 Excel 報表，直接使用傳入的參數，不使用內部 state 作為 fallback
             exportToExcel({
                 action,
-                dateRange,
-                agentId,
-                paymentStatus,
-                insurerId
+                dateRange: inputDateRange, // 直接使用傳入的值
+                agentId: inputAgentId,
+                paymentStatus: inputPaymentStatus,
+                insurerId: inputInsurerId
             })
         } else {
-            // 使用原有的 CSV 匯出
+            // 對於 CSV 報表，更新 state 讓 useEffect 觸發 triggerExport()
             setResource(action)
-            setDateRange(dateRange)
-            setAgentId(agentId)
-            setPaymentStatus(paymentStatus)
-            setInsurerId(insurerId)
+            setDateRange(inputDateRange || dateRange)
+            setAgentId(inputAgentId !== undefined ? inputAgentId : agentId)
+            setPaymentStatus(inputPaymentStatus !== undefined ? inputPaymentStatus : paymentStatus)
+            setInsurerId(inputInsurerId !== undefined ? inputInsurerId : insurerId)
         }
     };
     return { startExport, isLoading: isLoading || excelLoading }
