@@ -176,6 +176,11 @@ final class OtherReport
         $posts_data = [];
         if ($query->have_posts()) {
             $total_premium = 0;
+            $total_120_days = 0;
+            $total_90_days = 0;
+            $total_60_days = 0;
+            $total_30_days = 0;
+            
             while ($query->have_posts()) {
                 $query->the_post();
                 $client       = $client_map[get_post_meta(get_the_ID(), 'client_id', true)];
@@ -192,14 +197,61 @@ final class OtherReport
                 }
                 $premium = (float) (get_post_meta(get_the_ID(), 'premium', true) ?: 0);
                 $total_premium += $premium;
+                
+                // 計算日期差異 (考慮WordPress時區)
+                $post_date = get_post_meta(get_the_ID(), 'date', true);
+                $wp_timezone = wp_timezone(); // 取得 WP 設定的時區
+                $current_date = current_time('timestamp'); // 使用WordPress時區的當前時間戳
+                $days_diff = 0;
+                
+                if ($post_date) {
+                    // 將post_date轉換為WordPress時區的日期
+                    $post_datetime = new \DateTime('@' . $post_date);
+                    $post_datetime->setTimezone($wp_timezone);
+                    
+                    // 將當前時間轉換為WordPress時區的日期
+                    $current_datetime = new \DateTime('@' . $current_date);
+                    $current_datetime->setTimezone($wp_timezone);
+                    
+                    // 計算天數差異
+                    $post_date_only = $post_datetime->format('Y-m-d');
+                    $current_date_only = $current_datetime->format('Y-m-d');
+                    
+                    $post_date_obj = new \DateTime($post_date_only, $wp_timezone);
+                    $current_date_obj = new \DateTime($current_date_only, $wp_timezone);
+                    
+                    $interval = $current_date_obj->diff($post_date_obj);
+                    $days_diff = $interval->days;
+                }
+                
+                // 根據日期差異分配到對應的區間
+                $days_120_over = '';
+                $days_90_over = '';
+                $days_60_over = '';
+                $days_30_over = '';
+                
+                if ($days_diff >= 120) {
+                    $days_120_over = number_format($premium, 2, '.', ',');
+                    $total_120_days += $premium;
+                } elseif ($days_diff >= 90) {
+                    $days_90_over = number_format($premium, 2, '.', ',');
+                    $total_90_days += $premium;
+                } elseif ($days_diff >= 60) {
+                    $days_60_over = number_format($premium, 2, '.', ',');
+                    $total_60_days += $premium;
+                } elseif ($days_diff >= 30) {
+                    $days_30_over = number_format($premium, 2, '.', ',');
+                    $total_30_days += $premium;
+                }
+                
                 $posts_data[] = [
                     // 'id'              => get_the_ID(),
                     'Client Code'     => $client ? $client->post_title : '',
                     'Client Name'     => $client ? get_post_meta($client->ID, $display_name, true) ?? '' : '',
-                    '120Days & Over'  => number_format($premium, 2, '.', ',') ?? '',
-                    '90Days & Over'   => '',
-                    '60Days & Over'   => '',
-                    '30Days & Over'   => '',
+                    '120Days & Over'  => $days_120_over,
+                    '90Days & Over'   => $days_90_over,
+                    '60Days & Over'   => $days_60_over,
+                    '30Days & Over'   => $days_30_over,
                     'Current Balance' => number_format($premium, 2, '.', ',') ?? '',
                     'Advance Pay'     => '',
                     'Agent'           => $agent ? get_post_meta($agent->ID, 'agent_number', true) ?? '' : '',
@@ -210,10 +262,10 @@ final class OtherReport
                 // 'id'=>'',
                 'Client Code'     => '',
                 'Client Name'     => 'Total',
-                '120Days & Over'  => number_format($total_premium, 2, '.', ','),
-                '90Days & Over'   => '',
-                '60Days & Over'   => '',
-                '30Days & Over'   => '',
+                '120Days & Over'  => $total_120_days > 0 ? number_format($total_120_days, 2, '.', ',') : '',
+                '90Days & Over'   => $total_90_days > 0 ? number_format($total_90_days, 2, '.', ',') : '',
+                '60Days & Over'   => $total_60_days > 0 ? number_format($total_60_days, 2, '.', ',') : '',
+                '30Days & Over'   => $total_30_days > 0 ? number_format($total_30_days, 2, '.', ',') : '',
                 'Current Balance' => number_format($total_premium, 2, '.', ','),
                 'Advance Pay'     => '',
                 'Agent'           => '',
@@ -350,6 +402,11 @@ final class OtherReport
         $posts_data = [];
         if ($query->have_posts()) {
             $total_insurer_payment = 0;
+            $total_120_days = 0;
+            $total_90_days = 0;
+            $total_60_days = 0;
+            $total_30_days = 0;
+            
             while ($query->have_posts()) {
                 $query->the_post();
                 $debit_note  = $debit_note_map[get_post_meta(get_the_ID(), 'debit_note_id', true)];
@@ -367,21 +424,71 @@ final class OtherReport
                     $insurer_payment = -$insurer_payment;
                 }
                 $total_insurer_payment += $insurer_payment;
+                
+                // 計算日期差異 (考慮WordPress時區)
+                $note_date = get_post_meta($the_note->ID, 'date', true);
+                $wp_timezone = wp_timezone(); // 取得 WP 設定的時區
+                $current_date = current_time('timestamp'); // 使用WordPress時區的當前時間戳
+                $days_diff = 0;
+                
+                if ($note_date) {
+                    // 將note_date轉換為WordPress時區的日期
+                    $note_datetime = new \DateTime('@' . $note_date);
+                    $note_datetime->setTimezone($wp_timezone);
+                    
+                    // 將當前時間轉換為WordPress時區的日期
+                    $current_datetime = new \DateTime('@' . $current_date);
+                    $current_datetime->setTimezone($wp_timezone);
+                    
+                    // 計算天數差異
+                    $note_date_only = $note_datetime->format('Y-m-d');
+                    $current_date_only = $current_datetime->format('Y-m-d');
+                    
+                    $note_date_obj = new \DateTime($note_date_only, $wp_timezone);
+                    $current_date_obj = new \DateTime($current_date_only, $wp_timezone);
+                    
+                    $interval = $current_date_obj->diff($note_date_obj);
+                    $days_diff = $interval->days;
+                }
+                
+                // 根據日期差異分配到對應的區間
+                $days_120_payment = 0;
+                $days_90_payment = 0;
+                $days_60_payment = 0;
+                $days_30_payment = 0;
+                
+                if ($days_diff >= 120) {
+                    $days_120_payment = $insurer_payment;
+                    $total_120_days += $insurer_payment;
+                } elseif ($days_diff >= 90) {
+                    $days_90_payment = $insurer_payment;
+                    $total_90_days += $insurer_payment;
+                } elseif ($days_diff >= 60) {
+                    $days_60_payment = $insurer_payment;
+                    $total_60_days += $insurer_payment;
+                } elseif ($days_diff >= 30) {
+                    $days_30_payment = $insurer_payment;
+                    $total_30_days += $insurer_payment;
+                }
+                
                 // error_log('get_the_ID():'.get_the_ID());
                 // error_log('insurer_payment:'.$insurer_payment);
-                //如果$posts_data[$insurer_id]存在,則累加'120Days & Over'與'Current Balance'
+                //如果$posts_data[$insurer_id]存在,則累加各區間與'Current Balance'
                 if (isset($posts_data[$insurer_id])) {
-                    $posts_data[$insurer_id]['120Days & Over'] += $insurer_payment;
+                    $posts_data[$insurer_id]['120Days & Over'] += $days_120_payment;
+                    $posts_data[$insurer_id]['90Days & Over'] += $days_90_payment;
+                    $posts_data[$insurer_id]['60Days & Over'] += $days_60_payment;
+                    $posts_data[$insurer_id]['30Days & Over'] += $days_30_payment;
                     $posts_data[$insurer_id]['Current Balance'] += $insurer_payment;
                 } else {
                     $posts_data[$insurer_id] = [
                         'A/C No'          => $insurer ? get_post_meta($insurer->ID, 'insurer_number', true) : '',
                         'Type'            => '',
                         'Creditor Name'   => $insurer ? $insurer->post_title : '',
-                        '120Days & Over'  => $insurer_payment,
-                        '90Days & Over'   => '',
-                        '60Days & Over'   => '',
-                        '30Days & Over'   => '',
+                        '120Days & Over'  => $days_120_payment,
+                        '90Days & Over'   => $days_90_payment,
+                        '60Days & Over'   => $days_60_payment,
+                        '30Days & Over'   => $days_30_payment,
                         'Current Balance' => $insurer_payment,
                     ];
                 }
@@ -390,15 +497,18 @@ final class OtherReport
                 'A/C No'          => '',
                 'Type'            => '',
                 'Creditor Name'   => 'Total',
-                '120Days & Over'  => $total_insurer_payment,
-                '90Days & Over'   => '',
-                '60Days & Over'   => '',
-                '30Days & Over'   => '',
+                '120Days & Over'  => $total_120_days,
+                '90Days & Over'   => $total_90_days,
+                '60Days & Over'   => $total_60_days,
+                '30Days & Over'   => $total_30_days,
                 'Current Balance' => $total_insurer_payment,
             ];
             $posts_data = array_values($posts_data);
             foreach ($posts_data as $key => $value) {
-                $posts_data[$key]['120Days & Over']  = number_format($value['120Days & Over'], 2, '.', ',');
+                $posts_data[$key]['120Days & Over']  = $value['120Days & Over'] != 0 ? number_format($value['120Days & Over'], 2, '.', ',') : '';
+                $posts_data[$key]['90Days & Over']   = $value['90Days & Over'] != 0 ? number_format($value['90Days & Over'], 2, '.', ',') : '';
+                $posts_data[$key]['60Days & Over']   = $value['60Days & Over'] != 0 ? number_format($value['60Days & Over'], 2, '.', ',') : '';
+                $posts_data[$key]['30Days & Over']   = $value['30Days & Over'] != 0 ? number_format($value['30Days & Over'], 2, '.', ',') : '';
                 $posts_data[$key]['Current Balance'] = number_format($value['Current Balance'], 2, '.', ',');
             }
             wp_reset_postdata();
