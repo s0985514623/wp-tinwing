@@ -934,4 +934,309 @@ final class OtherReport
         }
         return round($total_premium, 2,PHP_ROUND_HALF_UP);
     }
+
+    /**
+     * Get profit and loss analysis callback
+     *
+     * @param \WP_REST_Request $request Request.
+     * @return \WP_REST_Response
+     */
+    public function get_profit_and_loss_analysis_callback($request)
+    { // phpcs:ignore
+        $params = $request->get_query_params() ?? [];
+        $params = WP::sanitize_text_field_deep($params, false);
+
+        // 準備假資料 - Profit and Loss Statement 報表
+        $data = [
+            // 標題行
+            [
+                'Account' => 'Profit and Loss Statement',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'HEADER'
+            ],
+            [
+                'Account' => 'As at 31/03/24',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'HEADER'
+            ],
+            [
+                'Account' => '',
+                'Current_Period' => 'Current Period',
+                'Year_to_Date' => 'Year to Date',
+                'Category' => 'HEADER'
+            ],
+            
+            // 空行
+            [
+                'Account' => '',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'EMPTY'
+            ],
+            
+            // Income 部分
+            [
+                'Account' => 'Income:',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'SECTION'
+            ],
+            [
+                'Account' => 'Premium Received',
+                'Current_Period' => 211291.57,
+                'Year_to_Date' => 2534014.57,
+                'Category' => 'INCOME'
+            ],
+            [
+                'Account' => 'Total Income',
+                'Current_Period' => 211291.57,
+                'Year_to_Date' => 2534014.57,
+                'Category' => 'TOTAL'
+            ],
+            
+            // 空行
+            [
+                'Account' => '',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'EMPTY'
+            ],
+            
+            // LESS 部分
+            [
+                'Account' => 'LESS:',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'SECTION'
+            ],
+            [
+                'Account' => 'Premium Paid - General',
+                'Current_Period' => 130662.92,
+                'Year_to_Date' => 2016608.86,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => '',
+                'Current_Period' => 130662.92,
+                'Year_to_Date' => 2016608.86,
+                'Category' => 'SUBTOTAL'
+            ],
+            
+            // 空行
+            [
+                'Account' => '',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'EMPTY'
+            ],
+            
+            // Other Earning 部分
+            [
+                'Account' => 'Other Earning :',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'SECTION'
+            ],
+            [
+                'Account' => 'Rebate Received',
+                'Current_Period' => 118710.00,
+                'Year_to_Date' => 118710.00,
+                'Category' => 'INCOME'
+            ],
+            [
+                'Account' => '',
+                'Current_Period' => 118710.00,
+                'Year_to_Date' => 118710.00,
+                'Category' => 'SUBTOTAL'
+            ],
+            
+            // 空行
+            [
+                'Account' => '',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'EMPTY'
+            ],
+            
+            // Gross Profit
+            [
+                'Account' => 'Gross Profit :',
+                'Current_Period' => 199338.65,
+                'Year_to_Date' => 626075.14,
+                'Category' => 'TOTAL'
+            ],
+            
+            // 空行
+            [
+                'Account' => '',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'EMPTY'
+            ],
+            
+            // Admin & General Expenses 部分
+            [
+                'Account' => 'Admin & General Expenses',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'SECTION'
+            ],
+            [
+                'Account' => 'Salary - Li Chung Chai',
+                'Current_Period' => 17100,
+                'Year_to_Date' => 215100,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Salary - Lai Yuen Chun',
+                'Current_Period' => 0,
+                'Year_to_Date' => 0,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Director Remuneration - Li Tsun Sun',
+                'Current_Period' => 16000,
+                'Year_to_Date' => 192000,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Printing & Stationery',
+                'Current_Period' => 117.88,
+                'Year_to_Date' => 1168.06,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Rent & Rates',
+                'Current_Period' => 0,
+                'Year_to_Date' => 16640,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Electricity, Water Fee & Gas',
+                'Current_Period' => 1003,
+                'Year_to_Date' => 23278.71,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Telephone Fax & Internet Fee',
+                'Current_Period' => 316,
+                'Year_to_Date' => 14353,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Insurance',
+                'Current_Period' => 2880,
+                'Year_to_Date' => 14019.84,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Management Fee',
+                'Current_Period' => 900,
+                'Year_to_Date' => 10800,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Stamp & Postage',
+                'Current_Period' => 0,
+                'Year_to_Date' => 1264,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Repairs & Maintenance',
+                'Current_Period' => 0,
+                'Year_to_Date' => 1520,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Business Registration',
+                'Current_Period' => 105,
+                'Year_to_Date' => 555,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Bank Charges',
+                'Current_Period' => 100,
+                'Year_to_Date' => 1200,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Sundry Expenses',
+                'Current_Period' => 0,
+                'Year_to_Date' => 2175,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Study Allowance',
+                'Current_Period' => 1040,
+                'Year_to_Date' => 3120,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Travel Expenses',
+                'Current_Period' => 0,
+                'Year_to_Date' => 4500,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Bonus',
+                'Current_Period' => 0,
+                'Year_to_Date' => 30000,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Lucky Money',
+                'Current_Period' => 0,
+                'Year_to_Date' => 7000,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Medical Expense',
+                'Current_Period' => 648,
+                'Year_to_Date' => 4629,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'MPF',
+                'Current_Period' => 1800,
+                'Year_to_Date' => 11700,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Audit Fee',
+                'Current_Period' => 0,
+                'Year_to_Date' => 9100,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'Account' => 'Total Expenses:',
+                'Current_Period' => 42009.88,
+                'Year_to_Date' => 564122.61,
+                'Category' => 'TOTAL'
+            ],
+            
+            // 空行
+            [
+                'Account' => '',
+                'Current_Period' => '',
+                'Year_to_Date' => '',
+                'Category' => 'EMPTY'
+            ],
+            
+            // Net Profit
+            [
+                'Account' => 'NET PROFIT FOR THE YEAR',
+                'Current_Period' => 157328.77,
+                'Year_to_Date' => 61952.53,
+                'Category' => 'FINAL_TOTAL'
+            ]
+        ];
+
+        return new \WP_REST_Response([
+            'data' => $data,
+            'total' => count($data),
+            'success' => true
+        ], 200);
+    }
 }

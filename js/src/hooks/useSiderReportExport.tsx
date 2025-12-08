@@ -2,6 +2,7 @@ import { useExport } from "@refinedev/core"
 import { useState, useEffect } from 'react'
 import dayjs from 'dayjs'
 import { Dayjs, } from 'dayjs'
+import { useExcelExport } from './useExcelExport'
 
 function useSiderReportExport() {
     const [resource, setResource] = useState('')
@@ -12,6 +13,9 @@ function useSiderReportExport() {
     const [agentId, setAgentId] = useState<number | undefined>()
     const [paymentStatus, setPaymentStatus] = useState<string | undefined>('paid')
     const [insurerId, setInsurerId] = useState<number | undefined>()
+    
+    // Excel 匯出功能
+    const { exportToExcel, isLoading: excelLoading } = useExcelExport()
     const { triggerExport, isLoading } = useExport({
         resource: resource,
         pageSize: -1,
@@ -80,13 +84,28 @@ function useSiderReportExport() {
     // 暴露一個能「帶 action」的啟動器
     const startExport = (
         { action, dateRange, agentId, paymentStatus, insurerId }: { action: string, dateRange: [Dayjs, Dayjs] | undefined, agentId?: number | undefined, paymentStatus?: string | undefined, insurerId?: number | undefined }) => {
-        setResource(action)
-        setDateRange(dateRange)
-        setAgentId(agentId)
-        setPaymentStatus(paymentStatus)
-        setInsurerId(insurerId)
+        
+        // 針對特定報表使用 Excel 匯出
+        const excelReports = ['profit_and_loss_analysis', 'trial_balance', 'balance_sheet']
+        
+        if (excelReports.includes(action)) {
+            exportToExcel({
+                action,
+                dateRange,
+                agentId,
+                paymentStatus,
+                insurerId
+            })
+        } else {
+            // 使用原有的 CSV 匯出
+            setResource(action)
+            setDateRange(dateRange)
+            setAgentId(agentId)
+            setPaymentStatus(paymentStatus)
+            setInsurerId(insurerId)
+        }
     };
-    return { startExport, isLoading }
+    return { startExport, isLoading: isLoading || excelLoading }
 }
 
 export default useSiderReportExport

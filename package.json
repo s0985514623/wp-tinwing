@@ -38,6 +38,7 @@
     "antd": "^5.9.4",
     "antd-toolkit": "^1.1.16",
     "axios": "^1.6.8",
+    "exceljs": "^4.4.0",
     "export-to-csv": "^1.0.0",
     "i18next": "^20.1.0",
     "i18next-browser-languagedetector": "^6.1.1",
