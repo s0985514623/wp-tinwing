@@ -157,7 +157,7 @@ const EditMetaPackage = () => {
                     </div>
                 </Col>
                 <Col span={8} className="text-center">
-                    <p className="text-[#000] font-light">Profit</p>
+                    <p className="text-[#000] font-light">Loss</p>
                     <p className="font-black text-4xl">
                         {profit.toLocaleString('en-US', {
                             minimumFractionDigits: 2, // 最少小數點後兩位
