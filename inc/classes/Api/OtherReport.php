@@ -985,11 +985,24 @@ final class OtherReport
         $current_period_insurer_payment = $this->calculate_insurer_payment_total($start_date, $end_date);
         $year_to_date_insurer_payment = $this->calculate_insurer_payment_total($year_start, $end_date);
         
-        // 計算 Gross Profit (Income - LESS)
-        $current_period_gross_profit = $current_period_income - $current_period_insurer_payment;
-        $year_to_date_gross_profit = $year_to_date_income - $year_to_date_insurer_payment;
+        // 計算 Other Earning 部分 - Other Earning – Rebate 類別
+        $current_period_other_earning = $this->calculate_other_earning_total($start_date, $end_date);
+        $year_to_date_other_earning = $this->calculate_other_earning_total($year_start, $end_date);
+        
+        // 計算 Gross Profit (Income - LESS + Other Earning)
+        $current_period_gross_profit = $current_period_income - $current_period_insurer_payment + $current_period_other_earning;
+        $year_to_date_gross_profit = $year_to_date_income - $year_to_date_insurer_payment + $year_to_date_other_earning;
+        
+        // 計算 Admin & General Expenses 分類
+        $current_period_admin_expenses = $this->calculate_admin_expenses_by_category($start_date, $end_date);
+        $year_to_date_admin_expenses = $this->calculate_admin_expenses_by_category($year_start, $end_date);
+        
+        // 計算 Total Expenses
+        $current_period_total_expenses = array_sum($current_period_admin_expenses);
+        $year_to_date_total_expenses = array_sum($year_to_date_admin_expenses);
 
         // 準備真實資料 - Profit and Loss Statement 報表
+        // 先建立基本結構，稍後動態插入 Admin & General Expenses
         $data = [
             // 標題行
             [
@@ -1084,14 +1097,14 @@ final class OtherReport
             ],
             [
                 'Account' => 'Rebate Received',
-                'Current_Period' => 118710.00,
-                'Year_to_Date' => 118710.00,
+                'Current_Period' => $current_period_other_earning,
+                'Year_to_Date' => $year_to_date_other_earning,
                 'Category' => 'INCOME'
             ],
             [
                 'Account' => '',
-                'Current_Period' => 118710.00,
-                'Year_to_Date' => 118710.00,
+                'Current_Period' => $current_period_other_earning,
+                'Year_to_Date' => $year_to_date_other_earning,
                 'Category' => 'SUBTOTAL'
             ],
             
@@ -1125,137 +1138,27 @@ final class OtherReport
                 'Current_Period' => '',
                 'Year_to_Date' => '',
                 'Category' => 'SECTION'
-            ],
-            [
-                'Account' => 'Salary - Li Chung Chai',
-                'Current_Period' => 17100,
-                'Year_to_Date' => 215100,
+            ]
+        ];
+        
+        // 動態添加 Admin & General Expenses 項目
+        foreach ($current_period_admin_expenses as $category_name => $current_amount) {
+            $year_amount = isset($year_to_date_admin_expenses[$category_name]) ? $year_to_date_admin_expenses[$category_name] : 0;
+            
+            $data[] = [
+                'Account' => $category_name,
+                'Current_Period' => $current_amount,
+                'Year_to_Date' => $year_amount,
                 'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Salary - Lai Yuen Chun',
-                'Current_Period' => 0,
-                'Year_to_Date' => 0,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Director Remuneration - Li Tsun Sun',
-                'Current_Period' => 16000,
-                'Year_to_Date' => 192000,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Printing & Stationery',
-                'Current_Period' => 117.88,
-                'Year_to_Date' => 1168.06,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Rent & Rates',
-                'Current_Period' => 0,
-                'Year_to_Date' => 16640,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Electricity, Water Fee & Gas',
-                'Current_Period' => 1003,
-                'Year_to_Date' => 23278.71,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Telephone Fax & Internet Fee',
-                'Current_Period' => 316,
-                'Year_to_Date' => 14353,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Insurance',
-                'Current_Period' => 2880,
-                'Year_to_Date' => 14019.84,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Management Fee',
-                'Current_Period' => 900,
-                'Year_to_Date' => 10800,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Stamp & Postage',
-                'Current_Period' => 0,
-                'Year_to_Date' => 1264,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Repairs & Maintenance',
-                'Current_Period' => 0,
-                'Year_to_Date' => 1520,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Business Registration',
-                'Current_Period' => 105,
-                'Year_to_Date' => 555,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Bank Charges',
-                'Current_Period' => 100,
-                'Year_to_Date' => 1200,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Sundry Expenses',
-                'Current_Period' => 0,
-                'Year_to_Date' => 2175,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Study Allowance',
-                'Current_Period' => 1040,
-                'Year_to_Date' => 3120,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Travel Expenses',
-                'Current_Period' => 0,
-                'Year_to_Date' => 4500,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Bonus',
-                'Current_Period' => 0,
-                'Year_to_Date' => 30000,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Lucky Money',
-                'Current_Period' => 0,
-                'Year_to_Date' => 7000,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Medical Expense',
-                'Current_Period' => 648,
-                'Year_to_Date' => 4629,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'MPF',
-                'Current_Period' => 1800,
-                'Year_to_Date' => 11700,
-                'Category' => 'EXPENSE'
-            ],
-            [
-                'Account' => 'Audit Fee',
-                'Current_Period' => 0,
-                'Year_to_Date' => 9100,
-                'Category' => 'EXPENSE'
-            ],
+            ];
+        }
+        
+        // 添加 Total Expenses 和最終結果
+        $additional_data = [
             [
                 'Account' => 'Total Expenses:',
-                'Current_Period' => 42009.88,
-                'Year_to_Date' => 564122.61,
+                'Current_Period' => $current_period_total_expenses,
+                'Year_to_Date' => $year_to_date_total_expenses,
                 'Category' => 'TOTAL'
             ],
             
@@ -1270,11 +1173,12 @@ final class OtherReport
             // Net Profit
             [
                 'Account' => 'NET PROFIT FOR THE YEAR',
-                'Current_Period' => 157328.77,
-                'Year_to_Date' => 61952.53,
+                'Current_Period' => $current_period_gross_profit - $current_period_total_expenses,
+                'Year_to_Date' => $year_to_date_gross_profit - $year_to_date_total_expenses,
                 'Category' => 'FINAL_TOTAL'
             ]
         ];
+        $data = array_merge($data, $additional_data);
 
         $response = new \WP_REST_Response([
             'data' => $data,
@@ -1343,7 +1247,7 @@ final class OtherReport
     }
 
     /**
-     * 計算 LESS 部分金額 (所有 Expenses - 指定的 Insurer Payment 類別)
+     * 計算 LESS 部分金額 (所有 Expenses 中的 Insurer Payment 類別總和)
      *
      * @param string|null $start_date
      * @param string|null $end_date
@@ -1442,24 +1346,253 @@ final class OtherReport
                 
                 error_log('terms_map');
                 error_log(print_r($terms_map, true));
-                // 計算總金額：排除指定的 Insurer Payment 類別
+                // 計算總金額：只計算指定的 Insurer Payment 類別
                 foreach ($expenses_data as $expense) {
                     $term_id = $expense['term_id'];
                     $amount = $expense['amount'];
                     
-                    $should_include = true;
+                    if (isset($terms_map[$term_id])) {
+                        $term_name = $terms_map[$term_id];
+                        
+                        // 如果是指定的 Insurer Payment 類別，就相加
+                        if (in_array($term_name, $target_categories)) {
+                            $total += $amount;
+                        }
+                    }
+                }
+            }
+        }
+
+        return round($total, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * 計算 Admin & General Expenses 分類金額
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @return array
+     */
+    private function calculate_admin_expenses_by_category($start_date, $end_date)
+    {
+        // 需要排除的類別 (避免重複計算)
+        $excluded_categories = [
+            'insurer-payment-cmb',
+            'insurer-payment-msig', 
+            'insurer-payment-taiping',
+            'insurer-payment-tokio',
+            'other-earning-rebate'  // 也排除 Other Earning，因為已經在 Other Earning 部分計算
+        ];
+
+        // 查詢 expenses 文章類型
+        $args = [
+            'post_type' => 'expenses',
+            'posts_per_page' => -1
+        ];
+        
+        // 只有在提供日期參數時才添加日期篩選
+        if ($start_date && $end_date) {
+            // 取得 WordPress 時區
+            $wp_timezone = wp_timezone();
+            
+            // 建立開始和結束日期時間物件
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            
+            // 轉換為 UTC 時間戳記以進行資料庫查詢
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+
+            $args['meta_query'] = [
+                'relation' => 'AND',
+                [
+                    'key' => 'date',
+                    'value' => [$start_timestamp, $end_timestamp],
+                    'compare' => 'BETWEEN',
+                    'type' => 'NUMERIC'
+                ]
+            ];
+        }
+
+        $query = new \WP_Query($args);
+        $category_totals = [];
+
+        if ($query->have_posts()) {
+            // 先收集所有的 term_id 和對應的金額
+            $term_ids = [];
+            $expenses_data = [];
+            
+            while ($query->have_posts()) {
+                $query->the_post();
+                $term_id = get_post_meta(get_the_ID(), 'term_id', true);
+                $amount = floatval(get_post_meta(get_the_ID(), 'amount', true));
+                
+                if ($term_id) {
+                    $term_ids[] = $term_id;
+                    $expenses_data[] = [
+                        'term_id' => $term_id,
+                        'amount' => $amount
+                    ];
+                }
+            }
+            wp_reset_postdata();
+            
+            // 一次性取得所有相關的 terms
+            if (!empty($term_ids)) {
+                $terms_args = [
+                    'post_type' => 'terms',
+                    'post__in' => array_unique($term_ids),
+                    'posts_per_page' => -1,
+                    'meta_query' => [
+                        [
+                            'key' => 'taxonomy',
+                            'value' => 'expense_class',
+                            'compare' => '='
+                        ]
+                    ]
+                ];
+                
+                $terms_query = new \WP_Query($terms_args);
+                $terms_map = [];
+                
+                if ($terms_query->have_posts()) {
+                    while ($terms_query->have_posts()) {
+                        $terms_query->the_post();
+                        $terms_map[get_the_ID()] = [
+                            'post_name' => get_post_field('post_name', get_the_ID()),
+                            'post_title' => html_entity_decode(get_the_title(), ENT_QUOTES, 'UTF-8')
+                        ];
+                    }
+                    wp_reset_postdata();
+                }
+                
+                // 按分類累加金額
+                foreach ($expenses_data as $expense) {
+                    $term_id = $expense['term_id'];
+                    $amount = $expense['amount'];
+                    
+                    if (isset($terms_map[$term_id])) {
+                        $term_name = $terms_map[$term_id]['post_name'];
+                        $term_title = $terms_map[$term_id]['post_title'];
+                        
+                        // 排除指定的 Insurer Payment 類別
+                        if (!in_array($term_name, $excluded_categories)) {
+                            if (!isset($category_totals[$term_title])) {
+                                $category_totals[$term_title] = 0;
+                            }
+                            $category_totals[$term_title] += $amount;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $category_totals;
+    }
+
+    /**
+     * 計算 Other Earning 總金額 (Insurer Payment 類別為 Other Earning – Rebate)
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @return float
+     */
+    private function calculate_other_earning_total($start_date, $end_date)
+    {
+        // 指定的 Other Earning 類別
+        $target_category = 'other-earning-rebate';
+
+        // 查詢 expenses 文章類型
+        $args = [
+            'post_type' => 'expenses',
+            'posts_per_page' => -1
+        ];
+        
+        // 只有在提供日期參數時才添加日期篩選
+        if ($start_date && $end_date) {
+            // 取得 WordPress 時區
+            $wp_timezone = wp_timezone();
+            
+            // 建立開始和結束日期時間物件
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            
+            // 轉換為 UTC 時間戳記以進行資料庫查詢
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+
+            $args['meta_query'] = [
+                'relation' => 'AND',
+                [
+                    'key' => 'date',
+                    'value' => [$start_timestamp, $end_timestamp],
+                    'compare' => 'BETWEEN',
+                    'type' => 'NUMERIC'
+                ]
+            ];
+        }
+
+        $query = new \WP_Query($args);
+        $total = 0;
+
+        if ($query->have_posts()) {
+            // 先收集所有的 term_id 和對應的金額
+            $term_ids = [];
+            $expenses_data = [];
+            
+            while ($query->have_posts()) {
+                $query->the_post();
+                $term_id = get_post_meta(get_the_ID(), 'term_id', true);
+                $amount = floatval(get_post_meta(get_the_ID(), 'amount', true));
+                
+                if ($term_id) {
+                    $term_ids[] = $term_id;
+                    $expenses_data[] = [
+                        'term_id' => $term_id,
+                        'amount' => $amount
+                    ];
+                }
+            }
+            wp_reset_postdata();
+            
+            // 一次性取得所有相關的 terms
+            if (!empty($term_ids)) {
+                $terms_args = [
+                    'post_type' => 'terms',
+                    'post__in' => array_unique($term_ids),
+                    'posts_per_page' => -1,
+                    'meta_query' => [
+                        [
+                            'key' => 'taxonomy',
+                            'value' => 'expense_class',
+                            'compare' => '='
+                        ]
+                    ]
+                ];
+                
+                $terms_query = new \WP_Query($terms_args);
+                $terms_map = [];
+                
+                if ($terms_query->have_posts()) {
+                    while ($terms_query->have_posts()) {
+                        $terms_query->the_post();
+                        $terms_map[get_the_ID()] = get_post_field('post_name', get_the_ID());
+                    }
+                    wp_reset_postdata();
+                }
+                
+                // 計算指定類別的總金額
+                foreach ($expenses_data as $expense) {
+                    $term_id = $expense['term_id'];
+                    $amount = $expense['amount'];
                     
                     if (isset($terms_map[$term_id])) {
                         $term_name = $terms_map[$term_id];
                         
-                        // 如果是指定的 Insurer Payment 類別，就不相加
-                        if (in_array($term_name, $target_categories)) {
-                            $should_include = false;
+                        // 檢查是否為目標類別
+                        if ($term_name === $target_category) {
+                            $total += $amount;
                         }
-                    }
-                    
-                    if ($should_include) {
-                        $total += $amount;
                     }
                 }
             }
