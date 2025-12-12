@@ -55,7 +55,7 @@ const ShowMetaMotor = () => {
                 <Col span={12}>
                     <div className="table table_td-flex-1 w-full mt-12">
                         <div className="tr mt-4">
-                            <div className="th">承保公司收取</div>
+                            <div className="th">承保公司退費</div>
                             <div className="td text-right">{insurerPaymentRate ? `${insurerPaymentRate}%` : ''}</div>
                             <div className="td text-right">{getPrice(round(grossPremium * (insurerPaymentRate / 100), 2))}</div>
                         </div>
@@ -70,7 +70,7 @@ const ShowMetaMotor = () => {
                             <div className="td text-right">{getPrice(extra_fieldValue)}</div>
                         </div>
                         <div className="tr">
-                            <div className="th">該付承保公司款項</div>
+                            <div className="th">承保公司合共退費</div>
                             <div className="td text-right"></div>
                             <div className="td text-right">{getPrice(insurerTotalFee)}</div>
                         </div>
@@ -91,7 +91,7 @@ const ShowMetaMotor = () => {
                             <div className="td text-right">{getPrice(extra_fieldValue)}</div>
                         </div>
                         <div className="tr">
-                            <div className="th">實收</div>
+                            <div className="th">客戶實退</div>
                             <div className="td text-right">{getPrice(totalPremium)}</div>
                         </div>
                     </div>

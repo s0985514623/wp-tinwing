@@ -49,7 +49,7 @@ const EditMetaPackage = () => {
         <>
             <div className="table table_td-flex-1 w-full mt-12">
                 <div className="tr mt-4">
-                    <div className="th">承保公司收取</div>
+                    <div className="th">承保公司退費</div>
                     <div className="td flex">
                         <div className="mr-2">
                             <Form.Item noStyle name={['insurer_fee_percent']}>
@@ -126,7 +126,7 @@ const EditMetaPackage = () => {
                     </div>
                 </div>
                 <div className="tr">
-                    <div className="th">該付承保公司款項</div>
+                    <div className="th">承保公司合共退費</div>
                     <div className="td flex">
                         <div></div>
                         <div>
@@ -138,7 +138,7 @@ const EditMetaPackage = () => {
                                   })}
                         </div>
                     </div>
-                    <div className="th">實收</div>
+                    <div className="th">客戶實退</div>
                     <div className="td">
                         {totalPremium.toLocaleString('en-US', {
                             minimumFractionDigits: 2, // 最少小數點後兩位
