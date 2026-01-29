@@ -881,13 +881,13 @@ final class OtherReport
             $mib               = floatval($motor_attr['mib']??0) ?? 0;
             $mib_value         = round($gross_premium * ($mib / 100), 2,PHP_ROUND_HALF_UP);
             $extra_field       = maybe_unserialize(get_post_meta($the_note->ID, 'extra_field', true));
-            $extra_field_value = $premium * (floatval($extra_field['value']??0) / 100);
+            $extra_field_value = round($premium * (floatval($extra_field['value']??0) / 100), 2, PHP_ROUND_HALF_UP);
             $insurer_payment   = $mib_value + $extra_field_value + round($insurer_fee_percent * $gross_premium / 100+1e-10, 2,PHP_ROUND_HALF_UP);
         } else {
             $levy              = get_post_meta($the_note->ID, 'levy', true);
             $levy_value        = round($gross_premium * (floatval($levy??0) / 100), 2,PHP_ROUND_HALF_UP);
             $extra_field       = maybe_unserialize(get_post_meta($the_note->ID, 'extra_field', true));
-            $extra_field_value = $premium * (floatval($extra_field['value']??0) / 100);
+            $extra_field_value = round($premium * (floatval($extra_field['value']??0) / 100), 2, PHP_ROUND_HALF_UP);
             $insurer_payment   = $levy_value + $extra_field_value + round($insurer_fee_percent * $gross_premium / 100+1e-10, 2,PHP_ROUND_HALF_UP);
         }
         return $insurer_payment;
@@ -933,6 +933,55 @@ final class OtherReport
             $total_premium = $premium * (1 + ($levy + $extra_field_value) / 100) + $less + 1e-10;
         }
         return round($total_premium, 2,PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * 計算 Account Receivable 的 This Period Debit（期間內所開的 Debit Note 總金額）
+     *
+     * @param string|null $start_date 開始日期
+     * @param string|null $end_date 結束日期
+     * @param \DateTimeZone $wp_timezone WordPress 時區
+     * @return float
+     */
+    private function calculate_account_receivable_debit($start_date, $end_date, $wp_timezone)
+    {
+        $total_debit = 0;
+        
+        if (!$start_date || !$end_date) {
+            return $total_debit;
+        }
+        
+        // 查詢期間內的 Debit Notes
+        $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+        $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+        $start_timestamp = $start_datetime->getTimestamp();
+        $end_timestamp = $end_datetime->getTimestamp();
+        
+        $debit_notes_args = [
+            'post_type' => 'debit_notes',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                [
+                    'key' => 'date',
+                    'value' => [$start_timestamp, $end_timestamp],
+                    'compare' => 'BETWEEN',
+                    'type' => 'NUMERIC'
+                ]
+            ]
+        ];
+        
+        $debit_notes_query = new \WP_Query($debit_notes_args);
+        if ($debit_notes_query->have_posts()) {
+            while ($debit_notes_query->have_posts()) {
+                $debit_notes_query->the_post();
+                $the_note = $debit_notes_query->post;
+                $total_premium = $this->get_total_premium($the_note);
+                $total_debit += $total_premium;
+            }
+        }
+        wp_reset_postdata();
+        
+        return round($total_debit, 2, PHP_ROUND_HALF_UP);
     }
 
     /**
@@ -1238,6 +1287,446 @@ final class OtherReport
             while ($query->have_posts()) {
                 $query->the_post();
                 $amount = floatval(get_post_meta(get_the_ID(), 'premium', true));
+                $total += $amount;
+            }
+        }
+        wp_reset_postdata();
+
+        return round($total, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * 計算指定 expense_class post_name 的 Expenses 總金額
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @param string $term_post_name expense_class 的 post_name（例如 'insurer-payment-msig'）
+     * @return float
+     */
+    private function calculate_expenses_total_by_term_post_name($start_date, $end_date, $term_post_name)
+    {
+        // 查詢 expenses 文章類型
+        $args = [
+            'post_type' => 'expenses',
+            'posts_per_page' => -1
+        ];
+        
+        // 只有在提供日期參數時才添加日期篩選
+        if ($start_date && $end_date) {
+            // 取得 WordPress 時區
+            $wp_timezone = wp_timezone();
+            
+            // 建立開始和結束日期時間物件
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            
+            // 轉換為 UTC 時間戳記以進行資料庫查詢
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+
+            $args['meta_query'] = [
+                'relation' => 'AND',
+                [
+                    'key' => 'date',
+                    'value' => [$start_timestamp, $end_timestamp],
+                    'compare' => 'BETWEEN',
+                    'type' => 'NUMERIC'
+                ]
+            ];
+        }
+
+        $query = new \WP_Query($args);
+        $total = 0;
+
+        if ($query->have_posts()) {
+            // 先收集所有的 term_id 和對應的金額
+            $term_ids = [];
+            $expenses_data = [];
+            
+            while ($query->have_posts()) {
+                $query->the_post();
+                $term_id = get_post_meta(get_the_ID(), 'term_id', true);
+                $amount = floatval(get_post_meta(get_the_ID(), 'amount', true));
+                
+                if ($term_id) {
+                    $term_ids[] = $term_id;
+                    $expenses_data[] = [
+                        'term_id' => $term_id,
+                        'amount' => $amount
+                    ];
+                }
+            }
+            wp_reset_postdata();
+            
+            // 一次性取得所有相關的 terms
+            if (!empty($term_ids)) {
+                $terms_args = [
+                    'post_type' => 'terms',
+                    'post__in' => array_unique($term_ids),
+                    'posts_per_page' => -1,
+                    'meta_query' => [
+                        [
+                            'key' => 'taxonomy',
+                            'value' => 'expense_class',
+                            'compare' => '='
+                        ]
+                    ]
+                ];
+                
+                $terms_query = new \WP_Query($terms_args);
+                $terms_map = [];
+                
+                if ($terms_query->have_posts()) {
+                    while ($terms_query->have_posts()) {
+                        $terms_query->the_post();
+                        $terms_map[get_the_ID()] = get_post_field('post_name', get_the_ID());
+                    }
+                    wp_reset_postdata();
+                }
+                
+                // 計算總金額：只計算指定的 post_name
+                foreach ($expenses_data as $expense) {
+                    $term_id = $expense['term_id'];
+                    $amount = $expense['amount'];
+                    
+                    if (isset($terms_map[$term_id])) {
+                        $post_name = $terms_map[$term_id];
+                        
+                        // 檢查是否為目標 post_name
+                        if ($post_name === $term_post_name) {
+                            $total += $amount;
+                        }
+                    }
+                }
+            }
+        }
+
+        return round($total, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * 計算指定 term 的 post_title 的 Expenses 總金額
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @param string $term_title expense_class 的 post_title（例如 'Salary – LCC'）
+     * @return float
+     */
+    private function calculate_expenses_total_by_term_title($start_date, $end_date, $term_title)
+    {
+        $args = [
+            'post_type' => 'expenses',
+            'posts_per_page' => -1
+        ];
+
+        if ($start_date && $end_date) {
+            $wp_timezone = wp_timezone();
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+
+            $args['meta_query'] = [
+                'relation' => 'AND',
+                [
+                    'key' => 'date',
+                    'value' => [$start_timestamp, $end_timestamp],
+                    'compare' => 'BETWEEN',
+                    'type' => 'NUMERIC'
+                ]
+            ];
+        }
+
+        $query = new \WP_Query($args);
+        $total = 0;
+
+        if ($query->have_posts()) {
+            $term_ids = [];
+            $expenses_data = [];
+
+            while ($query->have_posts()) {
+                $query->the_post();
+                $term_id = get_post_meta(get_the_ID(), 'term_id', true);
+                $amount = floatval(get_post_meta(get_the_ID(), 'amount', true));
+
+                if ($term_id) {
+                    $term_ids[] = $term_id;
+                    $expenses_data[] = [
+                        'term_id' => $term_id,
+                        'amount' => $amount
+                    ];
+                }
+            }
+            wp_reset_postdata();
+
+            if (!empty($term_ids)) {
+                $terms_args = [
+                    'post_type' => 'terms',
+                    'post__in' => array_unique($term_ids),
+                    'posts_per_page' => -1,
+                    'meta_query' => [
+                        [
+                            'key' => 'taxonomy',
+                            'value' => 'expense_class',
+                            'compare' => '='
+                        ]
+                    ]
+                ];
+
+                $terms_query = new \WP_Query($terms_args);
+                $terms_map = [];
+
+                if ($terms_query->have_posts()) {
+                    while ($terms_query->have_posts()) {
+                        $terms_query->the_post();
+                        $terms_map[get_the_ID()] = html_entity_decode(get_the_title(), ENT_QUOTES, 'UTF-8');
+                    }
+                    wp_reset_postdata();
+                }
+
+                foreach ($expenses_data as $expense) {
+                    $term_id = $expense['term_id'];
+                    $amount = $expense['amount'];
+
+                    if (isset($terms_map[$term_id])) {
+                        $current_term_title = $terms_map[$term_id];
+
+                        if ($current_term_title === $term_title) {
+                            $total += $amount;
+                        }
+                    }
+                }
+            }
+        }
+
+        return round($total, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * 計算指定銀行的 Receipt 總金額（以 receipts.premium 為準）
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @param string $bank_name
+     * @return float
+     */
+    private function calculate_receipt_total_by_bank($start_date, $end_date, $bank_name)
+    {
+        // 查詢 receipts 文章類型
+        $args = [
+            'post_type' => 'receipts',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                'relation' => 'AND',
+                [
+                    'key' => 'payment_receiver_account',
+                    'value' => $bank_name,
+                    'compare' => '=',
+                ],
+            ],
+        ];
+
+        // 只有在提供日期參數時才添加日期篩選
+        if ($start_date && $end_date) {
+            $wp_timezone = wp_timezone();
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+
+            $args['meta_query'][] = [
+                'key' => 'date',
+                'value' => [$start_timestamp, $end_timestamp],
+                'compare' => 'BETWEEN',
+                'type' => 'NUMERIC',
+            ];
+        }
+
+        $query = new \WP_Query($args);
+        $total = 0;
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $amount = floatval(get_post_meta(get_the_ID(), 'premium', true));
+                $total += $amount;
+            }
+        }
+        wp_reset_postdata();
+
+        return round($total, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * 計算指定銀行的 Adjust Balance 總金額（expenses.amount 且 is_adjust_balance=1）
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @param string $bank_name
+     * @return float
+     */
+    private function calculate_adjust_balance_total_by_bank($start_date, $end_date, $bank_name)
+    {
+        $args = [
+            'post_type' => 'expenses',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                'relation' => 'AND',
+                [
+                    'key' => 'is_adjust_balance',
+                    'value' => 1,
+                    'compare' => '=',
+                    'type' => 'NUMERIC',
+                ],
+                [
+                    'key' => 'payment_receiver_account',
+                    'value' => $bank_name,
+                    'compare' => '=',
+                ],
+            ],
+        ];
+
+        if ($start_date && $end_date) {
+            $wp_timezone = wp_timezone();
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+
+            $args['meta_query'][] = [
+                'key' => 'date',
+                'value' => [$start_timestamp, $end_timestamp],
+                'compare' => 'BETWEEN',
+                'type' => 'NUMERIC',
+            ];
+        }
+
+        $query = new \WP_Query($args);
+        $total = 0;
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $amount = floatval(get_post_meta(get_the_ID(), 'amount', true));
+                $total += $amount;
+            }
+        }
+        wp_reset_postdata();
+
+        return round($total, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * 計算所有 Adjust Balance 的總金額（expenses.amount 且 is_adjust_balance=1，不限定銀行）
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @return float
+     */
+    private function calculate_adjust_balance_total($start_date, $end_date)
+    {
+        $args = [
+            'post_type' => 'expenses',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                [
+                    'key' => 'is_adjust_balance',
+                    'value' => 1,
+                    'compare' => '=',
+                    'type' => 'NUMERIC',
+                ],
+            ],
+        ];
+
+        if ($start_date && $end_date) {
+            $wp_timezone = wp_timezone();
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+
+            $args['meta_query'][] = [
+                'key' => 'date',
+                'value' => [$start_timestamp, $end_timestamp],
+                'compare' => 'BETWEEN',
+                'type' => 'NUMERIC',
+            ];
+        }
+
+        $query = new \WP_Query($args);
+        $total = 0;
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $amount = floatval(get_post_meta(get_the_ID(), 'amount', true));
+                $total += $amount;
+            }
+        }
+        wp_reset_postdata();
+
+        return round($total, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * 計算指定銀行的 Expenses 總金額（expenses.amount 且排除 Adjust Balance）
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @param string $bank_name
+     * @return float
+     */
+    private function calculate_expenses_total_by_bank($start_date, $end_date, $bank_name)
+    {
+        $args = [
+            'post_type' => 'expenses',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                'relation' => 'AND',
+                [
+                    'key' => 'payment_receiver_account',
+                    'value' => $bank_name,
+                    'compare' => '=',
+                ],
+                // 排除 Adjust Balance（相容舊資料：is_adjust_balance 不存在也算一般 Expenses）
+                [
+                    'relation' => 'OR',
+                    [
+                        'key' => 'is_adjust_balance',
+                        'compare' => 'NOT EXISTS',
+                    ],
+                    [
+                        'key' => 'is_adjust_balance',
+                        'value' => 1,
+                        'compare' => '!=',
+                        'type' => 'NUMERIC',
+                    ],
+                ],
+            ],
+        ];
+
+        if ($start_date && $end_date) {
+            $wp_timezone = wp_timezone();
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+
+            $args['meta_query'][] = [
+                'key' => 'date',
+                'value' => [$start_timestamp, $end_timestamp],
+                'compare' => 'BETWEEN',
+                'type' => 'NUMERIC',
+            ];
+        }
+
+        $query = new \WP_Query($args);
+        $total = 0;
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $amount = floatval(get_post_meta(get_the_ID(), 'amount', true));
                 $total += $amount;
             }
         }
@@ -1599,5 +2088,1195 @@ final class OtherReport
         }
 
         return round($total, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * 計算指定 insurer（通過 post_name）的 Insurer Payment 總金額
+     * 從所有 receipts 中判斷是 debitNote/creditNote/renewal，然後進行 get_insurer_payment 之後將金額加總
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @param string $insurer_post_name insurer 的 post_name（例如 'msig-insurance-hong-kong-ltd'）
+     * @return float
+     */
+    private function calculate_insurer_payment_total_by_post_name($start_date, $end_date, $insurer_post_name)
+    {
+        // 首先找到對應的 insurer
+        $insurer_args = [
+            'post_type' => 'insurers',
+            'posts_per_page' => 1,
+            'name' => $insurer_post_name, // 使用 post_name 查找
+        ];
+        
+        $insurer_query = new \WP_Query($insurer_args);
+        $insurer = null;
+        
+        if ($insurer_query->have_posts()) {
+            $insurer_query->the_post();
+            $insurer = $insurer_query->post;
+        }
+        wp_reset_postdata();
+        
+        if (!$insurer) {
+            return 0;
+        }
+        
+        $insurer_id = $insurer->ID;
+        
+        // 查詢期間內的 receipts
+        $receipts_args = [
+            'post_type' => 'receipts',
+            'posts_per_page' => -1,
+        ];
+        
+        if ($start_date && $end_date) {
+            $wp_timezone = wp_timezone();
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+            
+            $receipts_args['meta_query'] = [
+                [
+                    'key' => 'date',
+                    'value' => [$start_timestamp, $end_timestamp],
+                    'compare' => 'BETWEEN',
+                    'type' => 'NUMERIC',
+                ],
+            ];
+        }
+        
+        $receipts_query = new \WP_Query($receipts_args);
+        $total = 0;
+        
+        if ($receipts_query->have_posts()) {
+            // 收集所有需要的 note IDs
+            $debit_note_ids = [];
+            $credit_note_ids = [];
+            $renewal_ids = [];
+            
+            while ($receipts_query->have_posts()) {
+                $receipts_query->the_post();
+                $receipt_id = get_the_ID();
+                
+                $debit_note_id = get_post_meta($receipt_id, 'debit_note_id', true);
+                $credit_note_id = get_post_meta($receipt_id, 'created_from_credit_note_id', true);
+                $renewal_id = get_post_meta($receipt_id, 'created_from_renewal_id', true);
+                
+                if ($debit_note_id) {
+                    $debit_note_ids[] = $debit_note_id;
+                }
+                if ($credit_note_id) {
+                    $credit_note_ids[] = $credit_note_id;
+                }
+                if ($renewal_id) {
+                    $renewal_ids[] = $renewal_id;
+                }
+            }
+            wp_reset_postdata();
+            
+            // 一次性查詢所有相關的 notes
+            $debit_notes_map = [];
+            $credit_notes_map = [];
+            $renewals_map = [];
+            
+            if (!empty($debit_note_ids)) {
+                $debit_notes_query = new \WP_Query([
+                    'post_type' => 'debit_notes',
+                    'post__in' => array_unique($debit_note_ids),
+                    'posts_per_page' => -1,
+                ]);
+                if ($debit_notes_query->have_posts()) {
+                    while ($debit_notes_query->have_posts()) {
+                        $debit_notes_query->the_post();
+                        $debit_notes_map[get_the_ID()] = $debit_notes_query->post;
+                    }
+                }
+                wp_reset_postdata();
+            }
+            
+            if (!empty($credit_note_ids)) {
+                $credit_notes_query = new \WP_Query([
+                    'post_type' => 'credit_notes',
+                    'post__in' => array_unique($credit_note_ids),
+                    'posts_per_page' => -1,
+                ]);
+                if ($credit_notes_query->have_posts()) {
+                    while ($credit_notes_query->have_posts()) {
+                        $credit_notes_query->the_post();
+                        $credit_notes_map[get_the_ID()] = $credit_notes_query->post;
+                    }
+                }
+                wp_reset_postdata();
+            }
+            
+            if (!empty($renewal_ids)) {
+                $renewals_query = new \WP_Query([
+                    'post_type' => 'renewals',
+                    'post__in' => array_unique($renewal_ids),
+                    'posts_per_page' => -1,
+                ]);
+                if ($renewals_query->have_posts()) {
+                    while ($renewals_query->have_posts()) {
+                        $renewals_query->the_post();
+                        $renewals_map[get_the_ID()] = $renewals_query->post;
+                    }
+                }
+                wp_reset_postdata();
+            }
+            
+            // 重新查詢 receipts 並計算
+            $receipts_query = new \WP_Query($receipts_args);
+            if ($receipts_query->have_posts()) {
+                while ($receipts_query->have_posts()) {
+                    $receipts_query->the_post();
+                    $receipt = $receipts_query->post;
+                    
+                    $debit_note_id = get_post_meta($receipt->ID, 'debit_note_id', true);
+                    $credit_note_id = get_post_meta($receipt->ID, 'created_from_credit_note_id', true);
+                    $renewal_id = get_post_meta($receipt->ID, 'created_from_renewal_id', true);
+                    
+                    // 判斷是 debitNote/creditNote/renewal（優先順序：creditNote > renewal > debitNote）
+                    $the_note = null;
+                    $is_credit_note = false;
+                    
+                    if ($credit_note_id && isset($credit_notes_map[$credit_note_id])) {
+                        $the_note = $credit_notes_map[$credit_note_id];
+                        $is_credit_note = true;
+                    } elseif ($renewal_id && isset($renewals_map[$renewal_id])) {
+                        $the_note = $renewals_map[$renewal_id];
+                    } elseif ($debit_note_id && isset($debit_notes_map[$debit_note_id])) {
+                        $the_note = $debit_notes_map[$debit_note_id];
+                    }
+                    
+                    // 檢查 theNote 的 insurer_id 是否匹配
+                    if ($the_note) {
+                        $note_insurer_id = get_post_meta($the_note->ID, 'insurer_id', true);
+                        
+                        if ($note_insurer_id == $insurer_id) {
+                            $insurer_payment = $this->get_insurer_payment($the_note, $insurer);
+                            
+                            // 如果是 creditNote 則減去，否則加上
+                            if ($is_credit_note) {
+                                $total -= $insurer_payment;
+                            } else {
+                                $total += $insurer_payment;
+                            }
+                        }
+                    }
+                }
+            }
+            wp_reset_postdata();
+        }
+        
+        return round($total, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * Get trial balance callback
+     *
+     * @param \WP_REST_Request $request Request.
+     * @return \WP_REST_Response
+     */
+    public function get_trial_balance_callback($request)
+    { // phpcs:ignore
+        $params = $request->get_query_params() ?? [];
+        $params = WP::sanitize_text_field_deep($params, false);
+
+        // 取得日期參數，考慮 WordPress 時區
+        $wp_timezone = wp_timezone();
+        $current_wp_time = new \DateTime('now', $wp_timezone);
+        
+        // 檢查是否有提供日期參數
+        $has_date_params = isset($params['start_date']) || isset($params['end_date']);
+        
+        if ($has_date_params) {
+            // 如果有提供日期參數，使用提供的值或預設值
+            $start_date = isset($params['start_date']) ? $params['start_date'] : $current_wp_time->format('Y-m-01'); // 預設當月第一天
+            $end_date = isset($params['end_date']) ? $params['end_date'] : $current_wp_time->format('Y-m-d'); // 預設今天
+        } else {
+            // 如果沒有提供任何日期參數，設為 null，表示不限制日期
+            $start_date = null;
+            $end_date = null;
+        }
+
+        // 計算期初日期（本期開始前一天）
+        if ($start_date) {
+            $start_date_obj = new \DateTime($start_date, $wp_timezone);
+            $beginning_date_obj = clone $start_date_obj;
+            $beginning_date_obj->modify('-1 day');
+            $beginning_date = $beginning_date_obj->format('d/m/Y');
+        } else {
+            $beginning_date = '28/02/2024'; // 預設值
+        }
+
+        // 格式化報表日期
+        if ($start_date && $end_date) {
+            $start_date_obj = new \DateTime($start_date, $wp_timezone);
+            $end_date_obj = new \DateTime($end_date, $wp_timezone);
+            $period_label = $start_date_obj->format('d/m/y') . ' - ' . $end_date_obj->format('d/m/y');
+        } else {
+            $period_label = '01/03/24 - 31/03/24'; // 預設值
+        }
+
+        // Log 所有參數
+        error_log('Trial Balance API - All params:');
+        error_log(print_r($params, true));
+        error_log('Trial Balance API - start_date: ' . ($start_date ?? 'null'));
+        error_log('Trial Balance API - end_date: ' . ($end_date ?? 'null'));
+
+        // 計算 Account Receivable 的 This Period Debit（期間內所開的 Debit Note 總金額）
+        $account_receivable_this_period_debit = $this->calculate_account_receivable_debit($start_date, $end_date, $wp_timezone);
+        
+        // 計算 Account Receivable 的 This Period Credit（期間內開立的 Receipt 總金額）
+        $account_receivable_this_period_credit = $this->calculate_receipt_total($start_date, $end_date);
+
+        // 計算 SOC - Current 的 This Period Debit（期間內 上海商業銀行 Income + Adjust Balance）
+        $soc_bank_name = '上海商業銀行';
+        $soc_income = $this->calculate_receipt_total_by_bank($start_date, $end_date, $soc_bank_name);
+        $soc_adjust_balance = $this->calculate_adjust_balance_total_by_bank($start_date, $end_date, $soc_bank_name);
+        $soc_income_plus_adjust = round($soc_income + $soc_adjust_balance, 2, PHP_ROUND_HALF_UP);
+        
+        // 計算 SOC - Current 的 This Period Credit（期間內 上海商業銀行 Expenses，排除 Adjust Balance）
+        $soc_expenses_total = $this->calculate_expenses_total_by_bank($start_date, $end_date, $soc_bank_name);
+
+        // 計算 KP1 - Current 的 This Period Debit（期間內 中國銀行 Income + Adjust Balance）
+        $boc_bank_name = '中國銀行';
+        $boc_income = $this->calculate_receipt_total_by_bank($start_date, $end_date, $boc_bank_name);
+        $boc_adjust_balance = $this->calculate_adjust_balance_total_by_bank($start_date, $end_date, $boc_bank_name);
+        $boc_income_plus_adjust = round($boc_income + $boc_adjust_balance, 2, PHP_ROUND_HALF_UP);
+        
+        // 計算 KP1 - Current 的 This Period Credit（期間內 中國銀行 Expenses，排除 Adjust Balance）
+        $boc_expenses_total = $this->calculate_expenses_total_by_bank($start_date, $end_date, $boc_bank_name);
+
+        // 計算 A/C Payable - MSIG 的 This Period Debit（期間內 Expenses 中 term_id 的 post_name = 'insurer-payment-msig' 的金額總和）
+        $msig_payment_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'insurer-payment-msig');
+        
+        // 計算 A/C Payable - MSIG 的 This Period Credit（期間內從所有 receipts 中判斷是 debitNote/creditNote/renewal，然後進行 get_insurer_payment 之後將金額加總）
+        // insurer 的 post_name 為 'msig-insurance-hong-kong-ltd'
+        $msig_insurer_payment_total = $this->calculate_insurer_payment_total_by_post_name($start_date, $end_date, 'msig-insurance-hong-kong-ltd');
+        
+        // 計算 A/C Payable - Tokio Marine 的 This Period Debit（期間內 Expenses 中 term_id 的 post_name = 'insurer-payment-tokio' 的金額總和）
+        $tokio_payment_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'insurer-payment-tokio');
+        
+        // 計算 A/C Payable - CMB Wing Lung 的 This Period Debit（期間內 Expenses 中 term_id 的 post_name = 'insurer-payment-cmb' 的金額總和）
+        $cmb_payment_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'insurer-payment-cmb');
+        
+        // 計算 A/C Payable - China Taiping 的 This Period Debit（期間內 Expenses 中 term_id 的 post_name = 'insurer-payment-taiping' 的金額總和）
+        $taiping_payment_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'insurer-payment-taiping');
+        
+        // 計算 A/C Payable - Tokio Marine 的 This Period Credit（期間內從所有 receipts 中判斷是 debitNote/creditNote/renewal，然後進行 get_insurer_payment 之後將金額加總）
+        // insurer 的 post_name 為 'the-tokio-marine-fire-ins-co-hk-ltd'
+        $tokio_insurer_payment_total = $this->calculate_insurer_payment_total_by_post_name($start_date, $end_date, 'the-tokio-marine-fire-ins-co-hk-ltd');
+        
+        // 計算 A/C Payable - CMB Wing Lung 的 This Period Credit（期間內從所有 receipts 中判斷是 debitNote/creditNote/renewal，然後進行 get_insurer_payment 之後將金額加總）
+        // insurer 的 post_name 為 'cmb-wing-lung-insurance-co-ltd'
+        $cmb_insurer_payment_total = $this->calculate_insurer_payment_total_by_post_name($start_date, $end_date, 'cmb-wing-lung-insurance-co-ltd');
+        
+        // 計算 A/C Payable - China Taiping 的 This Period Credit（期間內從所有 receipts 中判斷是 debitNote/creditNote/renewal，然後進行 get_insurer_payment 之後將金額加總）
+        // insurer 的 post_name 為 'china-taiping-insurance-hk-co-ltd'
+        $taiping_insurer_payment_total = $this->calculate_insurer_payment_total_by_post_name($start_date, $end_date, 'china-taiping-insurance-hk-co-ltd');
+        
+        // 計算 Premium Paid - General 的 This Period Debit（等於所有 insurer payment 的總和）
+        $premium_paid_general_debit = round($msig_payment_total + $tokio_payment_total + $cmb_payment_total + $taiping_payment_total, 2, PHP_ROUND_HALF_UP);
+        
+        // 計算 Rebate-Received 的 This Period Credit（期間內所有 Adjust Balance 的總金額）
+        $adjust_balance_total = $this->calculate_adjust_balance_total($start_date, $end_date);
+        
+        // 計算 Salary - Li Chung Chai 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'salary-lcc' 的金額總和）
+        $salary_lcc_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'salary-lcc');
+        
+        // 計算 Director Remuneration - Li Tsun Sun 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'dir-lts' 的金額總和）
+        $dir_lts_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'dir-lts');
+        
+        // 計算 Printing & Stationery 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'pretty-cash-printing-stationery' 的金額總和）
+        $printing_stationery_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'pretty-cash-printing-stationery');
+        
+        // 計算 Electricity, Water Fee & Gas 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'petty-cash-electricity' 的金額總和）
+        $electricity_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'petty-cash-electricity');
+        
+        // 計算 Telephone Fax & Internet Fee 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'petty-cash-telephone' 的金額總和）
+        $telephone_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'petty-cash-telephone');
+        
+        // 計算 Insurance 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'pia' 的金額總和）
+        $insurance_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'pia');
+        
+        // 計算 Management Fee 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'management-fee' 的金額總和）
+        $management_fee_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'management-fee');
+        
+        // 計算 Business Registration 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'misc' 的金額總和）
+        $business_registration_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'misc');
+        
+        // 計算 Bank Charges 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'bank-charges' 的金額總和）
+        $bank_charges_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'bank-charges');
+        
+        // 計算 Study Allowance 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'cpd' 的金額總和）
+        $study_allowance_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'cpd');
+        
+        // 計算 Medical Expenese 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'petty-cash-medical' 的金額總和）
+        $medical_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'petty-cash-medical');
+        
+        // 計算 MPF 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'mpf' 的金額總和）
+        $mpf_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'mpf');
+        
+        // 計算所有 This Period Debit 的總和
+        $total_this_period_debit = round(
+            $account_receivable_this_period_debit +
+            $soc_income_plus_adjust +
+            $boc_income_plus_adjust +
+            $msig_payment_total +
+            $tokio_payment_total +
+            $cmb_payment_total +
+            $taiping_payment_total +
+            $premium_paid_general_debit +
+            $salary_lcc_total +
+            $dir_lts_total +
+            $printing_stationery_total +
+            $electricity_total +
+            $telephone_total +
+            $insurance_total +
+            $management_fee_total +
+            $business_registration_total +
+            $bank_charges_total +
+            $study_allowance_total +
+            $medical_total +
+            $mpf_total,
+            2,
+            PHP_ROUND_HALF_UP
+        );
+        
+        // 計算所有 This Period Credit 的總和
+        // 注意：Premium Received 的 This Period Credit 目前是固定值 '211291.57'，需要包含在總和中
+        $premium_received_credit = 211291.57;
+        $total_this_period_credit = round(
+            $account_receivable_this_period_credit +
+            $soc_expenses_total +
+            $boc_expenses_total +
+            $msig_insurer_payment_total +
+            $tokio_insurer_payment_total +
+            $cmb_insurer_payment_total +
+            $taiping_insurer_payment_total +
+            $adjust_balance_total +
+            $premium_received_credit,
+            2,
+            PHP_ROUND_HALF_UP
+        );
+
+        // 準備假資料 - Trial Balance 報表
+        $data = [
+            // 標題行（獨立於上方，可置中）
+            [
+                'No.' => '',
+                'Attribute' => '',
+                'Account Name' => 'TRIAL BALANCE',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '',
+                'Category' => 'HEADER'
+            ],
+            [
+                'No.' => '',
+                'Attribute' => '',
+                'Account Name' => 'For Period : ' . $period_label,
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '',
+                'Category' => 'HEADER'
+            ],
+            [
+                'No.' => '',
+                'Attribute' => '',
+                'Account Name' => '',
+                'Beginning Balance Debit' => 'BEGINNING BALANCE Until ' . $beginning_date,
+                'Beginning Balance Credit' => '',
+                'This Period Debit' => 'THIS PERIOD',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => 'ENDING BALANCE',
+                'Ending Balance Credit' => '',
+                'Category' => 'HEADER'
+            ],
+            [
+                'No.' => 'No.',
+                'Attribute' => 'Attribute',
+                'Account Name' => 'Account Name',
+                'Beginning Balance Debit' => 'Debit',
+                'Beginning Balance Credit' => 'Credit',
+                'This Period Debit' => 'Debit',
+                'This Period Credit' => 'Credit',
+                'Ending Balance Debit' => 'Debit',
+                'Ending Balance Credit' => 'Credit',
+                'Category' => 'HEADER'
+            ],
+                        
+            // Assets（資產）
+            // Fixed Asset (固定資產)
+            [
+                'No.' => 1,
+                'Attribute' => 'Fixed Asset',
+                'Account Name' => 'Motor car',
+                'Beginning Balance Debit' => '195370.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '195370.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            [
+                'No.' => 2,
+                'Attribute' => 'Fixed Asset',
+                'Account Name' => 'Furniture & Fixture',
+                'Beginning Balance Debit' => '344950.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '344950.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            [
+                'No.' => 4,
+                'Attribute' => 'Fixed Asset',
+                'Account Name' => 'Acc.depreciation - Motor Car',
+                'Beginning Balance Debit' => '-195370.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '-195370.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'CONTRA_ASSET'
+            ],
+            [
+                'No.' => 5,
+                'Attribute' => 'Fixed Asset',
+                'Account Name' => 'Acc. Depreciation - F&F',
+                'Beginning Balance Debit' => '-344950.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '-344950.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'CONTRA_ASSET'
+            ],
+            [
+                'No.' => 6,
+                'Attribute' => 'Fixed Asset',
+                'Account Name' => 'Leasehold Improvement',
+                'Beginning Balance Debit' => '121300.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '121300.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            [
+                'No.' => 6,
+                'Attribute' => 'Fixed Asset',
+                'Account Name' => 'Acc. Depreciation - LH1',
+                'Beginning Balance Debit' => '-121300.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '-121300.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'CONTRA_ASSET'
+            ],
+            
+            // Current Asset (流動資產)
+            [
+                'No.' => 7,
+                'Attribute' => 'Current Asset',
+                'Account Name' => 'Utiliity & Other Deposit',
+                'Beginning Balance Debit' => '400.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '400.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            [
+                'No.' => 8,
+                'Attribute' => 'Current Asset',
+                'Account Name' => 'Account Receivable',
+                'Beginning Balance Debit' => '13463.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $account_receivable_this_period_debit,
+                'This Period Credit' => $account_receivable_this_period_credit,
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '46286.82',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            
+            // Cash at Bank & On Hold
+            [
+                'No.' => 9,
+                'Attribute' => 'Cash at Bank & On Hold',
+                'Account Name' => 'SOC - Current',
+                'Beginning Balance Debit' => '796545.01',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $soc_income_plus_adjust,
+                'This Period Credit' => $soc_expenses_total,
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '963479.54',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            [
+                'No.' => 10,
+                'Attribute' => 'Cash at Bank & On Hold',
+                'Account Name' => 'KP1 - Current',
+                'Beginning Balance Debit' => '71365.20',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $boc_income_plus_adjust,
+                'This Period Credit' => $boc_expenses_total,
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '40592.40',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            [
+                'No.' => 11,
+                'Attribute' => 'Cash at Bank & On Hold',
+                'Account Name' => 'SOS-Call',
+                'Beginning Balance Debit' => '2470.01',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '2470.01',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            [
+                'No.' => 12,
+                'Attribute' => 'Cash at Bank & On Hold',
+                'Account Name' => 'Cash on Hold',
+                'Beginning Balance Debit' => '1519.92',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '1519.92',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            
+            // Current Asset (流動資產) - continued
+            [
+                'No.' => 13,
+                'Attribute' => 'Current Asset',
+                'Account Name' => 'Li Tsun Sun - A/C',
+                'Beginning Balance Debit' => '1565787.44',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '1565787.44',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            [
+                'No.' => 14,
+                'Attribute' => 'Current Asset',
+                'Account Name' => 'Lai Yuen Chun - A/C',
+                'Beginning Balance Debit' => '1420032.16',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '1420032.16',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            [
+                'No.' => 15,
+                'Attribute' => 'Current Asset',
+                'Account Name' => 'Prepaid Expenses',
+                'Beginning Balance Debit' => '5000.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '5000.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'ASSET'
+            ],
+            
+            // Liabilities（負債）
+            [
+                'No.' => 16,
+                'Attribute' => 'Current Liabilities',
+                'Account Name' => 'A/C Payable',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '12176.25',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '12176.25',
+                'Category' => 'LIABILITY'
+            ],
+            [
+                'No.' => 17,
+                'Attribute' => 'Current Liabilities',
+                'Account Name' => 'A/C Payable - MSIG',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '273140.01',
+                'Spacer 1' => '',
+                'This Period Debit' => $msig_payment_total,
+                'This Period Credit' => $msig_insurer_payment_total,
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '252686.60',
+                'Category' => 'LIABILITY'
+            ],
+            [
+                'No.' => 18,
+                'Attribute' => 'Current Liabilities',
+                'Account Name' => 'A/C Payable - Tokio Marine',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '14326.23',
+                'Spacer 1' => '',
+                'This Period Debit' => $tokio_payment_total,
+                'This Period Credit' => $tokio_insurer_payment_total,
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '20972.96',
+                'Category' => 'LIABILITY'
+            ],
+            [
+                'No.' => 19,
+                'Attribute' => 'Current Liabilities',
+                'Account Name' => 'A/C Payable - CMB Wing Lung',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '577755.47',
+                'Spacer 1' => '',
+                'This Period Debit' => $cmb_payment_total,
+                'This Period Credit' => $cmb_insurer_payment_total,
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '616766.08',
+                'Category' => 'LIABILITY'
+            ],
+            [
+                'No.' => 20,
+                'Attribute' => 'Current Liabilities',
+                'Account Name' => 'A/C Payable - China Taiping',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '15416.69',
+                'Spacer 1' => '',
+                'This Period Debit' => $taiping_payment_total,
+                'This Period Credit' => $taiping_insurer_payment_total,
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '1869.54',
+                'Category' => 'LIABILITY'
+            ],
+            [
+                'No.' => 21,
+                'Attribute' => 'Current Liabilities',
+                'Account Name' => 'Creditor - Agent',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '-2044.25',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '-2044.25',
+                'Category' => 'LIABILITY'
+            ],
+            [
+                'No.' => 22,
+                'Attribute' => 'Current Liabilities',
+                'Account Name' => 'Accrual Expenses',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '9100.00',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '9100.00',
+                'Category' => 'LIABILITY'
+            ],
+            
+            // Equity（權益）
+            [
+                'No.' => 23,
+                'Attribute' => 'Capital',
+                'Account Name' => 'Share Capital',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '2.00',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '2.00',
+                'Category' => 'EQUITY'
+            ],
+            [
+                'No.' => 24,
+                'Attribute' => 'Capital',
+                'Account Name' => 'Retained Profit',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '3072069.61',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '3072069.61',
+                'Category' => 'EQUITY'
+            ],
+            
+            // Revenue（收入）
+            [
+                'No.' => 25,
+                'Attribute' => 'Income',
+                'Account Name' => 'Premium Received',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '2322723.00',
+                'This Period Debit' => '',
+                'This Period Credit' => '211291.57',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '2534014.57',
+                'Category' => 'REVENUE'
+            ],
+            [
+                'No.' => 26,
+                'Attribute' => 'Less',
+                'Account Name' => 'Premium Paid - General',
+                'Beginning Balance Debit' => '1885945.94',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $premium_paid_general_debit,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '2016608.86',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 27,
+                'Attribute' => 'Other Earning',
+                'Account Name' => 'Rebate-Received',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => $adjust_balance_total,
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '118710.00',
+                'Category' => 'REVENUE'
+            ],
+            [
+                'No.' => 28,
+                'Attribute' => 'Income',
+                'Account Name' => 'Other Income',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '16.97',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '',
+                'Ending Balance Credit' => '16.97',
+                'Category' => 'REVENUE'
+            ],
+            
+            // Expenses（費用）
+            [
+                'No.' => 29,
+                'Attribute' => 'Selling Expenses',
+                'Account Name' => 'Entertainment',
+                'Beginning Balance Debit' => '10040.57',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '10040.57',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 30,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Salary - Li Chung Chai',
+                'Beginning Balance Debit' => '198000.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $salary_lcc_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '215100.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 31,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Salary - Lai Yuen Chun',
+                'Beginning Balance Debit' => '0.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '0.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 32,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Director Remuneration - Li Tsun Sun',
+                'Beginning Balance Debit' => '176000.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $dir_lts_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '192000.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 33,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Printing & Stationery',
+                'Beginning Balance Debit' => '1050.18',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $printing_stationery_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '1168.06',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 34,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Rent & Rates',
+                'Beginning Balance Debit' => '16640.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '16640.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 35,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Electricity, Water Fee & Gas',
+                'Beginning Balance Debit' => '22275.71',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $electricity_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '23278.71',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 36,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Telephone Fax & Internet Fee',
+                'Beginning Balance Debit' => '14037.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $telephone_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '14353.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 37,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Insurance',
+                'Beginning Balance Debit' => '11139.84',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $insurance_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '14019.84',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 38,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Management Fee',
+                'Beginning Balance Debit' => '9900.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $management_fee_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '10800.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 39,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Stamp & Postage',
+                'Beginning Balance Debit' => '1264.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '1264.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 40,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Repairs & Maintenance',
+                'Beginning Balance Debit' => '1520.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '1520.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 41,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Business Registration',
+                'Beginning Balance Debit' => '450.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $business_registration_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '555.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 42,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Bank Charges',
+                'Beginning Balance Debit' => '1100.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $bank_charges_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '1200.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 43,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Sundry Expenses',
+                'Beginning Balance Debit' => '2175.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '2175.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 44,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Study Allowance',
+                'Beginning Balance Debit' => '2080.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $study_allowance_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '3120.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 45,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Travel Expenses',
+                'Beginning Balance Debit' => '4500.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '4500.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 46,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Bonus',
+                'Beginning Balance Debit' => '30000.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '30000.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 47,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Lucky Money',
+                'Beginning Balance Debit' => '7000.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '7000.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 48,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Medical Expenese',
+                'Beginning Balance Debit' => '3981.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $medical_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '4629.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 49,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'MPF',
+                'Beginning Balance Debit' => '9900.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $mpf_total,
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '11700.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 50,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Audit Fee',
+                'Beginning Balance Debit' => '9100.00',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => '',
+                'This Period Credit' => '',
+                'Ending Balance Debit' => '9100.00',
+                'Ending Balance Credit' => '',
+                'Category' => 'EXPENSE'
+            ],
+            
+            // 總計行
+            [
+                'Account Name' => 'Total:',
+                'Beginning Balance Debit' => '6294681.98',
+                'Beginning Balance Credit' => '6294681.98',
+                'Spacer 1' => '',
+                'This Period Debit' => $total_this_period_debit,
+                'This Period Credit' => $total_this_period_credit,
+                'Spacer 2' => '',
+                'Ending Balance Debit' => '6636340.33',
+                'Ending Balance Credit' => '6636340.33',
+                'Category' => 'TOTAL'
+            ]
+        ];
+
+        // 確保 HEADER、EMPTY 和 TOTAL 類別有 No. 和 Attribute 字段（為空）
+        foreach ($data as $key => $row) {
+            if (isset($row['Category']) && ($row['Category'] === 'HEADER' || $row['Category'] === 'EMPTY' || $row['Category'] === 'TOTAL')) {
+                if (!isset($row['No.'])) {
+                    $data[$key]['No.'] = '';
+                }
+                if (!isset($row['Attribute'])) {
+                    $data[$key]['Attribute'] = '';
+                }
+            }
+        }
+
+        // 轉換所有金額字段為數字格式（保留兩位小數，空值為 null）
+        $amount_fields = [
+            'Beginning Balance Debit',
+            'Beginning Balance Credit',
+            'This Period Debit',
+            'This Period Credit',
+            'Ending Balance Debit',
+            'Ending Balance Credit'
+        ];
+        
+        foreach ($data as $key => $row) {
+            // 對於 HEADER 和 EMPTY 類別，保持原樣（空字符串）
+            if (isset($row['Category']) && ($row['Category'] === 'HEADER' || $row['Category'] === 'EMPTY')) {
+                continue;
+            }
+            
+            foreach ($amount_fields as $field) {
+                if (isset($row[$field])) {
+                    $value = $row[$field];
+                    // 如果是空字符串，轉換為 null
+                    if ($value === '' || $value === null) {
+                        $data[$key][$field] = null;
+                    } else {
+                        // 轉換為數字，保留兩位小數
+                        $data[$key][$field] = round((float) $value, 2);
+                    }
+                }
+            }
+        }
+
+        $response = new \WP_REST_Response([
+            'data' => $data,
+            'total' => count($data),
+            'success' => true
+        ], 200);
+        
+        // 設定 JSON 編碼選項，避免斜線轉義
+        $response->set_headers(['Content-Type' => 'application/json; charset=utf-8']);
+        
+        return $response;
     }
 }

@@ -24,7 +24,7 @@ export const OtherReports: React.FC = () => {
                     <Button type='primary' onClick={() => startExport({action:'client_ageing_report', dateRange})}>Client Ageing Report</Button>
                     <Button type='primary' onClick={() => startExport({action:'insurer_ageing_report', dateRange})}>Insurer Ageing Report</Button>
                     <Button type='primary' onClick={() => startExport({action:'profit_and_loss_analysis', dateRange})}>Profit and Loss Analysis</Button>
-                    <Button type='primary' onClick={() => window.open('https://accounting.potential-insurance.com/balance-sheet/', '_blank')}>Trial Balance</Button>
+                    <Button type='primary' onClick={() => startExport({action:'trial_balance', dateRange})}>Trial Balance</Button>
                     <Button type='primary' onClick={() => window.open('https://accounting.potential-insurance.com/trial-balance/', '_blank')}>Balance Sheet</Button>
                 </div>
             </Spin>
