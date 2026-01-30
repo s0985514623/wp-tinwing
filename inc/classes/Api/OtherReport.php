@@ -2378,7 +2378,7 @@ final class OtherReport
         $taiping_insurer_payment_total = $this->calculate_insurer_payment_total_by_post_name($start_date, $end_date, 'china-taiping-insurance-hk-co-ltd');
         
         // 計算 Premium Paid - General 的 This Period Debit（等於所有 insurer payment 的總和）
-        $premium_paid_general_debit = round($msig_payment_total + $tokio_payment_total + $cmb_payment_total + $taiping_payment_total, 2, PHP_ROUND_HALF_UP);
+        $premium_paid_general_debit = round($msig_insurer_payment_total + $tokio_insurer_payment_total + $cmb_insurer_payment_total + $taiping_insurer_payment_total, 2, PHP_ROUND_HALF_UP);
         
         // 計算 Rebate-Received 的 This Period Credit（期間內所有 Adjust Balance 的總金額）
         $adjust_balance_total = $this->calculate_adjust_balance_total($start_date, $end_date);
@@ -2402,7 +2402,7 @@ final class OtherReport
         $insurance_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'pia');
         
         // 計算 Management Fee 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'management-fee' 的金額總和）
-        $management_fee_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'management-fee');
+        $management_fee_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'ioyl');
         
         // 計算 Business Registration 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'misc' 的金額總和）
         $business_registration_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'misc');
@@ -2446,8 +2446,7 @@ final class OtherReport
         );
         
         // 計算所有 This Period Credit 的總和
-        // 注意：Premium Received 的 This Period Credit 目前是固定值 '211291.57'，需要包含在總和中
-        $premium_received_credit = 211291.57;
+        $premium_received_credit = $account_receivable_this_period_debit;
         $total_this_period_credit = round(
             $account_receivable_this_period_credit +
             $soc_expenses_total +
@@ -2863,7 +2862,7 @@ final class OtherReport
                 'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '2322723.00',
                 'This Period Debit' => '',
-                'This Period Credit' => '211291.57',
+                'This Period Credit' => $account_receivable_this_period_debit,
                 'Ending Balance Debit' => '',
                 'Ending Balance Credit' => '2534014.57',
                 'Category' => 'REVENUE'
