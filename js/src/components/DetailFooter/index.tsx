@@ -20,7 +20,7 @@ const DebitNotesFooter = ({ model = true, className = 'p-4 w-full mt-12 text-[#0
                                 </div>
                                 <div className="tr">
                                     <div className="th print:!text-[14px]">Methods of Payment </div>
-                                    <div className="td print:!text-[14px]">Crossed Cheque ： Potential Insuance Agency Co.</div>
+                                    <div className="td print:!text-[14px]">Crossed Cheque ： Potential Insurance Agency Co.</div>
                                 </div>
                             </div>
                         </Col>
