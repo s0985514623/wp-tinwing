@@ -22,6 +22,7 @@ import { DataType as TClient } from 'pages/clients/types'
 export const ListView: React.FC = () => {
   const [pageSize, setPageSize] = useState(30);
   const [current, setCurrent] = useState(1);
+  const [exportFilters, setExportFilters] = useState<CrudFilters>([]);
 
   const { tableProps, searchFormProps } = useTable<DataType>({
     sorters: {
@@ -146,6 +147,7 @@ export const ListView: React.FC = () => {
         //   value: '=',
         // },
       ]
+      setExportFilters(filters as CrudFilters)
       return filters as CrudFilters
     },
     pagination: {
@@ -213,6 +215,7 @@ export const ListView: React.FC = () => {
 
   //Export CSV
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
+    filters: exportFilters,
     mapData: (item) => {
       const sourceData = item?.created_from_credit_note_id ? creditNotes : debitNotes;
       const id = item?.created_from_credit_note_id ? item?.created_from_credit_note_id : item?.debit_note_id;

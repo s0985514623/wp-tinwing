@@ -1,9 +1,16 @@
 import React from 'react'
-// import dayjs from 'dayjs';
-import { Form, Button, DatePicker, FormProps, Input, Radio } from 'antd'
+import dayjs from 'dayjs';
+import { Form, Button, DatePicker,TimeRangePickerProps, FormProps, Input, Radio } from 'antd'
 // import type { RadioChangeEvent } from 'antd';
 const { RangePicker } = DatePicker
-
+const rangePresets: TimeRangePickerProps['presets'] = [
+  { label: 'Last 7 Days', value: [dayjs().add(-7, 'd'), dayjs()] },
+  { label: 'Last 14 Days', value: [dayjs().add(-14, 'd'), dayjs()] },
+  { label: 'Last 30 Days', value: [dayjs().add(-30, 'd'), dayjs()] },
+  { label: 'Last 90 Days', value: [dayjs().add(-90, 'd'), dayjs()] },
+  { label: 'Last 180 Days', value: [dayjs().add(-180, 'd'), dayjs()] },
+  { label: 'Last 365 Days', value: [dayjs().add(-365, 'd'), dayjs()] },
+];
 const Filter: React.FC<{ formProps: FormProps ,isReceipts?: boolean}> = ({ formProps ,isReceipts=false}) => {
   const IsArchivedFormItem = () => {
     if (window.location.hash === '#/clientsSummary') {
@@ -31,9 +38,9 @@ const Filter: React.FC<{ formProps: FormProps ,isReceipts?: boolean}> = ({ formP
         <Form.Item
           label="Bill DATE"
           name={['dateRange']}
-          //  initialValue={[dayjs('2022-01-01'), dayjs()]}
+           initialValue={[dayjs().add(-30, 'd'), dayjs()]}
         >
-          <RangePicker size="small" className="w-full" />
+          <RangePicker presets={rangePresets} size="small" className="w-full" />
         </Form.Item>
         <Form.Item label="Engine" name={['motor_engine_no']} className={isReceipts ? 'tw-hidden' : ''}>
           <Input className="w-full" size="small" allowClear={true} />

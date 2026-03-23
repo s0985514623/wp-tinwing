@@ -57,7 +57,7 @@ export const accounting = [
         name: 'expensesDropdown',
         meta: {
             parent: 'accountingDropdown',
-            label: 'Other Expenses',
+            label: 'Expenses',
         },
     },
     {

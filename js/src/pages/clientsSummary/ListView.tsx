@@ -55,26 +55,26 @@ const termOptions = {
         operator: 'eq',
         value: '=',
       },
-      // {
-      //   field: 'meta_query[1][key]',
-      //   operator: 'eq',
-      //   value: 'period_of_insurance_to',
-      // },
-      // {
-      //   field: 'meta_query[1][value]',
-      //   operator: 'eq',
-      //   value: dayjs('2022-01-01').unix(),
-      // },
-      // {
-      //   field: 'meta_query[1][compare]',
-      //   operator: 'eq',
-      //   value: '>',
-      // },
-      // {
-      //   field: 'meta_query[1][type]',
-      //   operator: 'eq',
-      //   value: 'NUMERIC',
-      // },
+      {
+        field: 'meta_query[1][key]',
+        operator: 'eq',
+        value: 'date',
+      },
+      {
+        field: 'meta_query[1][value][0]',
+        operator: 'eq',
+        value: dayjs().add(-30, 'd').startOf('day').unix(),
+      },
+      {
+        field: 'meta_query[1][value][1]',
+        operator: 'eq',
+        value: dayjs().endOf('day').unix(),
+      },
+      {
+        field: 'meta_query[1][compare]',
+        operator: 'eq',
+        value:  'BETWEEN',
+      },
     ] as CrudFilters,
   },
   onSearch: (values: any) => {
@@ -252,6 +252,7 @@ export const ListView: React.FC = () => {
         }}
         rowKey={(record) => `${record.date}-${record.id}`}
         size="middle"
+        loading={clientsSummaryData?.loading}
       >
         <Table.Column
           dataIndex="date"

@@ -210,8 +210,8 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
 
           <div className="w-full mb-4 flex justify-between">
             <div className="flex flex-col justify-end">
-              <p>保險名稱 / 通訊地址</p>
-              <p>Insured / correspondence Address</p>
+              <p>受保人名稱 / 通訊地址</p>
+              <p>Name / correspondence Address</p>
             </div>
             <div className="text-center text-lg font-semibold border-2 border-solid border-black py-2 px-12">
               <p>Credit Note</p>

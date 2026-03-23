@@ -22,6 +22,7 @@ import { round } from 'lodash'
 export const ListView: React.FC = () => {
   const [pageSize, setPageSize] = useState(30);
   const [current, setCurrent] = useState(1);
+  const [exportFilters, setExportFilters] = useState<CrudFilters>([]);
   
   const { tableProps, searchFormProps } = useTable<DataType>({
     sorters: {
@@ -194,6 +195,7 @@ export const ListView: React.FC = () => {
         // 	value: '=',
         // },
       ]
+      setExportFilters(filters as CrudFilters)
       return filters as CrudFilters
     },
     pagination: {
@@ -301,6 +303,7 @@ export const ListView: React.FC = () => {
 
   //Export CSV
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
+    filters: exportFilters,
     mapData: (item) => {
       // 取得client資料
       const theClient =
