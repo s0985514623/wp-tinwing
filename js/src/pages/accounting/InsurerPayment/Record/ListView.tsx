@@ -321,9 +321,12 @@ export const ListView: React.FC = () => {
         Premium: Number(premium).toLocaleString(),
         'Payment to Insurer': Number(paymentToInsurer).toLocaleString(),
         Paid: item.is_paid ? 'Yes' : 'No',
-        Bank: item.payment_receiver_account,
-        'Cheque No': item.cheque_no,
+        Bank: item.is_paid ? item.pay_to_insurer_by_bank : '',
+        'Cheque No': item.pay_to_insurer_by_cheque,
         'Invoice No': item.pay_to_insurer_by_invoice,
+        'Payment Date': item.pay_to_insurer_by_payment_date
+          ? dayjs.unix(item.pay_to_insurer_by_payment_date).format('YYYY-MM-DD')
+          : '',
         Remark: item.remark,
       }
     },
