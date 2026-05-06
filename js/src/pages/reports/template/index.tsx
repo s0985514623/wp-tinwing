@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { useTable, ExportButton } from '@refinedev/antd'
 import { Table, Row, Col, Card } from 'antd'
 import dayjs from 'dayjs'
-import { getPrice } from 'utils'
+import { getPrice, getTotalPremiumByDebitNote } from 'utils'
 import Filter from './Filter'
 import FilterTags from 'components/FilterTags'
-import { TSearchProps, TTemplateProps, TRequiredProps } from './types'
+import { TTemplateProps, TRequiredProps } from './types'
 import { CrudFilters, useExport, BaseRecord, useMany, BaseKey } from '@refinedev/core'
 import { DataType as TDebitNote } from 'pages/debitNotes/types'
 import { DataType as TCreditNote } from 'pages/creditNotes/types'
@@ -15,7 +15,17 @@ import { DataType as TReceipt } from 'pages/receipts/types'
 import { DataType as TRenewal } from 'pages/renewals/types'
 
 type DataType = TDebitNote & TCreditNote & TReceipt & { post_type: string }
+type ReportNoteRecord = {
+    note_no?: string | null
+    receipt_no?: string | null
+}
+
 function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
+    const noteNoDataIndex = resource === 'receipts' ? 'receipt_no' : 'note_no'
+    const getReportNoteNo = (record: ReportNoteRecord) => {
+        return (resource === 'receipts' ? record.receipt_no : record.note_no) ?? ''
+    }
+
     const { tableProps, searchFormProps } = useTable<DataType>({
         resource,
         pagination: {
@@ -100,7 +110,7 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
             ],
             mapData: (item) => {
                 return {
-                    'Note No.': item.note_no,
+                    'Note No.': getReportNoteNo(item),
                     Date: dayjs.unix(item.date).format('YYYY-MM-DD'),
                     'Payment Date': dayjs
                         .unix(item.date)
@@ -277,10 +287,10 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
                             />
                             <Table.Column
                                 width={120}
-                                dataIndex={resource === 'receipts' ? 'receipt_no' : 'note_no'}
+                                dataIndex={noteNoDataIndex}
                                 title="Note No."
                                 sorter={(a: T, b: T) =>
-                                    a?.note_no.localeCompare(b.note_no || '')
+                                    getReportNoteNo(a).localeCompare(getReportNoteNo(b))
                                 }
                             />
                             <Table.Column
@@ -291,16 +301,15 @@ function template<T extends TRequiredProps>({ resource }: TTemplateProps) {
                                 sorter={(a: T, b: T) => a.date - b.date}
                             />
                             <Table.Column
-                                dataIndex="premium"
+                                dataIndex="id"
                                 title="Premium"
-                                render={(premium: number, record: T) => {
-                                    if ((record as any).post_type === 'credit_notes') {
-                                        return getPrice(premium * -1)
-                                    }
-
-                                    return getPrice(premium) //debit_notes
-                                }}
-                                sorter={(a: T, b: T) => a.premium - b.premium}
+                                render={(id: number, record: DataType) => {
+                                    const totalPremium = getTotalPremiumByDebitNote(record)
+                                    return totalPremium
+                                  }}
+                                  sorter={(a, b) =>
+                                    getTotalPremiumByDebitNote(a) - getTotalPremiumByDebitNote(b)
+                                  }
                             />
                             <Table.Column
                                 dataIndex="agent_id"
