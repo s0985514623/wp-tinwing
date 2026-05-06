@@ -29,9 +29,64 @@ export const ListView: React.FC = () => {
     dayjs().add(-30, 'd'),
     dayjs(),
   ])
+  const [isPaidFilter, setIsPaidFilter] = useState<number | undefined>(0)
   const [pageSize, setPageSize] = useState(30);
   const [current, setCurrent] = useState(1);
   const { selectedRowKeys, rowSelection } = useRowSelection<DataType>()
+  const buildReceiptFilters = (
+    filterDateRange: [Dayjs, Dayjs] | undefined,
+    filterIsPaid: number | undefined,
+  ) => {
+    const startDate = filterDateRange?.[0]
+      ? dayjs(filterDateRange[0].format('YYYY-MM-DD')).startOf('day').unix()
+      : undefined
+    const endDate = filterDateRange?.[1]
+      ? dayjs(filterDateRange[1].format('YYYY-MM-DD')).endOf('day').unix()
+      : undefined
+
+    return [
+      {
+        field: 'meta_query[0][key]',
+        operator: 'eq',
+        value: 'date',
+      },
+      {
+        field: 'meta_query[0][value][0]',
+        operator: 'eq',
+        value: startDate,
+      },
+      {
+        field: 'meta_query[0][value][1]',
+        operator: 'eq',
+        value: endDate,
+      },
+      {
+        field: 'meta_query[0][type]',
+        operator: 'eq',
+        value: 'NUMERIC',
+      },
+      {
+        field: 'meta_query[0][compare]',
+        operator: 'eq',
+        value: filterDateRange ? 'BETWEEN' : '>',
+      },
+      {
+        field: 'meta_query[1][key]',
+        operator: 'eq',
+        value: 'is_paid',
+      },
+      {
+        field: 'meta_query[1][value]',
+        operator: 'eq',
+        value: filterIsPaid,
+      },
+      {
+        field: 'meta_query[1][compare]',
+        operator: 'eq',
+        value: '=',
+      },
+    ] as CrudFilters
+  }
 
   // Receipt 資料
   const { tableProps, searchFormProps } = useTable<DataType>({
@@ -44,84 +99,23 @@ export const ListView: React.FC = () => {
       ],
     },
     filters: {
-      initial: [
-        {
-          field: 'meta_query[0][key]',
-          operator: 'eq',
-          value: 'date',
-        },
-        {
-          field: 'meta_query[0][value][0]',
-          operator: 'eq',
-          value: dateRange ? dateRange[0]?.startOf('day').unix() : undefined,
-        },
-        {
-          field: 'meta_query[0][value][1]',
-          operator: 'eq',
-          value: dateRange ? dateRange[1]?.endOf('day').unix() : undefined,
-        },
-        {
-          field: 'meta_query[0][compare]',
-          operator: 'eq',
-          value: 'BETWEEN',
-        },
-        {
-          field: 'meta_query[1][key]',
-          operator: 'eq',
-          value: 'is_paid',
-        },
-        {
-          field: 'meta_query[1][value]',
-          operator: 'eq',
-          value: 0,
-        },
-        {
-          field: 'meta_query[1][compare]',
-          operator: 'eq',
-          value: '=',
-        },
-      ],
+      initial: buildReceiptFilters(dateRange, isPaidFilter),
     },
     onSearch: (values: any) => {
-      const filters = [
-        {
-          field: 'meta_query[0][key]',
-          operator: 'eq',
-          value: 'date',
-        },
-        {
-          field: 'meta_query[0][value][0]',
-          operator: 'eq',
-          value: values?.dateRange ? values?.dateRange[0]?.startOf('day').unix() : undefined,
-        },
-        {
-          field: 'meta_query[0][value][1]',
-          operator: 'eq',
-          value: values?.dateRange ? values?.dateRange[1]?.endOf('day').unix() : undefined,
-        },
-        {
-          field: 'meta_query[0][compare]',
-          operator: 'eq',
-          value: 'BETWEEN',
-        },
-        {
-          field: 'meta_query[1][key]',
-          operator: 'eq',
-          value: 'is_paid',
-        },
-        {
-          field: 'meta_query[1][value]',
-          operator: 'eq',
-          value: values?.is_paid === '' ? undefined : values?.is_paid,
-        },
-        {
-          field: 'meta_query[1][compare]',
-          operator: 'eq',
-          value: '=',
-        },
-      ]
-      // console.log('🚀 ~ filters:', filters)
-      return filters as CrudFilters
+      const nextDateRange = Object.prototype.hasOwnProperty.call(values ?? {}, 'dateRange')
+        ? values?.dateRange
+        : dateRange
+      const nextIsPaidFilter = Object.prototype.hasOwnProperty.call(values ?? {}, 'is_paid')
+        ? values?.is_paid
+        : isPaidFilter
+
+      setDateRange(nextDateRange)
+      setIsPaidFilter(nextIsPaidFilter === '' ? undefined : nextIsPaidFilter)
+
+      return buildReceiptFilters(
+        nextDateRange,
+        nextIsPaidFilter === '' ? undefined : nextIsPaidFilter,
+      )
     },
     pagination: {
       pageSize: -1,
@@ -215,28 +209,7 @@ export const ListView: React.FC = () => {
   const disabledBtn = parsedTableProps.dataSource?.length == 0 ? true : false
   //Export CSV
   const { triggerExport, isLoading: exportLoading } = useExport<DataType>({
-    filters: [
-      {
-        field: 'meta_query[0][key]',
-        operator: 'eq',
-        value: 'date',
-      },
-      {
-        field: 'meta_query[0][value][0]',
-        operator: 'eq',
-        value: dateRange ? dateRange[0]?.startOf('day').unix() : undefined,
-      },
-      {
-        field: 'meta_query[0][value][1]',
-        operator: 'eq',
-        value: dateRange ? dateRange[1]?.endOf('day').unix() : undefined,
-      },
-      {
-        field: 'meta_query[0][compare]',
-        operator: 'eq',
-        value: 'BETWEEN',
-      },
-    ],
+    filters: buildReceiptFilters(dateRange, isPaidFilter),
     mapData: (item) => {
       if (!item) return
       const fine_the_note = () => {
@@ -389,21 +362,21 @@ export const ListView: React.FC = () => {
             <Button
               size="small"
               type="primary"
-              onClick={() => searchFormProps.onFinish?.({ is_paid: 1 })}
+              onClick={() => searchFormProps.onFinish?.({ dateRange, is_paid: 1 })}
             >
               Paid
             </Button>
             <Button
               size="small"
               type="primary"
-              onClick={() => searchFormProps.onFinish?.({ is_paid: 0 })}
+              onClick={() => searchFormProps.onFinish?.({ dateRange, is_paid: 0 })}
             >
               Unpaid
             </Button>
             <Button
               size="small"
               type="primary"
-              onClick={() => searchFormProps.onFinish?.({ is_paid: undefined })}
+              onClick={() => searchFormProps.onFinish?.({ dateRange, is_paid: undefined })}
             >
               Show All
             </Button>
@@ -411,7 +384,7 @@ export const ListView: React.FC = () => {
               size="small"
               type="primary"
               // is_paid: 2 是永遠不會有的值，用來當作無資料查詢
-              onClick={() => searchFormProps.onFinish?.({ is_paid: 2 })}
+              onClick={() => searchFormProps.onFinish?.({ dateRange, is_paid: 2 })}
             >
               Show None
             </Button>
@@ -755,7 +728,16 @@ export const ListView: React.FC = () => {
             {...getColumnSearchProps({
               dataIndex: 'pay_to_insurer_by_invoice',
             })}
-            {...getSortProps<DataType>('pay_to_insurer_by_invoice')}
+            sorter={(a: DataType, b: DataType) => {
+              const aValue = a.pay_to_insurer_by_invoice || ''
+              const bValue = b.pay_to_insurer_by_invoice || ''
+
+              if (!aValue && bValue) return 1
+              if (aValue && !bValue) return -1
+              if (!aValue && !bValue) return 0
+
+              return aValue.localeCompare(bValue, undefined, { numeric: true })
+            }}
           />
 
           <Table.Column
@@ -765,7 +747,16 @@ export const ListView: React.FC = () => {
             {...getColumnSearchProps({
               dataIndex: 'pay_to_insurer_by_cheque',
             })}
-            {...getSortProps<DataType>('pay_to_insurer_by_cheque')}
+            sorter={(a: DataType, b: DataType) => {
+              const aValue = a.pay_to_insurer_by_cheque || ''
+              const bValue = b.pay_to_insurer_by_cheque || ''
+
+              if (!aValue && bValue) return 1
+              if (aValue && !bValue) return -1
+              if (!aValue && !bValue) return 0
+
+              return aValue.localeCompare(bValue, undefined, { numeric: true })
+            }}
           />
           <Table.Column
             width={120}
