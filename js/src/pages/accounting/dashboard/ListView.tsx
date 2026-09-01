@@ -300,6 +300,38 @@ export const ListView: React.FC = () => {
           },
         ],
     })
+  //Other Earning 其他收入（獨立 CPT other_earnings，一年輸入一次，類似年終花紅）
+  const { data: otherEarningData, isLoading: otherEarningIsLoading } =
+    useList<TExpenses>({
+      resource: 'other_earnings',
+      pagination: {
+        pageSize: -1,
+      },
+      filters: dateRange
+        ? [
+          {
+            field: 'meta_query[0][key]',
+            operator: 'eq',
+            value: 'date',
+          },
+          {
+            field: 'meta_query[0][value][0]',
+            operator: 'eq',
+            value: dateRange[0]?.startOf('day').unix(),
+          },
+          {
+            field: 'meta_query[0][value][1]',
+            operator: 'eq',
+            value: dateRange[1]?.endOf('day').unix(),
+          },
+          {
+            field: 'meta_query[0][compare]',
+            operator: 'eq',
+            value: 'BETWEEN',
+          },
+        ]
+        : [],
+    })
   //Insurers
   // const { data: insurersData, isLoading: insurersIsLoading } =
   //   useList<TInsurers>({
@@ -315,17 +347,27 @@ export const ListView: React.FC = () => {
   const receiptsNo = receiptsData?.total
   const creditNotesNo = creditNotesData?.total
   const renewalsNo = renewalsData?.total
+  //Other Earning 總額（不分銀行）
+  const otherEarningTotal = useMemo(() => {
+    return (
+      otherEarningData?.data?.reduce(
+        (acc, item) => acc + Number(item?.amount ?? 0),
+        0,
+      ) || 0
+    )
+  }, [otherEarningData?.data])
   const noDisplayData = [
     { noBy: 'No of Quotation', value: quotationsNo },
     { noBy: 'No of Debit Notes', value: debitNotesNo },
     { noBy: 'No of Receipt', value: receiptsNo },
     { noBy: 'No of Renewal', value: renewalsNo },
     { noBy: 'No of Credit Notes', value: creditNotesNo },
+    { noBy: 'Other Earning', value: otherEarningTotal.toLocaleString() },
   ]
 
-  //4-2. 計算 Receipt 收入，分銀行來紀錄
+  //4-2. 計算 Receipt 收入，分銀行來紀錄（含 Other Earning）
   const receiptsByBankToIncome = useMemo(() => {
-    return receiptsData?.data.reduce(
+    const income = receiptsData?.data.reduce(
       (acc, receipt) => {
         //如果沒有銀行就不計算
         const bank = receipt?.payment_receiver_account
@@ -356,8 +398,21 @@ export const ListView: React.FC = () => {
       [{ bank: '上海商業銀行', income: 0 }, { bank: '中國銀行', income: 0 }] as { bank: string; income: number }[],
     ) || []
 
+    //計算 Other Earning（進帳，用加法）
+    otherEarningData?.data.forEach((otherEarning) => {
+      const bank = otherEarning?.payment_receiver_account
+      if (!bank) return
+      const amount = Number(otherEarning?.amount ?? 0)
+      const existingBank = income.find((item) => item.bank === bank)
+      if (existingBank) {
+        existingBank.income += amount
+      } else {
+        income.push({ bank, income: amount })
+      }
+    })
 
-  }, [receiptsData?.data, debitNotesData?.data, renewalsData?.data, creditNotesData?.data])
+    return income
+  }, [receiptsData?.data, debitNotesData?.data, renewalsData?.data, creditNotesData?.data, otherEarningData?.data])
 
   /*4-3. Bank Balance 計算
   receipt能計算的只有Receipt Amount(premium)跟 Credit Note Amount
@@ -397,6 +452,19 @@ export const ListView: React.FC = () => {
       const bank = adjustBalance?.payment_receiver_account
       if (!bank) return
       const amount = Number(adjustBalance?.amount ?? 0)
+      const existingBank = profit.find((item) => item.bank === bank)
+      if (existingBank) {
+        existingBank.income += amount
+      } else {
+        profit.push({ bank, income: amount })
+      }
+    })
+
+    //計算 Other Earning（進帳，用加法）
+    otherEarningData?.data.forEach((otherEarning) => {
+      const bank = otherEarning?.payment_receiver_account
+      if (!bank) return
+      const amount = Number(otherEarning?.amount ?? 0)
       const existingBank = profit.find((item) => item.bank === bank)
       if (existingBank) {
         existingBank.income += amount
@@ -456,6 +524,7 @@ export const ListView: React.FC = () => {
     debitNotesData?.data,
     adjustBalancesData?.data,
     expensesData?.data,
+    otherEarningData?.data,
     // InsurerPaymentData?.data,
     renewalsData?.data,
     // insurersData?.data,
@@ -555,6 +624,7 @@ export const ListView: React.FC = () => {
     receiptsIsLoading ||
     expensesIsLoading ||
     adjustBalancesIsLoading ||
+    otherEarningIsLoading ||
     renewalsIsLoading
   //顯示數據
   const ShowData = () => {

@@ -768,7 +768,7 @@ export const ListView: React.FC = () => {
               }
             }}
           />
-          {/* <Table.Column width={120} dataIndex="remark" title="Remark" /> */}
+          <Table.Column width={120} dataIndex="remark" title="Remark" />
           <Table.Column
             width={120}
             dataIndex="pay_to_insurer_by_payment_date"

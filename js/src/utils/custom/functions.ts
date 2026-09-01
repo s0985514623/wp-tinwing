@@ -133,8 +133,10 @@ export const getInsurerPayment = (
   //const insurerTotalFee = mibValue + round(grossPremium * (insurerPaymentRate / 100), 2);
   // 其他保險(一般保險/短期保險)的算法都是
   //const insurerTotalFee = levyValue + round(grossPremium * (insurerPaymentRate / 100), 2);
-  const insurer_fee_percent = debitNote?.insurer_fee_percent || 0
-  const insurerPaymentRate = insurer_fee_percent ?? insurer?.payment_rate
+  // 沒填「承保公司收取%」時退回保險公司的預設佣金率，寫法與 debitNotes/renewals 等列表一致
+  const insurerPaymentRate = Number(
+    debitNote?.insurer_fee_percent ?? insurer?.payment_rate ?? 0,
+  )
   const originalPremium = debitNote?.premium ?? 0
   const premium = getGrossPremiumByDebitNote(debitNote)
   const template = debitNote?.template
@@ -151,23 +153,21 @@ export const getInsurerPayment = (
       extraValue +
       round(premium * (insurerPaymentRate / 100) + 1e-10, 2)
     return insurerTotalFee
-  } else if (
-    'general' === template ||
-    'shortTerms' === template ||
-    'package' === template
-  ) {
-    const levy = debitNote?.levy || 0
-    const levyValue = round(premium * (levy / 100), 2)
-    const extraValue = round(
-      originalPremium * (Number(debitNote?.extra_field?.value ?? 0) / 100),
-      2,
-    )
-    const insurerTotalFee =
-      levyValue +
-      extraValue +
-      round(premium * (insurerPaymentRate / 100) + 1e-10, 2)
-    return insurerTotalFee
   }
 
-  return 0
+  // general / shortTerms / package / marineInsurance 以及未指定 template 都走這個算法，
+  // 與 getTotalPremiumByDebitNote 的 default 分支一致。
+  // 原本這裡是 general/shortTerms/package 的白名單，marineInsurance 會掉到 return 0，
+  // 導致海運保險的 Payment to Insurer 一律顯示 0。
+  const levy = debitNote?.levy || 0
+  const levyValue = round(premium * (levy / 100), 2)
+  const extraValue = round(
+    originalPremium * (Number(debitNote?.extra_field?.value ?? 0) / 100),
+    2,
+  )
+  const insurerTotalFee =
+    levyValue +
+    extraValue +
+    round(premium * (insurerPaymentRate / 100) + 1e-10, 2)
+  return insurerTotalFee
 }

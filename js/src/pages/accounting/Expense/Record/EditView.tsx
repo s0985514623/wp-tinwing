@@ -11,9 +11,12 @@ import { AmountInput } from 'components/AmountInput'
 
 const { TextArea } = Input
 
-export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
-  is_adjust_balance = false,
-}) => {
+export const EditView: React.FC<{
+  is_adjust_balance?: boolean
+  is_other_earning?: boolean
+}> = ({ is_adjust_balance = false, is_other_earning = false }) => {
+  // Adjust Balance 與 Other Earning 共用同一份精簡表單（沒有 Category / Cheque No.）
+  const isSimpleForm = is_adjust_balance || is_other_earning
   //當前表單的props
   const { formProps, saveButtonProps, queryResult } = useForm()
   const expenseData = queryResult?.data?.data as DataType
@@ -23,7 +26,7 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
     resource: 'terms',
     id: expenseData?.term_id || 0,
     queryOptions: {
-      enabled: !is_adjust_balance,
+      enabled: !isSimpleForm,
     },
   })
   const { selectProps: termsProps } = useSelect<TTerms>({
@@ -48,7 +51,7 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
       },
     ],
     queryOptions: {
-      enabled: !is_adjust_balance,
+      enabled: !isSimpleForm,
     },
   })
 
@@ -80,7 +83,7 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
         <Spin
           indicator={<LoadingOutlined className="text-2xl" spin />}
           tip="fetching data..."
-          spinning={!!termsIsLoading && !is_adjust_balance}
+          spinning={!!termsIsLoading && !isSimpleForm}
         >
           <Row gutter={0} className="mt-12">
             <Col span={12}>
@@ -90,7 +93,7 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
                   <div className="th">Date</div>
                   <div className="td">{expenseDate}</div>
                 </div>
-                {!is_adjust_balance && (
+                {!isSimpleForm && (
                   <div className="tr">
                     <div className="th">Category</div>
                     <div className="td">
@@ -112,7 +115,7 @@ export const EditView: React.FC<{ is_adjust_balance?: boolean }> = ({
                     </Form.Item>
                   </div>
                 </div>
-                {!is_adjust_balance && (
+                {!isSimpleForm && (
                   <>
                     <div className="tr">
                       <div className="th">Cheque No.</div>

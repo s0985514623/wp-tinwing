@@ -32,6 +32,7 @@ final class Bootstrap {
 		Api\Terms::instance();
 		Api\Agents::instance();
 		Api\Expenses::instance();
+		Api\OtherEarnings::instance();
 		Api\Clients::instance();
 		Api\Receipts::instance();
 		Api\InsurerProducts::instance();

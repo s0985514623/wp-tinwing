@@ -192,8 +192,12 @@ final class Receipts {
 	 * @return \WP_REST_Response
 	 */
 	public function post_receipts_callback( $request ) { // phpcs:ignore
-		$params         = $request->get_json_params() ?? [];
-		$params         = WP::sanitize_text_field_deep( $params, false );
+		$raw_params     = $request->get_json_params() ?? [];
+		$params         = WP::sanitize_text_field_deep( $raw_params, false );
+		// remark 需要保留換行，明確用 sanitize_textarea_field，不依賴 sanitize_text_field_deep 的預設值
+		if ( isset( $raw_params['remark'] ) ) {
+			$params['remark'] = \sanitize_textarea_field( $raw_params['remark'] );
+		}
 
 		// 檢查 post_title 是否重複
 		if (isset($params['receipt_no']) && !empty($params['receipt_no'])) {
@@ -274,8 +278,12 @@ final class Receipts {
 	 * @return \WP_REST_Response
 	 */
 	public function post_receipts_with_id_callback( $request ) { // phpcs:ignore
-		$params     = $request->get_json_params() ?? [];
-		$params     = WP::sanitize_text_field_deep( $params, false );
+		$raw_params = $request->get_json_params() ?? [];
+		$params     = WP::sanitize_text_field_deep( $raw_params, false );
+		// remark 需要保留換行，明確用 sanitize_textarea_field，不依賴 sanitize_text_field_deep 的預設值
+		if ( isset( $raw_params['remark'] ) ) {
+			$params['remark'] = \sanitize_textarea_field( $raw_params['remark'] );
+		}
 		$post_id    = $request->get_param('id');
 		$post_title = isset($params['receipt_no'])?$params['receipt_no']:\get_the_title($post_id);
 
@@ -392,8 +400,12 @@ final class Receipts {
 	 * @return \WP_REST_Response
 	 */
 	public function post_receipts_bulk_edit_callback( $request ) { // phpcs:ignore
-		$params = $request->get_json_params() ?? [];
-		$params = WP::sanitize_text_field_deep( $params, false, [ 'is_paid' ] );
+		$raw_params = $request->get_json_params() ?? [];
+		$params     = WP::sanitize_text_field_deep( $raw_params, false, [ 'is_paid' ] );
+		// remark 需要保留換行，明確用 sanitize_textarea_field，不依賴 sanitize_text_field_deep 的預設值
+		if ( isset( $raw_params['remark'] ) ) {
+			$params['remark'] = \sanitize_textarea_field( $raw_params['remark'] );
+		}
 
 		// 更新文章
 		$post_ids = $params['ids'];

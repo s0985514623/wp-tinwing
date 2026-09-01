@@ -51,7 +51,7 @@ final class CPT {
 				'slug'          => 'test',
 				'var'           => Plugin::$snake . '_test',
 			],
-			'post_type_array'     => [ 'quotations', 'debit_notes', 'renewals', 'receipts', 'credit_notes', 'terms', 'insurers', 'insurer_products', 'agents', 'clients', 'expenses' ],
+			'post_type_array'     => [ 'quotations', 'debit_notes', 'renewals', 'receipts', 'credit_notes', 'terms', 'insurers', 'insurer_products', 'agents', 'clients', 'expenses', 'other_earnings' ],
 			'cpt_post_meta_array' =>[
 				'quotations'       => PostType\Quotations::instance()->get_meta(),
 				'debit_notes'      => PostType\Quotations::instance()->get_meta(),
@@ -64,6 +64,7 @@ final class CPT {
 				'agents'           => PostType\Agents::instance()->get_meta(),
 				'clients'          => PostType\Clients::instance()->get_meta(),
 				'expenses'         => PostType\Expenses::instance()->get_meta(),
+				'other_earnings'   => PostType\OtherEarnings::instance()->get_meta(),
 			],
 		];
 		$this->post_meta_array     = $args['post_meta_array'];

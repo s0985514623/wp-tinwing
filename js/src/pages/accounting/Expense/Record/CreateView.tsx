@@ -9,9 +9,12 @@ import { AmountInput } from 'components/AmountInput'
 const { TextArea } = Input
 
 
-export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
-  is_adjust_balance = false,
-}) => {
+export const CreateView: React.FC<{
+  is_adjust_balance?: boolean
+  is_other_earning?: boolean
+}> = ({ is_adjust_balance = false, is_other_earning = false }) => {
+  // Adjust Balance 與 Other Earning 共用同一份精簡表單（沒有 Category / Cheque No.）
+  const isSimpleForm = is_adjust_balance || is_other_earning
   //當前表單的props
   const { formProps, saveButtonProps } = useForm()
   //terms 資料
@@ -42,7 +45,7 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
       },
     ],
     queryOptions: {
-      enabled: !is_adjust_balance,
+      enabled: !isSimpleForm,
     },
   })
   // console.log('🚀 ~ selectProps:', termsProps)
@@ -69,15 +72,18 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
         <Row gutter={0} className="mt-12">
           <Col span={12}>
             <div className="table table_td-flex-1 w-full">
-              <Form.Item
-                noStyle
-                hidden
-                name={['is_adjust_balance']}
-                initialValue={is_adjust_balance}
-                valuePropName="checked"
-              >
-                <Switch />
-              </Form.Item>
+              {/* other_earnings 是獨立 CPT，沒有 is_adjust_balance 這個 meta */}
+              {!is_other_earning && (
+                <Form.Item
+                  noStyle
+                  hidden
+                  name={['is_adjust_balance']}
+                  initialValue={is_adjust_balance}
+                  valuePropName="checked"
+                >
+                  <Switch />
+                </Form.Item>
+              )}
               <div className="tr">
                 <div className="th">Date</div>
                 <div className="td">
@@ -86,7 +92,7 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
                   </Form.Item>
                 </div>
               </div>
-              {!is_adjust_balance && (
+              {!isSimpleForm && (
                 <div className="tr">
                   <div className="th">Category</div>
                   <div className="td">
@@ -104,7 +110,7 @@ export const CreateView: React.FC<{ is_adjust_balance?: boolean }> = ({
                   </Form.Item>
                 </div>
               </div>
-              {!is_adjust_balance && (
+              {!isSimpleForm && (
                 <>
                   <div className="tr">
                     <div className="th">Cheque No.</div>

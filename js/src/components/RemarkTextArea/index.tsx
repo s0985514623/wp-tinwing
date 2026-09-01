@@ -13,7 +13,9 @@ export const RemarkTextArea: React.FC<{ data?: DataType; model?: 'edit' | 'show'
     const remarkString = data?.remark || '';
     const TextArea = () => {
         if (model === 'show') {
-            return <>{data?.remark}</>;
+            // whitespace-pre-line 保留使用者輸入的換行，過長的單行也會自動折行
+            // 不能只靠 _main.scss 的 main{white-space:pre-line}，react-to-print 的列印 iframe 沒有 main 祖先
+            return <div className="w-full whitespace-pre-line">{data?.remark}</div>;
         }
         return (
             <Form.Item noStyle name={['remark']} initialValue={remarkString}>

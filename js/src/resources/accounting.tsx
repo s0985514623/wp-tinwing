@@ -29,6 +29,16 @@ export const accounting = [
         },
     },
     {
+        name: 'other_earnings',
+        list: '/otherEarning',
+        create: '/otherEarning/create',
+        edit: '/otherEarning/edit/:id',
+        meta: {
+            parent: 'accountingDropdown',
+            label: 'Other Earning',
+        },
+    },
+    {
         name: 'insurerPaymentDropdown',
         meta: {
             parent: 'accountingDropdown',

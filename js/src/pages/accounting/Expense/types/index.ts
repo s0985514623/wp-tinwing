@@ -6,9 +6,10 @@ export const ZDataType = z.object({
 	date: z.number(),
 	amount: z.number(),
 	remark: z.string(),
-	term_id:z.number(),
+	// other_earnings 這個 resource 沒有 term_id / cheque_no，故放寬
+	term_id:z.number().nullable().optional(),
 	payment_receiver_account: z.string(),
-	cheque_no: z.string(),
+	cheque_no: z.string().nullable().optional(),
 	payment_date: z.number(),
 
 })

@@ -69,6 +69,16 @@ export const ModalEdit: React.FC<ModalEditProps> = ({
             </div>
           </div>
         </div>
+        <div className={className}>
+          <div className="tr">
+            <div className="th">Remark</div>
+            <div className="td flex">
+              <Form.Item noStyle name={['remark']}>
+                <Input.TextArea rows={3} />
+              </Form.Item>
+            </div>
+          </div>
+        </div>
 				<div className={className}>
           <div className="tr">
             <div className="th">Payment Date</div>

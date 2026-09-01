@@ -1,7 +1,7 @@
 import React from 'react';
 import { nanoid } from 'nanoid';
 import { Empty } from 'antd';
-const index: React.FC<{ noDisplayData: { noBy: string; value?: number }[] }> = ({ noDisplayData = [] }) => {
+const index: React.FC<{ noDisplayData: { noBy: string; value?: number | string }[] }> = ({ noDisplayData = [] }) => {
     if (noDisplayData.length === 0) return <Empty className=" my-4" />;
     return (
         <div className="grid grid-cols-4 gap-5 my-4">

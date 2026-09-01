@@ -17,9 +17,32 @@ import { safeParse, getSortProps } from 'utils'
 import dayjs, { Dayjs } from 'dayjs'
 import Filter from '../../dashboard/Filter'
 import { ModalEdit } from './ModalEdit'
-export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
-  is_adjust_balance = false,
-}) => {
+export const ListView: React.FC<{
+  is_adjust_balance?: boolean
+  is_other_earning?: boolean
+}> = ({ is_adjust_balance = false, is_other_earning = false }) => {
+  // Adjust Balance 與 Other Earning 共用同一份精簡列表（沒有 Category / Cheque No. / 批次編輯）
+  const isSimpleForm = is_adjust_balance || is_other_earning
+  // other_earnings 是獨立 CPT，沒有 is_adjust_balance 這個 meta，送出這組條件會查不到任何資料
+  const adjustBalanceFilters: CrudFilters = is_other_earning
+    ? []
+    : [
+      {
+        field: 'meta_query[1][key]',
+        operator: 'eq',
+        value: 'is_adjust_balance',
+      },
+      {
+        field: 'meta_query[1][value]',
+        operator: 'eq',
+        value: 1,
+      },
+      {
+        field: 'meta_query[1][compare]',
+        operator: 'eq',
+        value: is_adjust_balance ? '=' : '!=',
+      },
+    ]
   const { show, close, modalProps } = useModal()
   const { selectedRowKeys, rowSelection } = useRowSelection<DataType>()
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]|undefined>(undefined)
@@ -56,21 +79,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
         //   operator: 'eq',
         //   value: 'BETWEEN',
         // },
-        {
-          field: 'meta_query[1][key]',
-          operator: 'eq',
-          value: 'is_adjust_balance',
-        },
-        {
-          field: 'meta_query[1][value]',
-          operator: 'eq',
-          value: 1,
-        },
-        {
-          field: 'meta_query[1][compare]',
-          operator: 'eq',
-          value: is_adjust_balance ? '=' : '!=',
-        },
+        ...adjustBalanceFilters,
       ],
     },
     onSearch: (values: any) => {
@@ -95,21 +104,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
           operator: 'eq',
           value: 'BETWEEN',
         },
-        {
-          field: 'meta_query[1][key]',
-          operator: 'eq',
-          value: 'is_adjust_balance',
-        },
-        {
-          field: 'meta_query[1][value]',
-          operator: 'eq',
-          value: 1,
-        },
-        {
-          field: 'meta_query[1][compare]',
-          operator: 'eq',
-          value: is_adjust_balance ? '=' : '!=',
-        },
+        ...adjustBalanceFilters,
       ]
       return filters as CrudFilters
     },
@@ -131,7 +126,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
         ?.map((r) => r?.term_id)
         .filter((id): id is number => typeof id === 'number') ?? [],
     queryOptions: {
-      enabled: !!parsedTableProps?.dataSource && !is_adjust_balance,
+      enabled: !!parsedTableProps?.dataSource && !isSimpleForm,
     },
   })
   // 計算已選單的  Expense 總金額
@@ -165,21 +160,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
         operator: 'eq',
         value: 'BETWEEN',
       },
-      {
-        field: 'meta_query[1][key]',
-        operator: 'eq',
-        value: 'is_adjust_balance',
-      },
-      {
-        field: 'meta_query[1][value]',
-        operator: 'eq',
-        value: 1,
-      },
-      {
-        field: 'meta_query[1][compare]',
-        operator: 'eq',
-        value: is_adjust_balance ? '=' : '!=',
-      },
+      ...adjustBalanceFilters,
     ]
     ,
     mapData: (item) => {
@@ -204,7 +185,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
   })
   return (
     <>
-      {!is_adjust_balance && (
+      {!isSimpleForm && (
         <ModalEdit
           modalProps={modalProps}
           selectedRowKeys={selectedRowKeys}
@@ -214,7 +195,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
       <List
         headerButtons={() => (
           <>
-            {!is_adjust_balance && (
+            {!isSimpleForm && (
               <Button
                 size="small"
                 type="primary"
@@ -242,7 +223,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
           {...parsedTableProps}
           rowKey="id"
           size="middle"
-          rowSelection={!is_adjust_balance ? rowSelection : undefined}
+          rowSelection={!isSimpleForm ? rowSelection : undefined}
           summary={(pageData) => {
             return (
               <Table.Summary.Row>
@@ -273,7 +254,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
         render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
         {...getSortProps<DataType>('date')}
       />
-      {!is_adjust_balance && (
+      {!isSimpleForm && (
         <Table.Column
           width={120}
           dataIndex="term_id"
@@ -304,7 +285,7 @@ export const ListView: React.FC<{ is_adjust_balance?: boolean }> = ({
         )}
         {...getSortProps<DataType>('amount')}
       />
-      {!is_adjust_balance && (
+      {!isSimpleForm && (
         <>
           <Table.Column
             width={120}

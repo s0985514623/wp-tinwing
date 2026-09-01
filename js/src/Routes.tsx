@@ -242,6 +242,11 @@ const AppRoutes = () => {
           <Route path="create" element={<ExpenseRecordCreate is_adjust_balance />} />
           <Route path="edit/:id" element={<ExpenseRecordEdit is_adjust_balance/>} />
         </Route>
+				<Route path="/otherEarning">
+          <Route index element={<ExpenseRecordList is_other_earning />} />
+          <Route path="create" element={<ExpenseRecordCreate is_other_earning />} />
+          <Route path="edit/:id" element={<ExpenseRecordEdit is_other_earning />} />
+        </Route>
       </Route>
       <Route
         element={
