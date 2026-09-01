@@ -129,12 +129,20 @@ export const ListView: React.FC<{
       enabled: !!parsedTableProps?.dataSource && !isSimpleForm,
     },
   })
-  // 計算已選單的  Expense 總金額
-  const selectedExpenses = selectedRowKeys.map((id) => {
-    const receipt = parsedTableProps?.dataSource?.find((r) => r.id === id)
-    return receipt?.amount
+  // 總計：有勾選時顯示勾選的合計，沒勾選時顯示全部合計
+  // Adjust Balance 與 Other Earning 沒有勾選框，原本會永遠停在 0
+  const allRows = parsedTableProps?.dataSource ?? []
+  const sumAmount = (rows: readonly DataType[]) =>
+    rows.reduce((acc, row) => acc + Number(row?.amount ?? 0), 0)
+  const hasSelection = selectedRowKeys.length > 0
+  const totalExpense = hasSelection
+    ? sumAmount(allRows.filter((row) => selectedRowKeys.includes(row.id)))
+    : sumAmount(allRows)
+  const totalLabel = hasSelection ? `已選 ${selectedRowKeys.length} 筆` : '總計'
+  const totalText = totalExpense.toLocaleString('en-US', {
+    minimumFractionDigits: 2, // 最少小數點後兩位
+    maximumFractionDigits: 2, // 最多小數點後兩位
   })
-  const totalExpense = selectedExpenses.reduce((acc, curr) => Number(acc) + Number(curr), 0)
   //如果没有数据，就禁用导出按钮
   const disabledBtn = parsedTableProps.dataSource?.length == 0 ? true : false
   //Export CSV
@@ -224,13 +232,22 @@ export const ListView: React.FC<{
           rowKey="id"
           size="middle"
           rowSelection={!isSimpleForm ? rowSelection : undefined}
-          summary={(pageData) => {
+          summary={() => {
+            // 讓合計對齊 Amount 欄。完整模式的欄序是 勾選 / Date / Category / Amount，
+            // 精簡模式沒有勾選欄與 Category 欄，欄序是 Date / Amount，
+            // 前面要少墊兩格，否則數字會落到 Bank、Remark 底下。
+            const leadingCells = isSimpleForm ? 1 : 3
             return (
               <Table.Summary.Row>
-                <Table.Summary.Cell index={0}></Table.Summary.Cell>
-                <Table.Summary.Cell index={1}></Table.Summary.Cell>
-                <Table.Summary.Cell index={2}>總計</Table.Summary.Cell>
-                <Table.Summary.Cell index={3}>{totalExpense ? Number(totalExpense).toLocaleString() : 0}</Table.Summary.Cell>
+                {Array.from({ length: leadingCells - 1 }, (_, i) => (
+                  <Table.Summary.Cell key={i} index={i}></Table.Summary.Cell>
+                ))}
+                <Table.Summary.Cell index={leadingCells - 1}>
+                  {totalLabel}
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={leadingCells}>
+                  {totalText}
+                </Table.Summary.Cell>
               </Table.Summary.Row>
             )
           }}
