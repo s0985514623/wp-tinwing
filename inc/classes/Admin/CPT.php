@@ -16,6 +16,13 @@ final class CPT {
 	use \J7\WpUtils\Traits\SingletonTrait;
 
 	/**
+	 * 記錄上次 flush rewrite rules 時的 CPT / rewrite 設定雜湊
+	 *
+	 * @var string
+	 */
+	const REWRITE_RULES_HASH_OPTION = 'wp_tinwing_rewrite_rules_hash';
+
+	/**
 	 * Post metas
 	 *
 	 * @var array
@@ -98,8 +105,29 @@ final class CPT {
 		// add {$this->post_type}/{slug}/test rewrite rule
 		if ( ! empty( $this->rewrite ) ) {
 			\add_rewrite_rule( '^wp-tinwing/([^/]+)/' . $this->rewrite['slug'] . '/?$', 'index.php?post_type=wp-tinwing&name=$matches[1]&' . $this->rewrite['var'] . '=1', 'top' );
-			\flush_rewrite_rules();
+			$this->maybe_flush_rewrite_rules();
 		}
+	}
+
+	/**
+	 * 只有在 CPT 清單或 rewrite 設定變動時才 flush rewrite rules
+	 *
+	 * flush_rewrite_rules() 會重建全站 rewrite rules 並寫入 rewrite_rules option。
+	 * 原本這裡是無條件呼叫，等於每一個請求（包含每一支 REST API）都多做一次
+	 * 全表重建加一次 DB 寫入，實測讓每支 API 慢了約 2 秒。
+	 *
+	 * 改成比對設定雜湊：新增 / 移除 CPT 或改動 rewrite 設定時會自動 flush 一次，
+	 * 之後的請求直接略過。
+	 *
+	 * @return void
+	 */
+	private function maybe_flush_rewrite_rules(): void {
+		$hash = \md5( (string) \wp_json_encode( [ $this->post_type_array, $this->rewrite ] ) );
+		if ( \get_option( self::REWRITE_RULES_HASH_OPTION ) === $hash ) {
+			return;
+		}
+		\flush_rewrite_rules();
+		\update_option( self::REWRITE_RULES_HASH_OPTION, $hash );
 	}
 
 	/**
@@ -378,8 +406,10 @@ final class CPT {
 	 * @return array
 	 */
 	public function custom_post_type_rewrite_rules( $rules ) {
-		global $wp_rewrite;
-		$wp_rewrite->flush_rules();
+		// 這裡原本呼叫 $wp_rewrite->flush_rules()，但本方法本身就是掛在
+		// rewrite_rules_array filter 上（flush 的過程中才會觸發），在裡面再 flush
+		// 一次是自我遞迴，而且會讓每次進入文章編輯畫面都重建一遍 rewrite rules。
+		// 規則的 flush 時機統一交給 maybe_flush_rewrite_rules() 判斷。
 		return $rules;
 	}
 

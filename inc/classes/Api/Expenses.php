@@ -112,7 +112,8 @@ final class Expenses {
 			$args['meta_key'] = $params['meta_key'];
 		}
 		// 兼容舊版的查詢條件(當is_adjust_balance不存在時)，如果有 is_adjust_balance 且不等於的條件，則加入查詢條件
-		foreach ($args['meta_query'] as $key => $value) {
+		// 沒帶 meta_query 參數時 $args['meta_query'] 不存在，直接 foreach 會噴 Undefined array key + foreach 兩個 Warning
+		foreach (($args['meta_query'] ?? []) as $key => $value) {
 			if (!is_array($value)) {
 				continue;
 			}
