@@ -86,6 +86,14 @@ Refine dataProvider (js/src/rest-data-provider/index.ts)
 
 `Expense/Record` 的三個頁面元件同時服務 expenses / adjust_balance / other_earnings,靠 `is_adjust_balance` 與 `is_other_earning` 兩個 prop 分流,元件內以 `isSimpleForm` 統一判斷要不要隱藏 Category / Cheque No. / 批次編輯。
 
+### ⚠️ 陷阱 E — `expense_class` 的 slug 不代表分類名稱
+
+支出分類大多是從 `Others N` 這類空位**改名**而來,改名時 `post_name` 沒跟著變。實例:`Audit Fee` 的 slug 是 `misc`、`Gift` 是 `others-3`、`Repairs & Maintenance` 是 `others-5`、`Visa – BR` 是 `visa-telephone`。部分名稱還帶著從別處貼上的隱形字元 U+2060(`Loan to director`、`Golf (entertainment )`),連接號也有 en dash `–` 與 hyphen `-` 混用。
+
+**依分類做統計時要比對「正規化後的名稱」,不要比對 slug。** Trial Balance 曾用 slug `misc` 算 Business Registration,結果顯示的是 Audit Fee 的金額。正規化與對應表的寫法見 `OtherReport.php::normalize_expense_class_name()` 與 `TRIAL_BALANCE_EXPENSE_MAP`。
+
+例外:4 個 `insurer-payment-*` 分類的 slug 與名稱一致,現行程式以 slug 識別。
+
 ## 4. Schema-driven 的 post meta 機制(最重要的慣例)
 
 欄位定義集中宣告一次,由三個地方消費。
@@ -143,7 +151,7 @@ Refine dataProvider (js/src/rest-data-provider/index.ts)
 Dashboard(`pages/accounting/dashboard/ListView.tsx`)的 Other Earning 會出現在三個位置:Income 區塊的總額卡片、Income 的各銀行金額、Profit 的各銀行金額。
 
 ### 報表模組
-`inc/classes/Api/OtherReport.php`(3,281 行)提供 7 個端點:
+`inc/classes/Api/OtherReport.php`(約 3,500 行)提供 7 個端點:
 
 - `client_ageing_report` — 客戶帳齡分析
 - `insurer_ageing_report` — 保險公司帳齡分析
@@ -154,6 +162,20 @@ Dashboard(`pages/accounting/dashboard/ListView.tsx`)的 Other Earning 會出現�
 - `balance_sheet` — 資產負債表
 
 Excel 匯出走 `exceljs`,共用 hook 在 `js/src/hooks/useExcelExport.tsx` 與 `useSiderReportExport.tsx`。
+
+#### Trial Balance(`get_trial_balance_callback()`)
+
+55 個科目的清單寫在 PHP 陣列裡,依客戶提供的 Excel 定義。三組金額的來源不同:
+
+| 欄位 | 來源 |
+| --- | --- |
+| 期初 Beginning | **寫死常數**,為「截至 31/03/2025」的結帳後餘額;損益類科目(No.25–50)期初為空。標題日期固定,不隨報表起始日變動 |
+| 本期 This Period | 1–28 列各有專屬計算(應收、銀行、保險公司應付等);29–55 費用列由 `calculate_expenses_totals_by_trial_balance_item()` 依 `TRIAL_BALANCE_EXPENSE_MAP` 一次彙總 |
+| 期末 Ending、合計 | **即時計算**。`ASSET` / `CONTRA_ASSET` / `EXPENSE` 取「借 − 貸」放借方,其餘取「貸 − 借」放貸方 |
+
+- **改期初數字 = 改 PHP 常數**,沒有設定介面。
+- **客戶新增支出分類時要更新 `TRIAL_BALANCE_EXPENSE_MAP`**,否則該分類不會進任何費用列,只會在 `debug.log` 留下「對不到科目的支出分類」並造成借貸不平衡。名稱為 `Others 數字` 的分類自動歸 `Misc`,不必加。
+- 前端匯出依每列的 `Category` 排版,增減科目不必改前端。
 
 ### Debit Note 的 5 種模板
 `general` / `motor` / `shortTerms` / `package` / `marineInsurance`,定義在 `js/src/pages/debitNotes/types/index.ts` 的 `templates` 陣列與 `ZTemplates` enum。每種模板各有一組 `EditTemplate*` 與 `ShowTemplate*` 元件(`js/src/pages/debitNotes/components/`)。列印用 `react-to-print`,進入點在各資源的 `ShowView.tsx`。
@@ -185,6 +207,5 @@ PHP 品質工具:`phpcs.xml`、`phpmd.xml`、`phpstan.neon`。
 ## 8. 已知技術債(現況記錄,非待辦清單)
 
 - **REST 端點沒有權限控管。** 所有 `get_apis()` 的 `permission_callback` 都是 `__return_true`,並附 `// TODO 應該是特定會員才能看`。前端 `Routes.tsx` 的 `<Authenticated>` 守衛整段被註解掉。實際唯一防線是 wp-admin 頁面本身的 `manage_options`,**API 端點本身對外全開**。
-- **每個請求都 flush rewrite rules。** `inc/classes/Admin/CPT.php:100` 在 `init` hook 內無條件呼叫 `flush_rewrite_rules()`;另外 `custom_post_type_rewrite_rules()` 也呼叫了 `$wp_rewrite->flush_rules()`。
 - **Supabase 遺留物。** 系統是從 Supabase 遷移過來的,`@refinedev/supabase`、`js/src/utils/supabaseClient.ts`、`js/src/main_old.tsx` 是殘留,現行程式碼未使用。
 - **`Admin\Migration`** 是一次性的 `receipt_id` 回填,以 `wp_tinwing_migration_receipt_id_executed` option 當執行旗標,搭配 `Admin\MigrationAdmin` 提供管理介面。

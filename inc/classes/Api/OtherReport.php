@@ -19,6 +19,79 @@ final class OtherReport
     use \J7\WpUtils\Traits\ApiRegisterTrait;
 
     /**
+     * Trial Balance 費用科目與 Tinwing 支出分類（expense_class）的對應
+     *
+     * 來源：客戶 2026-09-14 提供的「RAN-Trial Balance-2.xlsx」Expenses Catagories 工作表。
+     * key 是系統裡的分類名稱，value 是 Trial Balance 的 Account Name，多個分類可累加到同一個科目。
+     *
+     * 刻意用「名稱」而不是 slug 或 ID 比對：分類大多是從「Others N」空位改名而來，slug 沒跟著改
+     * （例如 Audit Fee 的 slug 是 misc、Gift 的 slug 是 others-3），用 slug 會對錯科目。
+     * 比對前兩邊都會經過 normalize_expense_class_name()，大小寫、en dash、隱形字元都不影響。
+     * 名稱為「Others 數字」的分類不列在這裡，統一歸到 TRIAL_BALANCE_EXPENSE_OTHERS_ITEM。
+     */
+    private const TRIAL_BALANCE_EXPENSE_MAP = [
+        'Golf (entertainment )'                      => 'Entertainment',
+        'Loan to director'                           => 'Loan to Director',
+        'Bank Audit Charge'                          => 'Bank Charges',
+        'Bank Charges'                               => 'Bank Charges',
+        'Bonus'                                      => 'Bonus',
+        'Business Registration'                      => 'Business Registration',
+        'CPD – Study Allowance'                      => 'Study Allowance',
+        'Director Remuneration – Li Tsun Sun'        => 'Director Remuneration - Li Tsun Sun',
+        'Petty Cash – Entertainment'                 => 'Entertainment',
+        'Insurance'                                  => 'Insurance',
+        'Management Fee'                             => 'Management Fee',
+        'Lucky Money'                                => 'Lucky Money',
+        'Audit Fee'                                  => 'Audit Fee',
+        'MPF'                                        => 'MPF',
+        'New Computer System'                        => 'New Computer System',
+        'MPF – Li Chung Chai'                        => 'Salary - Li Chung Chai',
+        'MPF – Lai Yuen Chun'                        => 'Salary - Lai Yuen Chun',
+        'Gift'                                       => 'Gift',
+        'Repairs & Maintenance'                      => 'Repairs & Maintenance',
+        'Petty Cash – Electricity / Wate Fee / Gas.' => 'Electricity, Water Fee & Gas',
+        'Petty Cash – Gift'                          => 'Gift',
+        'Petty Cash – Medical'                       => 'Medical Expenese',
+        'Petty Cash – Repair & Maintance'            => 'Repairs & Maintenance',
+        'Petty Cash – Postage / Stamp'               => 'Stamp & Postage',
+        'Petty Cash – Rent & Rates'                  => 'Rent & Rates',
+        'Petty Cash – Sundry'                        => 'Sundry Expenses',
+        'Petty Cash – Telephone'                     => 'Telephone Fax & Internet Fee',
+        'Petty Cash – Travel'                        => 'Travel Expenses',
+        'Commission – D/R Li Tsun Sun'               => 'Director Remuneration - Li Tsun Sun',
+        'Pretty Cash – Printing & Stationery'        => 'Printing & Stationery',
+        'Printing'                                   => 'Printing & Stationery',
+        'Salary – Li Chung Chai'                     => 'Salary - Li Chung Chai',
+        'Salary – Lai Yuen Chun'                     => 'Salary - Lai Yuen Chun',
+        'Visa – Electricity / Wate Fee / Gas.'       => 'Electricity, Water Fee & Gas',
+        'Visa – Entertainment'                       => 'Entertainment',
+        'Visa – Gift'                                => 'Gift',
+        'Visa – Medical'                             => 'Medical Expenese',
+        'Visa – Tax'                                 => 'Tax',
+        'Visa – Postage / Stamp'                     => 'Stamp & Postage',
+        'Visa – Rent & Rates'                        => 'Rent & Rates',
+        'Visa – Sundry'                              => 'Sundry Expenses',
+        'Visa – Tel / Fax / Internet Fee'            => 'Telephone Fax & Internet Fee',
+        'Visa – BR'                                  => 'Business Registration',
+        'Visa – Travel'                              => 'Travel Expenses',
+    ];
+
+    /**
+     * 名稱為「Others 數字」的自訂分類在 Trial Balance 上顯示的科目
+     */
+    private const TRIAL_BALANCE_EXPENSE_OTHERS_ITEM = 'Misc';
+
+    /**
+     * 已由 A/C Payable 各列計算的保險公司付款分類（slug），費用科目彙總時略過
+     */
+    private const TRIAL_BALANCE_INSURER_PAYMENT_SLUGS = [
+        'insurer-payment-msig',
+        'insurer-payment-tokio',
+        'insurer-payment-cmb',
+        'insurer-payment-taiping',
+    ];
+
+    /**
      * Constructor.
      */
     public function __construct()
@@ -2273,6 +2346,136 @@ final class OtherReport
     }
 
     /**
+     * 正規化支出分類名稱，供 Trial Balance 對應表比對
+     *
+     * 系統裡部分分類名稱帶著從別處貼上的隱形字元（U+2060），連接號也有 en dash 與 hyphen 混用，
+     * 這裡統一移除隱形字元、把 en/em dash 換成 hyphen、壓縮空白並轉小寫。
+     *
+     * @param string $name 分類名稱
+     * @return string
+     */
+    private function normalize_expense_class_name(string $name): string
+    {
+        $name = html_entity_decode($name, ENT_QUOTES, 'UTF-8');
+        $name = preg_replace('/[\x{200B}-\x{200D}\x{2060}\x{FEFF}]/u', '', $name) ?? $name;
+        $name = str_replace(["\u{2013}", "\u{2014}"], '-', $name);
+        $name = preg_replace('/\s+/u', ' ', $name) ?? $name;
+
+        return strtolower(trim($name));
+    }
+
+    /**
+     * 計算 Trial Balance 各費用科目的 This Period Debit
+     *
+     * 依 TRIAL_BALANCE_EXPENSE_MAP 把期間內的 Expenses 按分類名稱累加到科目，
+     * 取代原本「每個科目各查一次、只認一個 slug」的做法。
+     * 保險公司付款分類已由 A/C Payable 各列計算，這裡略過；
+     * 其餘對不到科目的分類只記 log、不歸入任何一列，讓合計借貸不平衡成為看得見的訊號，
+     * 而不是悄悄併進 Misc。
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @return array<string, float> key 為 Trial Balance 的 Account Name，涵蓋所有費用科目
+     */
+    private function calculate_expenses_totals_by_trial_balance_item($start_date, $end_date): array
+    {
+        $item_by_name = [];
+        foreach (self::TRIAL_BALANCE_EXPENSE_MAP as $category_name => $item) {
+            $item_by_name[$this->normalize_expense_class_name($category_name)] = $item;
+        }
+
+        $items = array_unique(array_merge(array_values(self::TRIAL_BALANCE_EXPENSE_MAP), [self::TRIAL_BALANCE_EXPENSE_OTHERS_ITEM]));
+        $totals = array_fill_keys($items, 0.0);
+
+        $args = [
+            'post_type' => 'expenses',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+        ];
+
+        if ($start_date && $end_date) {
+            $wp_timezone = wp_timezone();
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+
+            $args['meta_query'] = [
+                'relation' => 'AND',
+                [
+                    'key' => 'date',
+                    'value' => [$start_datetime->getTimestamp(), $end_datetime->getTimestamp()],
+                    'compare' => 'BETWEEN',
+                    'type' => 'NUMERIC'
+                ]
+            ];
+        }
+
+        // 依分類加總金額；Adjust Balance 不屬於任何費用科目
+        $amount_by_term = [];
+        foreach ((new \WP_Query($args))->posts as $expense_id) {
+            if (filter_var(get_post_meta($expense_id, 'is_adjust_balance', true), FILTER_VALIDATE_BOOLEAN)) {
+                continue;
+            }
+            $term_id = (int) get_post_meta($expense_id, 'term_id', true);
+            if (!$term_id) {
+                continue;
+            }
+            $amount_by_term[$term_id] = ($amount_by_term[$term_id] ?? 0.0) + floatval(get_post_meta($expense_id, 'amount', true));
+        }
+
+        if (empty($amount_by_term)) {
+            return $totals;
+        }
+
+        $term_ids = (new \WP_Query([
+            'post_type' => 'terms',
+            'post__in' => array_keys($amount_by_term),
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'meta_query' => [
+                [
+                    'key' => 'taxonomy',
+                    'value' => 'expense_class',
+                    'compare' => '='
+                ]
+            ]
+        ]))->posts;
+        // 統一成 int，才能與 $amount_by_term 的 key 做嚴格比對
+        $term_ids = array_map('intval', $term_ids);
+
+        $unmapped = [];
+        foreach ($amount_by_term as $term_id => $amount) {
+            if (!in_array($term_id, $term_ids, true)) {
+                $unmapped['term_id ' . $term_id] = $amount;
+                continue;
+            }
+            if (in_array(get_post_field('post_name', $term_id), self::TRIAL_BALANCE_INSURER_PAYMENT_SLUGS, true)) {
+                continue;
+            }
+
+            $category_name = (string) get_post_field('post_title', $term_id);
+            $normalized = $this->normalize_expense_class_name($category_name);
+
+            if (isset($item_by_name[$normalized])) {
+                $totals[$item_by_name[$normalized]] += $amount;
+            } elseif (preg_match('/^others \d+$/', $normalized)) {
+                $totals[self::TRIAL_BALANCE_EXPENSE_OTHERS_ITEM] += $amount;
+            } else {
+                $unmapped[$category_name] = $amount;
+            }
+        }
+
+        if (!empty($unmapped)) {
+            error_log('Trial Balance - 對不到科目的支出分類（未計入任何費用列）: ' . wp_json_encode($unmapped, JSON_UNESCAPED_UNICODE));
+        }
+
+        foreach ($totals as $item => $total) {
+            $totals[$item] = round($total, 2, PHP_ROUND_HALF_UP);
+        }
+
+        return $totals;
+    }
+
+    /**
      * Get trial balance callback
      *
      * @param \WP_REST_Request $request Request.
@@ -2300,15 +2503,8 @@ final class OtherReport
             $end_date = null;
         }
 
-        // 計算期初日期（本期開始前一天）
-        if ($start_date) {
-            $start_date_obj = new \DateTime($start_date, $wp_timezone);
-            $beginning_date_obj = clone $start_date_obj;
-            $beginning_date_obj->modify('-1 day');
-            $beginning_date = $beginning_date_obj->format('d/m/Y');
-        } else {
-            $beginning_date = '28/02/2024'; // 預設值
-        }
+        // 期初餘額是截至 31/03/2025 的固定數字，不隨報表起始日變動，標題日期也跟著固定（客戶 2026-09-14 確認）
+        $beginning_date = '31/03/2025';
 
         // 格式化報表日期
         if ($start_date && $end_date) {
@@ -2383,85 +2579,11 @@ final class OtherReport
         // 計算 Rebate-Received 的 This Period Credit（期間內所有 Adjust Balance 的總金額）
         $adjust_balance_total = $this->calculate_adjust_balance_total($start_date, $end_date);
         
-        // 計算 Salary - Li Chung Chai 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'salary-lcc' 的金額總和）
-        $salary_lcc_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'salary-lcc');
-        
-        // 計算 Director Remuneration - Li Tsun Sun 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'dir-lts' 的金額總和）
-        $dir_lts_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'dir-lts');
-        
-        // 計算 Printing & Stationery 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'pretty-cash-printing-stationery' 的金額總和）
-        $printing_stationery_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'pretty-cash-printing-stationery');
-        
-        // 計算 Electricity, Water Fee & Gas 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'petty-cash-electricity' 的金額總和）
-        $electricity_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'petty-cash-electricity');
-        
-        // 計算 Telephone Fax & Internet Fee 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'petty-cash-telephone' 的金額總和）
-        $telephone_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'petty-cash-telephone');
-        
-        // 計算 Insurance 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'pia' 的金額總和）
-        $insurance_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'pia');
-        
-        // 計算 Management Fee 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'management-fee' 的金額總和）
-        $management_fee_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'ioyl');
-        
-        // 計算 Business Registration 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'misc' 的金額總和）
-        $business_registration_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'misc');
-        
-        // 計算 Bank Charges 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'bank-charges' 的金額總和）
-        $bank_charges_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'bank-charges');
-        
-        // 計算 Study Allowance 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'cpd' 的金額總和）
-        $study_allowance_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'cpd');
-        
-        // 計算 Medical Expenese 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'petty-cash-medical' 的金額總和）
-        $medical_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'petty-cash-medical');
-        
-        // 計算 MPF 的 This Period Debit（期間內 Expenses 中 term 的 post_name = 'mpf' 的金額總和）
-        $mpf_total = $this->calculate_expenses_total_by_term_post_name($start_date, $end_date, 'mpf');
-        
-        // 計算所有 This Period Debit 的總和
-        $total_this_period_debit = round(
-            $account_receivable_this_period_debit +
-            $soc_income_plus_adjust +
-            $boc_income_plus_adjust +
-            $msig_payment_total +
-            $tokio_payment_total +
-            $cmb_payment_total +
-            $taiping_payment_total +
-            $premium_paid_general_debit +
-            $salary_lcc_total +
-            $dir_lts_total +
-            $printing_stationery_total +
-            $electricity_total +
-            $telephone_total +
-            $insurance_total +
-            $management_fee_total +
-            $business_registration_total +
-            $bank_charges_total +
-            $study_allowance_total +
-            $medical_total +
-            $mpf_total,
-            2,
-            PHP_ROUND_HALF_UP
-        );
-        
-        // 計算所有 This Period Credit 的總和
-        $premium_received_credit = $account_receivable_this_period_debit;
-        $total_this_period_credit = round(
-            $account_receivable_this_period_credit +
-            $soc_expenses_total +
-            $boc_expenses_total +
-            $msig_insurer_payment_total +
-            $tokio_insurer_payment_total +
-            $cmb_insurer_payment_total +
-            $taiping_insurer_payment_total +
-            $adjust_balance_total +
-            $premium_received_credit,
-            2,
-            PHP_ROUND_HALF_UP
-        );
+        // Selling / Admin & General Expenses 各科目的 This Period Debit：
+        // 依 TRIAL_BALANCE_EXPENSE_MAP 把期間內的支出按分類名稱累加到科目，一次查詢算完
+        $expense_totals = $this->calculate_expenses_totals_by_trial_balance_item($start_date, $end_date);
 
-        // 準備假資料 - Trial Balance 報表
+        // Trial Balance 報表資料（期末與合計為 null，由下方計算）
         $data = [
             // 標題行（獨立於上方，可置中）
             [
@@ -2528,21 +2650,21 @@ final class OtherReport
                 'Spacer 1' => '',
                 'This Period Debit' => '',
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '195370.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             [
                 'No.' => 2,
                 'Attribute' => 'Fixed Asset',
                 'Account Name' => 'Furniture & Fixture',
-                'Beginning Balance Debit' => '344950.00',
+                'Beginning Balance Debit' => '356600.00',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
                 'This Period Debit' => '',
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '344950.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             [
@@ -2554,8 +2676,8 @@ final class OtherReport
                 'Spacer 1' => '',
                 'This Period Debit' => '',
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '-195370.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'CONTRA_ASSET'
             ],
             [
@@ -2567,8 +2689,8 @@ final class OtherReport
                 'Spacer 1' => '',
                 'This Period Debit' => '',
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '-344950.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'CONTRA_ASSET'
             ],
             [
@@ -2580,8 +2702,8 @@ final class OtherReport
                 'Spacer 1' => '',
                 'This Period Debit' => '',
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '121300.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             [
@@ -2593,8 +2715,8 @@ final class OtherReport
                 'Spacer 1' => '',
                 'This Period Debit' => '',
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '-121300.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'CONTRA_ASSET'
             ],
             
@@ -2608,22 +2730,22 @@ final class OtherReport
                 'Spacer 1' => '',
                 'This Period Debit' => '',
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '400.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             [
                 'No.' => 8,
                 'Attribute' => 'Current Asset',
                 'Account Name' => 'Account Receivable',
-                'Beginning Balance Debit' => '13463.00',
+                'Beginning Balance Debit' => '29546.00',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
                 'This Period Debit' => $account_receivable_this_period_debit,
                 'This Period Credit' => $account_receivable_this_period_credit,
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '46286.82',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             
@@ -2632,28 +2754,28 @@ final class OtherReport
                 'No.' => 9,
                 'Attribute' => 'Cash at Bank & On Hold',
                 'Account Name' => 'SOC - Current',
-                'Beginning Balance Debit' => '796545.01',
+                'Beginning Balance Debit' => '417503.19',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
                 'This Period Debit' => $soc_income_plus_adjust,
                 'This Period Credit' => $soc_expenses_total,
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '963479.54',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             [
                 'No.' => 10,
                 'Attribute' => 'Cash at Bank & On Hold',
                 'Account Name' => 'KP1 - Current',
-                'Beginning Balance Debit' => '71365.20',
+                'Beginning Balance Debit' => '20722.54',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
                 'This Period Debit' => $boc_income_plus_adjust,
                 'This Period Credit' => $boc_expenses_total,
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '40592.40',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             [
@@ -2666,8 +2788,8 @@ final class OtherReport
                 'This Period Debit' => '',
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '2470.01',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             [
@@ -2680,8 +2802,8 @@ final class OtherReport
                 'This Period Debit' => '',
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '1519.92',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             
@@ -2696,8 +2818,8 @@ final class OtherReport
                 'This Period Debit' => '',
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '1565787.44',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             [
@@ -2710,8 +2832,8 @@ final class OtherReport
                 'This Period Debit' => '',
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '1420032.16',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             [
@@ -2724,8 +2846,8 @@ final class OtherReport
                 'This Period Debit' => '',
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '5000.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'ASSET'
             ],
             
@@ -2739,8 +2861,8 @@ final class OtherReport
                 'This Period Debit' => '',
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '12176.25',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'LIABILITY'
             ],
             [
@@ -2748,13 +2870,13 @@ final class OtherReport
                 'Attribute' => 'Current Liabilities',
                 'Account Name' => 'A/C Payable - MSIG',
                 'Beginning Balance Debit' => '',
-                'Beginning Balance Credit' => '273140.01',
+                'Beginning Balance Credit' => '232538.10',
                 'Spacer 1' => '',
                 'This Period Debit' => $msig_payment_total,
                 'This Period Credit' => $msig_insurer_payment_total,
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '252686.60',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'LIABILITY'
             ],
             [
@@ -2762,13 +2884,13 @@ final class OtherReport
                 'Attribute' => 'Current Liabilities',
                 'Account Name' => 'A/C Payable - Tokio Marine',
                 'Beginning Balance Debit' => '',
-                'Beginning Balance Credit' => '14326.23',
+                'Beginning Balance Credit' => '25403.88',
                 'Spacer 1' => '',
                 'This Period Debit' => $tokio_payment_total,
                 'This Period Credit' => $tokio_insurer_payment_total,
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '20972.96',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'LIABILITY'
             ],
             [
@@ -2776,13 +2898,13 @@ final class OtherReport
                 'Attribute' => 'Current Liabilities',
                 'Account Name' => 'A/C Payable - CMB Wing Lung',
                 'Beginning Balance Debit' => '',
-                'Beginning Balance Credit' => '577755.47',
+                'Beginning Balance Credit' => '25985.04',
                 'Spacer 1' => '',
                 'This Period Debit' => $cmb_payment_total,
                 'This Period Credit' => $cmb_insurer_payment_total,
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '616766.08',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'LIABILITY'
             ],
             [
@@ -2790,13 +2912,13 @@ final class OtherReport
                 'Attribute' => 'Current Liabilities',
                 'Account Name' => 'A/C Payable - China Taiping',
                 'Beginning Balance Debit' => '',
-                'Beginning Balance Credit' => '15416.69',
+                'Beginning Balance Credit' => '2334.65',
                 'Spacer 1' => '',
                 'This Period Debit' => $taiping_payment_total,
                 'This Period Credit' => $taiping_insurer_payment_total,
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '1869.54',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'LIABILITY'
             ],
             [
@@ -2804,12 +2926,12 @@ final class OtherReport
                 'Attribute' => 'Current Liabilities',
                 'Account Name' => 'Creditor - Agent',
                 'Beginning Balance Debit' => '',
-                'Beginning Balance Credit' => '-2044.25',
+                'Beginning Balance Credit' => '11398.33',
                 'This Period Debit' => '',
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '-2044.25',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'LIABILITY'
             ],
             [
@@ -2821,8 +2943,8 @@ final class OtherReport
                 'This Period Debit' => '',
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '9100.00',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'LIABILITY'
             ],
             
@@ -2836,8 +2958,8 @@ final class OtherReport
                 'This Period Debit' => '',
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '2.00',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EQUITY'
             ],
             [
@@ -2845,12 +2967,12 @@ final class OtherReport
                 'Attribute' => 'Capital',
                 'Account Name' => 'Retained Profit',
                 'Beginning Balance Debit' => '',
-                'Beginning Balance Credit' => '3072069.61',
+                'Beginning Balance Credit' => '3155693.01',
                 'This Period Debit' => '',
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '3072069.61',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EQUITY'
             ],
             
@@ -2860,39 +2982,39 @@ final class OtherReport
                 'Attribute' => 'Income',
                 'Account Name' => 'Premium Received',
                 'Beginning Balance Debit' => '',
-                'Beginning Balance Credit' => '2322723.00',
+                'Beginning Balance Credit' => '',
                 'This Period Debit' => '',
                 'This Period Credit' => $account_receivable_this_period_debit,
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '2534014.57',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'REVENUE'
             ],
             [
                 'No.' => 26,
                 'Attribute' => 'Less',
                 'Account Name' => 'Premium Paid - General',
-                'Beginning Balance Debit' => '1885945.94',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
                 'This Period Debit' => $premium_paid_general_debit,
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '2016608.86',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 27,
                 'Attribute' => 'Other Earning',
-                'Account Name' => 'Rebate-Received',
+                'Account Name' => 'Rebate-Received / Others',
                 'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
                 'This Period Debit' => '',
                 'This Period Credit' => $adjust_balance_total,
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '118710.00',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'REVENUE'
             ],
             [
@@ -2900,13 +3022,13 @@ final class OtherReport
                 'Attribute' => 'Income',
                 'Account Name' => 'Other Income',
                 'Beginning Balance Debit' => '',
-                'Beginning Balance Credit' => '16.97',
+                'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
                 'This Period Debit' => '',
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '',
-                'Ending Balance Credit' => '16.97',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'REVENUE'
             ],
             
@@ -2915,312 +3037,383 @@ final class OtherReport
                 'No.' => 29,
                 'Attribute' => 'Selling Expenses',
                 'Account Name' => 'Entertainment',
-                'Beginning Balance Debit' => '10040.57',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => '',
+                'This Period Debit' => $expense_totals['Entertainment'],
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '10040.57',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 30,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Salary - Li Chung Chai',
-                'Beginning Balance Debit' => '198000.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $salary_lcc_total,
+                'This Period Debit' => $expense_totals['Salary - Li Chung Chai'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '215100.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 31,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Salary - Lai Yuen Chun',
-                'Beginning Balance Debit' => '0.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => '',
+                'This Period Debit' => $expense_totals['Salary - Lai Yuen Chun'],
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '0.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 32,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Director Remuneration - Li Tsun Sun',
-                'Beginning Balance Debit' => '176000.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $dir_lts_total,
+                'This Period Debit' => $expense_totals['Director Remuneration - Li Tsun Sun'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '192000.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 33,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Printing & Stationery',
-                'Beginning Balance Debit' => '1050.18',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $printing_stationery_total,
+                'This Period Debit' => $expense_totals['Printing & Stationery'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '1168.06',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 34,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Rent & Rates',
-                'Beginning Balance Debit' => '16640.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => '',
+                'This Period Debit' => $expense_totals['Rent & Rates'],
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '16640.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 35,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Electricity, Water Fee & Gas',
-                'Beginning Balance Debit' => '22275.71',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $electricity_total,
+                'This Period Debit' => $expense_totals['Electricity, Water Fee & Gas'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '23278.71',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 36,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Telephone Fax & Internet Fee',
-                'Beginning Balance Debit' => '14037.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $telephone_total,
+                'This Period Debit' => $expense_totals['Telephone Fax & Internet Fee'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '14353.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 37,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Insurance',
-                'Beginning Balance Debit' => '11139.84',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $insurance_total,
+                'This Period Debit' => $expense_totals['Insurance'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '14019.84',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 38,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Management Fee',
-                'Beginning Balance Debit' => '9900.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $management_fee_total,
+                'This Period Debit' => $expense_totals['Management Fee'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '10800.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 39,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Stamp & Postage',
-                'Beginning Balance Debit' => '1264.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => '',
+                'This Period Debit' => $expense_totals['Stamp & Postage'],
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '1264.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 40,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Repairs & Maintenance',
-                'Beginning Balance Debit' => '1520.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => '',
+                'This Period Debit' => $expense_totals['Repairs & Maintenance'],
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '1520.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 41,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Business Registration',
-                'Beginning Balance Debit' => '450.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $business_registration_total,
+                'This Period Debit' => $expense_totals['Business Registration'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '555.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 42,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Bank Charges',
-                'Beginning Balance Debit' => '1100.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $bank_charges_total,
+                'This Period Debit' => $expense_totals['Bank Charges'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '1200.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 43,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Sundry Expenses',
-                'Beginning Balance Debit' => '2175.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => '',
+                'This Period Debit' => $expense_totals['Sundry Expenses'],
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '2175.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 44,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Study Allowance',
-                'Beginning Balance Debit' => '2080.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $study_allowance_total,
+                'This Period Debit' => $expense_totals['Study Allowance'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '3120.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 45,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Travel Expenses',
-                'Beginning Balance Debit' => '4500.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => '',
+                'This Period Debit' => $expense_totals['Travel Expenses'],
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '4500.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 46,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Bonus',
-                'Beginning Balance Debit' => '30000.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => '',
+                'This Period Debit' => $expense_totals['Bonus'],
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '30000.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 47,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Lucky Money',
-                'Beginning Balance Debit' => '7000.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => '',
+                'This Period Debit' => $expense_totals['Lucky Money'],
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '7000.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 48,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Medical Expenese',
-                'Beginning Balance Debit' => '3981.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $medical_total,
+                'This Period Debit' => $expense_totals['Medical Expenese'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '4629.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 49,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'MPF',
-                'Beginning Balance Debit' => '9900.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $mpf_total,
+                'This Period Debit' => $expense_totals['MPF'],
                 'This Period Credit' => '',
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '11700.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             [
                 'No.' => 50,
                 'Attribute' => 'Admin & General Expenses',
                 'Account Name' => 'Audit Fee',
-                'Beginning Balance Debit' => '9100.00',
+                'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => '',
+                'This Period Debit' => $expense_totals['Audit Fee'],
                 'This Period Credit' => '',
-                'Ending Balance Debit' => '9100.00',
-                'Ending Balance Credit' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 51,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'New Computer System',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $expense_totals['New Computer System'],
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 52,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Tax',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $expense_totals['Tax'],
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 53,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Gift',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $expense_totals['Gift'],
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 54,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Loan to Director',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $expense_totals['Loan to Director'],
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
+                'Category' => 'EXPENSE'
+            ],
+            [
+                'No.' => 55,
+                'Attribute' => 'Admin & General Expenses',
+                'Account Name' => 'Misc',
+                'Beginning Balance Debit' => '',
+                'Beginning Balance Credit' => '',
+                'Spacer 1' => '',
+                'This Period Debit' => $expense_totals['Misc'],
+                'This Period Credit' => '',
+                'Spacer 2' => '',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'EXPENSE'
             ],
             
             // 總計行
             [
+                // 六個金額欄由下方依各列加總
                 'Account Name' => 'Total:',
-                'Beginning Balance Debit' => '6294681.98',
-                'Beginning Balance Credit' => '6294681.98',
+                'Beginning Balance Debit' => null,
+                'Beginning Balance Credit' => null,
                 'Spacer 1' => '',
-                'This Period Debit' => $total_this_period_debit,
-                'This Period Credit' => $total_this_period_credit,
+                'This Period Debit' => null,
+                'This Period Credit' => null,
                 'Spacer 2' => '',
-                'Ending Balance Debit' => '6636340.33',
-                'Ending Balance Credit' => '6636340.33',
+                'Ending Balance Debit' => null,
+                'Ending Balance Credit' => null,
                 'Category' => 'TOTAL'
             ]
         ];
@@ -3233,6 +3426,65 @@ final class OtherReport
                 }
                 if (!isset($row['Attribute'])) {
                     $data[$key]['Attribute'] = '';
+                }
+            }
+        }
+
+        // 期末餘額與合計一律由期初 + 本期算出，不再寫死
+        // ASSET / CONTRA_ASSET / EXPENSE 屬借方性質，其餘屬貸方性質；
+        // 淨額為負時照放在性質那一側（例如累計折舊的期末借方為負數），與客戶的 Excel 一致
+        $to_amount = static function ($value): ?float {
+            return ('' === $value || null === $value) ? null : (float) $value;
+        };
+        // + 0.0 是為了把 -0.0 轉成 0.0，避免匯出時出現 -0.00
+        $round_amount = static function (float $value): float {
+            return round($value, 2, PHP_ROUND_HALF_UP) + 0.0;
+        };
+        $debit_nature_categories = ['ASSET', 'CONTRA_ASSET', 'EXPENSE'];
+        $total_fields = [
+            'Beginning Balance Debit',
+            'Beginning Balance Credit',
+            'This Period Debit',
+            'This Period Credit',
+            'Ending Balance Debit',
+            'Ending Balance Credit',
+        ];
+        $totals = array_fill_keys($total_fields, 0.0);
+
+        foreach ($data as $key => $row) {
+            $category = $row['Category'] ?? '';
+            if (in_array($category, ['HEADER', 'EMPTY', 'TOTAL'], true)) {
+                continue;
+            }
+
+            $beginning_debit = $to_amount($row['Beginning Balance Debit'] ?? null);
+            $beginning_credit = $to_amount($row['Beginning Balance Credit'] ?? null);
+            $period_debit = $to_amount($row['This Period Debit'] ?? null);
+            $period_credit = $to_amount($row['This Period Credit'] ?? null);
+
+            $data[$key]['Ending Balance Debit'] = null;
+            $data[$key]['Ending Balance Credit'] = null;
+
+            // 四個來源都沒有值的科目（例如 Other Income）期末留空，不顯示 0
+            if (null !== $beginning_debit || null !== $beginning_credit || null !== $period_debit || null !== $period_credit) {
+                $debit_sum = (float) $beginning_debit + (float) $period_debit;
+                $credit_sum = (float) $beginning_credit + (float) $period_credit;
+                if (in_array($category, $debit_nature_categories, true)) {
+                    $data[$key]['Ending Balance Debit'] = $round_amount($debit_sum - $credit_sum);
+                } else {
+                    $data[$key]['Ending Balance Credit'] = $round_amount($credit_sum - $debit_sum);
+                }
+            }
+
+            foreach ($total_fields as $field) {
+                $totals[$field] += (float) $to_amount($data[$key][$field]);
+            }
+        }
+
+        foreach ($data as $key => $row) {
+            if ('TOTAL' === ($row['Category'] ?? '')) {
+                foreach ($total_fields as $field) {
+                    $data[$key][$field] = $round_amount($totals[$field]);
                 }
             }
         }
