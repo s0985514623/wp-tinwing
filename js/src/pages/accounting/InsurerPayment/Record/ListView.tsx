@@ -90,7 +90,9 @@ export const ListView: React.FC = () => {
 
   // Receipt 資料
   const { tableProps, searchFormProps } = useTable<DataType>({
+    // 這頁一次抓全部、純前端排序,關掉 server 排序避免每次點欄位都多打一次無效查詢
     sorters: {
+      mode: 'off' as const,
       initial: [
         {
           field: 'id',

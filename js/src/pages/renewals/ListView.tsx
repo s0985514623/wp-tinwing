@@ -18,7 +18,10 @@ export const ListView: React.FC = () => {
     const [exportFilters, setExportFilters] = useState<CrudFilters>([]);
 
     const { tableProps, searchFormProps } = useTable<DataType>({
+			// 這頁一次抓全部、純前端排序,關掉 server 排序避免每次點欄位都多打一次無效查詢
+			// 預設排序改由下方 Bill Date 欄位的 defaultSortOrder 在前端完成,結果等價
 			sorters: {
+				mode: 'off' as const,
 				initial: [
 					{
 						field: 'meta_value_num',
@@ -393,7 +396,7 @@ export const ListView: React.FC = () => {
                     },
                     showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
                 }}>
-                <Table.Column width={100} dataIndex="date" title="Bill Date" render={(date: number) => (date ? dayjs.unix(date).format('YYYY-MM-DD') : '')} {...getSortProps<DataType>('date')} />
+                <Table.Column width={100} dataIndex="date" title="Bill Date" render={(date: number) => (date ? dayjs.unix(date).format('YYYY-MM-DD') : '')} {...getSortProps<DataType>('date')} defaultSortOrder="descend" />
                 <Table.Column
                     width={100}
                     dataIndex="note_no"
