@@ -8,6 +8,7 @@ import { DataType as TTerms } from 'pages/terms/types'
 import dayjs from 'dayjs'
 import { ReceiptBankSelect } from 'components/ReceiptBankSelect'
 import { AmountInput } from 'components/AmountInput'
+import { compareTermName, filterTermOption } from 'utils'
 
 const { TextArea } = Input
 
@@ -54,6 +55,18 @@ export const EditView: React.FC<{
       enabled: !isSimpleForm,
     },
   })
+  // Category 下拉：選項 A-Z 排序，並改用前端搜尋
+  // （terms API 不吃關鍵字參數，useSelect 預設的伺服器端搜尋等於沒有作用）
+  const sortedTermsProps = {
+    ...termsProps,
+    options: [...(termsProps?.options ?? [])].sort((a, b) =>
+      compareTermName(a?.label, b?.label),
+    ),
+    onSearch: undefined,
+    showSearch: true,
+    //TODO 類型問題
+    filterOption: filterTermOption as any,
+  }
 
   const expenseDate = dayjs.unix(expenseData?.date).format('YYYY-MM-DD')
   const category = termsData?.data?.name || ''
@@ -102,7 +115,11 @@ export const EditView: React.FC<{
                         name={['term_id']}
                         initialValue={category}
                       >
-                        <Select className="w-full" {...termsProps} allowClear />
+                        <Select
+                          className="w-full"
+                          {...sortedTermsProps}
+                          allowClear
+                        />
                       </Form.Item>
                     </div>
                   </div>
