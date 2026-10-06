@@ -92,6 +92,60 @@ final class OtherReport
     ];
 
     /**
+     * 記在 expenses、但其實不是支出的 expense_class（slug）
+     *
+     * Other Earning – Rebate 是收到的回佣（錢進來），Trial Balance 的 No.27
+     * Rebate-Received / Others 已改由 other_earnings CPT 提供，這個舊分類不該再被
+     * 當成銀行支出，也不該進任何費用科目。
+     */
+    private const TRIAL_BALANCE_NON_EXPENSE_SLUGS = [
+        'other-earning-rebate',
+    ];
+
+    /**
+     * expense_class slug 對應 term ID 的暫存（同一次請求內共用）
+     *
+     * @var array<string, array<int>>
+     */
+    private $expense_class_term_ids_cache = [];
+
+    /**
+     * 取得指定 expense_class slug 對應的 term ID（查一次記起來）
+     *
+     * @param array<string> $slugs
+     * @return array<int>
+     */
+    private function get_expense_class_term_ids_by_slugs(array $slugs): array
+    {
+        if (empty($slugs)) {
+            return [];
+        }
+
+        $cache_key = implode(',', $slugs);
+        if (isset($this->expense_class_term_ids_cache[$cache_key])) {
+            return $this->expense_class_term_ids_cache[$cache_key];
+        }
+
+        $term_ids = (new \WP_Query([
+            'post_type' => 'terms',
+            'post_name__in' => $slugs,
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'meta_query' => [
+                [
+                    'key' => 'taxonomy',
+                    'value' => 'expense_class',
+                    'compare' => '='
+                ]
+            ]
+        ]))->posts;
+
+        $this->expense_class_term_ids_cache[$cache_key] = array_map('intval', $term_ids);
+
+        return $this->expense_class_term_ids_cache[$cache_key];
+    }
+
+    /**
      * Constructor.
      */
     public function __construct()
@@ -1058,6 +1112,112 @@ final class OtherReport
     }
 
     /**
+     * 計算 Credit Note Premium Total（期間內所開的 Credit Note 總金額）
+     *
+     * @param string|null $start_date 開始日期
+     * @param string|null $end_date 結束日期
+     * @param \DateTimeZone $wp_timezone WordPress 時區
+     * @return float
+     */
+    private function calculate_credit_note_premium_total($start_date, $end_date, $wp_timezone)
+    {
+        $total_premium_sum = 0;
+
+        if (!$start_date || !$end_date) {
+            return $total_premium_sum;
+        }
+
+        // 查詢期間內的 Credit Notes
+        $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+        $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+        $start_timestamp = $start_datetime->getTimestamp();
+        $end_timestamp = $end_datetime->getTimestamp();
+
+        $credit_notes_args = [
+            'post_type' => 'credit_notes',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                [
+                    'key' => 'date',
+                    'value' => [$start_timestamp, $end_timestamp],
+                    'compare' => 'BETWEEN',
+                    'type' => 'NUMERIC'
+                ]
+            ]
+        ];
+
+        $credit_notes_query = new \WP_Query($credit_notes_args);
+        if ($credit_notes_query->have_posts()) {
+            while ($credit_notes_query->have_posts()) {
+                $credit_notes_query->the_post();
+                $the_note = $credit_notes_query->post;
+                $total_premium_sum += $this->get_total_premium($the_note);
+            }
+        }
+        wp_reset_postdata();
+
+        return round($total_premium_sum, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
+     * 計算 Other Earning 模組（獨立 CPT other_earnings）的期間總金額
+     *
+     * 注意：與 calculate_other_earning_total() 不是同一回事 —— 那個算的是 expense_class
+     * 為 other-earning-rebate 的支出分類（P&L 的回佣科目），兩者刻意分開，不要互相取代。
+     * 日期取 date 而非 payment_date，與 Trial Balance 其他科目一致。
+     *
+     * @param string|null $start_date
+     * @param string|null $end_date
+     * @param string|null $bank_name 指定銀行（payment_receiver_account），null 表示不限
+     * @return float
+     */
+    private function calculate_other_earnings_module_total($start_date, $end_date, $bank_name = null)
+    {
+        $args = [
+            'post_type' => 'other_earnings',
+            'posts_per_page' => -1,
+        ];
+
+        if ($bank_name) {
+            $args['meta_query'] = [
+                [
+                    'key' => 'payment_receiver_account',
+                    'value' => $bank_name,
+                    'compare' => '=',
+                ],
+            ];
+        }
+
+        if ($start_date && $end_date) {
+            $wp_timezone = wp_timezone();
+            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
+            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
+            $start_timestamp = $start_datetime->getTimestamp();
+            $end_timestamp = $end_datetime->getTimestamp();
+
+            $args['meta_query'][] = [
+                'key' => 'date',
+                'value' => [$start_timestamp, $end_timestamp],
+                'compare' => 'BETWEEN',
+                'type' => 'NUMERIC',
+            ];
+        }
+
+        $query = new \WP_Query($args);
+        $total = 0;
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $total += floatval(get_post_meta(get_the_ID(), 'amount', true));
+            }
+        }
+        wp_reset_postdata();
+
+        return round($total, 2, PHP_ROUND_HALF_UP);
+    }
+
+    /**
      * Get profit and loss analysis callback
      *
      * @param \WP_REST_Request $request Request.
@@ -1631,117 +1791,6 @@ final class OtherReport
     }
 
     /**
-     * 計算指定銀行的 Adjust Balance 總金額（expenses.amount 且 is_adjust_balance=1）
-     *
-     * @param string|null $start_date
-     * @param string|null $end_date
-     * @param string $bank_name
-     * @return float
-     */
-    private function calculate_adjust_balance_total_by_bank($start_date, $end_date, $bank_name)
-    {
-        $args = [
-            'post_type' => 'expenses',
-            'posts_per_page' => -1,
-            'meta_query' => [
-                'relation' => 'AND',
-                [
-                    'key' => 'is_adjust_balance',
-                    'value' => 1,
-                    'compare' => '=',
-                    'type' => 'NUMERIC',
-                ],
-                [
-                    'key' => 'payment_receiver_account',
-                    'value' => $bank_name,
-                    'compare' => '=',
-                ],
-            ],
-        ];
-
-        if ($start_date && $end_date) {
-            $wp_timezone = wp_timezone();
-            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
-            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
-            $start_timestamp = $start_datetime->getTimestamp();
-            $end_timestamp = $end_datetime->getTimestamp();
-
-            $args['meta_query'][] = [
-                'key' => 'date',
-                'value' => [$start_timestamp, $end_timestamp],
-                'compare' => 'BETWEEN',
-                'type' => 'NUMERIC',
-            ];
-        }
-
-        $query = new \WP_Query($args);
-        $total = 0;
-
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
-                $query->the_post();
-                $amount = floatval(get_post_meta(get_the_ID(), 'amount', true));
-                $total += $amount;
-            }
-        }
-        wp_reset_postdata();
-
-        return round($total, 2, PHP_ROUND_HALF_UP);
-    }
-
-    /**
-     * 計算所有 Adjust Balance 的總金額（expenses.amount 且 is_adjust_balance=1，不限定銀行）
-     *
-     * @param string|null $start_date
-     * @param string|null $end_date
-     * @return float
-     */
-    private function calculate_adjust_balance_total($start_date, $end_date)
-    {
-        $args = [
-            'post_type' => 'expenses',
-            'posts_per_page' => -1,
-            'meta_query' => [
-                [
-                    'key' => 'is_adjust_balance',
-                    'value' => 1,
-                    'compare' => '=',
-                    'type' => 'NUMERIC',
-                ],
-            ],
-        ];
-
-        if ($start_date && $end_date) {
-            $wp_timezone = wp_timezone();
-            $start_datetime = new \DateTime($start_date . ' 00:00:00', $wp_timezone);
-            $end_datetime = new \DateTime($end_date . ' 23:59:59', $wp_timezone);
-            $start_timestamp = $start_datetime->getTimestamp();
-            $end_timestamp = $end_datetime->getTimestamp();
-
-            $args['meta_query'][] = [
-                'key' => 'date',
-                'value' => [$start_timestamp, $end_timestamp],
-                'compare' => 'BETWEEN',
-                'type' => 'NUMERIC',
-            ];
-        }
-
-        $query = new \WP_Query($args);
-        $total = 0;
-
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
-                $query->the_post();
-                $amount = floatval(get_post_meta(get_the_ID(), 'amount', true));
-                $total += $amount;
-            }
-        }
-        wp_reset_postdata();
-
-        return round($total, 2, PHP_ROUND_HALF_UP);
-    }
-
-    /**
      * 計算指定銀行的 Expenses 總金額（expenses.amount 且排除 Adjust Balance）
      *
      * @param string|null $start_date
@@ -1793,12 +1842,18 @@ final class OtherReport
             ];
         }
 
+        // Other Earning – Rebate 之類記在 expenses 但其實是收入的分類，不算銀行支出
+        $excluded_term_ids = $this->get_expense_class_term_ids_by_slugs(self::TRIAL_BALANCE_NON_EXPENSE_SLUGS);
+
         $query = new \WP_Query($args);
         $total = 0;
 
         if ($query->have_posts()) {
             while ($query->have_posts()) {
                 $query->the_post();
+                if ($excluded_term_ids && in_array((int) get_post_meta(get_the_ID(), 'term_id', true), $excluded_term_ids, true)) {
+                    continue;
+                }
                 $amount = floatval(get_post_meta(get_the_ID(), 'amount', true));
                 $total += $amount;
             }
@@ -2448,7 +2503,11 @@ final class OtherReport
                 $unmapped['term_id ' . $term_id] = $amount;
                 continue;
             }
-            if (in_array(get_post_field('post_name', $term_id), self::TRIAL_BALANCE_INSURER_PAYMENT_SLUGS, true)) {
+            $slug = get_post_field('post_name', $term_id);
+            // 保險公司付款已由 A/C Payable 各列計算；非支出分類刻意不進任何費用科目
+            if (in_array($slug, self::TRIAL_BALANCE_INSURER_PAYMENT_SLUGS, true)
+                || in_array($slug, self::TRIAL_BALANCE_NON_EXPENSE_SLUGS, true)
+            ) {
                 continue;
             }
 
@@ -2524,23 +2583,31 @@ final class OtherReport
         // 計算 Account Receivable 的 This Period Debit（期間內所開的 Debit Note 總金額）
         $account_receivable_this_period_debit = $this->calculate_account_receivable_debit($start_date, $end_date, $wp_timezone);
         
-        // 計算 Account Receivable 的 This Period Credit（期間內開立的 Receipt 總金額）
-        $account_receivable_this_period_credit = $this->calculate_receipt_total($start_date, $end_date);
+        // 計算 Credit Note Premium Total（期間內所開的 Credit Note 總金額）
+        $credit_note_premium_total = $this->calculate_credit_note_premium_total($start_date, $end_date, $wp_timezone);
 
-        // 計算 SOC - Current 的 This Period Debit（期間內 上海商業銀行 Income + Adjust Balance）
+        // 計算 Account Receivable 的 This Period Credit（期間內開立的 Receipt 總金額 + Credit Note Premium Total）
+        $account_receivable_this_period_credit = round(
+            $this->calculate_receipt_total($start_date, $end_date) + $credit_note_premium_total,
+            2,
+            PHP_ROUND_HALF_UP
+        );
+
+        // 計算 SOC - Current 的 This Period Debit（期間內 上海商業銀行 Income + Other Earning）
+        // Other Earning 同時是 No.27 Rebate-Received / Others 的貸方，記在這裡才借貸相抵
         $soc_bank_name = '上海商業銀行';
         $soc_income = $this->calculate_receipt_total_by_bank($start_date, $end_date, $soc_bank_name);
-        $soc_adjust_balance = $this->calculate_adjust_balance_total_by_bank($start_date, $end_date, $soc_bank_name);
-        $soc_income_plus_adjust = round($soc_income + $soc_adjust_balance, 2, PHP_ROUND_HALF_UP);
+        $soc_other_earning = $this->calculate_other_earnings_module_total($start_date, $end_date, $soc_bank_name);
+        $soc_income_plus_other_earning = round($soc_income + $soc_other_earning, 2, PHP_ROUND_HALF_UP);
         
         // 計算 SOC - Current 的 This Period Credit（期間內 上海商業銀行 Expenses，排除 Adjust Balance）
         $soc_expenses_total = $this->calculate_expenses_total_by_bank($start_date, $end_date, $soc_bank_name);
 
-        // 計算 KP1 - Current 的 This Period Debit（期間內 中國銀行 Income + Adjust Balance）
+        // 計算 KP1 - Current 的 This Period Debit（期間內 中國銀行 Income + Other Earning）
         $boc_bank_name = '中國銀行';
         $boc_income = $this->calculate_receipt_total_by_bank($start_date, $end_date, $boc_bank_name);
-        $boc_adjust_balance = $this->calculate_adjust_balance_total_by_bank($start_date, $end_date, $boc_bank_name);
-        $boc_income_plus_adjust = round($boc_income + $boc_adjust_balance, 2, PHP_ROUND_HALF_UP);
+        $boc_other_earning = $this->calculate_other_earnings_module_total($start_date, $end_date, $boc_bank_name);
+        $boc_income_plus_other_earning = round($boc_income + $boc_other_earning, 2, PHP_ROUND_HALF_UP);
         
         // 計算 KP1 - Current 的 This Period Credit（期間內 中國銀行 Expenses，排除 Adjust Balance）
         $boc_expenses_total = $this->calculate_expenses_total_by_bank($start_date, $end_date, $boc_bank_name);
@@ -2576,8 +2643,8 @@ final class OtherReport
         // 計算 Premium Paid - General 的 This Period Debit（等於所有 insurer payment 的總和）
         $premium_paid_general_debit = round($msig_insurer_payment_total + $tokio_insurer_payment_total + $cmb_insurer_payment_total + $taiping_insurer_payment_total, 2, PHP_ROUND_HALF_UP);
         
-        // 計算 Rebate-Received 的 This Period Credit（期間內所有 Adjust Balance 的總金額）
-        $adjust_balance_total = $this->calculate_adjust_balance_total($start_date, $end_date);
+        // 計算 Rebate-Received 的 This Period Credit（期間內 Other Earning 模組的總金額）
+        $other_earning_module_total = $this->calculate_other_earnings_module_total($start_date, $end_date);
         
         // Selling / Admin & General Expenses 各科目的 This Period Debit：
         // 依 TRIAL_BALANCE_EXPENSE_MAP 把期間內的支出按分類名稱累加到科目，一次查詢算完
@@ -2757,7 +2824,7 @@ final class OtherReport
                 'Beginning Balance Debit' => '417503.19',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $soc_income_plus_adjust,
+                'This Period Debit' => $soc_income_plus_other_earning,
                 'This Period Credit' => $soc_expenses_total,
                 'Spacer 2' => '',
                 'Ending Balance Debit' => null,
@@ -2771,7 +2838,7 @@ final class OtherReport
                 'Beginning Balance Debit' => '20722.54',
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
-                'This Period Debit' => $boc_income_plus_adjust,
+                'This Period Debit' => $boc_income_plus_other_earning,
                 'This Period Credit' => $boc_expenses_total,
                 'Spacer 2' => '',
                 'Ending Balance Debit' => null,
@@ -2983,7 +3050,7 @@ final class OtherReport
                 'Account Name' => 'Premium Received',
                 'Beginning Balance Debit' => '',
                 'Beginning Balance Credit' => '',
-                'This Period Debit' => '',
+                'This Period Debit' => $credit_note_premium_total,
                 'This Period Credit' => $account_receivable_this_period_debit,
                 'Ending Balance Debit' => null,
                 'Ending Balance Credit' => null,
@@ -3011,7 +3078,7 @@ final class OtherReport
                 'Beginning Balance Credit' => '',
                 'Spacer 1' => '',
                 'This Period Debit' => '',
-                'This Period Credit' => $adjust_balance_total,
+                'This Period Credit' => $other_earning_module_total,
                 'Spacer 2' => '',
                 'Ending Balance Debit' => null,
                 'Ending Balance Credit' => null,
