@@ -45,7 +45,9 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
     });
     const debitNoteNo = debitNoteData?.data?.note_no || '';
     const debit_note_id = receiptData?.debit_note_id || 0;
-    const note_no = receiptData?.receipt_no || receiptData?.id;
+    //Note No / Note Date 取自上游單據（debit note 或 renewal），不是 receipt
+    const note_no = debitNoteNo || searchId;
+    const noteDate = debitNoteData?.data?.date;
     const premium = receiptData?.premium ?? getTotalPremiumByDebitNote(debitNoteData?.data);
     const insurerPayment = getInsurerPayment(receiptData, debitNoteData?.data as TDebitNote, insurersData?.data as TInsurer);
     const selectedClient = clientResult?.data || defaultClient;
@@ -87,7 +89,7 @@ export const EditView: React.FC<IResourceComponentsProps> = () => {
                                 </div>
                                 <div className="tr">
                                     <div className="th">Note Date</div>
-                                    <div className="td">{dayjs.unix(receiptData?.date as number).format('YYYY-MM-DD')}</div>
+                                    <div className="td">{typeof noteDate === 'number' ? dayjs.unix(noteDate).format('YYYY-MM-DD') : ''}</div>
                                 </div>
                                 <div className="tr">
                                     <div className="th">Insurer</div>

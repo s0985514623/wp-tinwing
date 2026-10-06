@@ -45,43 +45,30 @@ export const ListView: React.FC = () => {
       : undefined
 
     return [
+      // 日期篩的是對應單據(debit note / renewal / credit note)的日期，不是 receipt 自己的收款日
+      // 後端 Api\Receipts::get_source_note_date_meta_query() 負責換算
       {
-        field: 'meta_query[0][key]',
-        operator: 'eq',
-        value: 'date',
-      },
-      {
-        field: 'meta_query[0][value][0]',
+        field: 'source_note_date[0]',
         operator: 'eq',
         value: startDate,
       },
       {
-        field: 'meta_query[0][value][1]',
+        field: 'source_note_date[1]',
         operator: 'eq',
         value: endDate,
       },
       {
-        field: 'meta_query[0][type]',
-        operator: 'eq',
-        value: 'NUMERIC',
-      },
-      {
-        field: 'meta_query[0][compare]',
-        operator: 'eq',
-        value: filterDateRange ? 'BETWEEN' : '>',
-      },
-      {
-        field: 'meta_query[1][key]',
+        field: 'meta_query[0][key]',
         operator: 'eq',
         value: 'is_paid',
       },
       {
-        field: 'meta_query[1][value]',
+        field: 'meta_query[0][value]',
         operator: 'eq',
         value: filterIsPaid,
       },
       {
-        field: 'meta_query[1][compare]',
+        field: 'meta_query[0][compare]',
         operator: 'eq',
         value: '=',
       },
@@ -183,6 +170,37 @@ export const ListView: React.FC = () => {
     ids: getInsurersIds?.map((theRecord) => theRecord?.client_id || '0') ?? [],
   })
   const clients = clientData?.data || []
+
+  // Note No. / Note Date 顯示的是 receipt 對應的上游單據，來源依序為 credit note → renewal → debit note
+  const getSourceNote = (record?: DataType) => {
+    if (!record) return undefined
+    if (record.created_from_credit_note_id) {
+      const note = creditNotes.find(
+        (cn) => cn.id === record.created_from_credit_note_id,
+      )
+      return note ? { note, path: `/creditNotes/show/${note.id}` } : undefined
+    }
+    if (record.created_from_renewal_id) {
+      const note = renewals.find((r) => r.id === record.created_from_renewal_id)
+      return note ? { note, path: `/renewals/show/${note.id}` } : undefined
+    }
+    if (record.debit_note_id) {
+      const note = debitNotes.find((dn) => dn.id === record.debit_note_id)
+      return note ? { note, path: `/debitNotes/show/${note.id}` } : undefined
+    }
+    return undefined
+  }
+
+  const getSourceNoteNo = (record?: DataType) => {
+    const note = getSourceNote(record)?.note
+    if (!note) return ''
+    return note.note_no || note.id?.toString() || ''
+  }
+
+  const getSourceNoteDate = (record?: DataType) => {
+    const date = getSourceNote(record)?.note?.date
+    return typeof date === 'number' ? date : undefined
+  }
 
   // 計算實際相關的保險公司列表（用於篩選選項）
   const relevantInsurers = useMemo(() => {
@@ -287,9 +305,10 @@ export const ListView: React.FC = () => {
         }
         return 'N/A'
       }
+      const noteDate = getSourceNoteDate(item)
       return {
-        'Receipt No': item?.receipt_no,
-        'Receipt Date': dayjs.unix(item?.date as number).format('YYYY-MM-DD'),
+        'Note No': getSourceNoteNo(item),
+        'Note Date': noteDate ? dayjs.unix(noteDate).format('YYYY-MM-DD') : '',
         'Client Name': clientName(),
         'Policy No': policyNo(),
         Insurer: insurerName,
@@ -437,28 +456,28 @@ export const ListView: React.FC = () => {
         >
           <Table.Column
             width={120}
-            dataIndex="receipt_no"
             title="Note No."
             {...getColumnSearchProps({
               dataIndex: 'receipt_no',
+              renderText: (_text: string | number, _record?: DataType) =>
+                getSourceNoteNo(_record),
             })}
-            // {...getSortProps<DataType>('receipt_no')}
             // 複寫render方法
-            render={(renderReceiptNo: number, record: DataType) => {
-              //取得receipt_no, 如果沒有則顯示id
-              const receipt_no = parsedTableProps?.dataSource?.find(
-                (r) => r.id === record?.id,
-              )?.receipt_no
-              return (
-                <Link to={`/receipts/show/${record?.id}`}>
-                  {receipt_no ?? record?.id}
-                </Link>
-              )
+            render={(_text: string | number, record: DataType) => {
+              const source = getSourceNote(record)
+              if (!source) return ''
+              return <Link to={source.path}>{getSourceNoteNo(record)}</Link>
             }}
             sorter={(a: DataType, b: DataType) => {
-              const a_note = a.receipt_no ?? a.id.toString()
-              const b_note = b.receipt_no ?? b.id.toString()
-              return a_note.localeCompare(b_note)
+              const aNote = getSourceNoteNo(a)
+              const bNote = getSourceNoteNo(b)
+
+              // 空值永遠排到最後
+              if (!aNote && bNote) return 1
+              if (aNote && !bNote) return -1
+              if (!aNote && !bNote) return 0
+
+              return aNote.localeCompare(bNote)
             }}
           />
           <Table.Column
@@ -607,10 +626,22 @@ export const ListView: React.FC = () => {
           />
           <Table.Column
             width={120}
-            dataIndex="date"
             title="Note Date"
-            render={(date: number) => dayjs.unix(date).format('YYYY-MM-DD')}
-            {...getSortProps<DataType>('date')}
+            render={(_text: string | number, record: DataType) => {
+              const date = getSourceNoteDate(record)
+              return date ? dayjs.unix(date).format('YYYY-MM-DD') : ''
+            }}
+            sorter={(a: DataType, b: DataType) => {
+              const aDate = getSourceNoteDate(a)
+              const bDate = getSourceNoteDate(b)
+
+              // 空值永遠排到最後
+              if (!aDate && bDate) return 1
+              if (aDate && !bDate) return -1
+              if (!aDate && !bDate) return 0
+
+              return (aDate as number) - (bDate as number)
+            }}
           />
           <Table.Column
             width={120}

@@ -139,6 +139,27 @@ final class Receipts {
 		if (isset($params['id'])) {
 			$args['post__in'] = $params['id'];
 		}
+		// 如果有 source_note_date 參數，改用「對應單據的日期」篩選，而不是 receipt 自己的收款日
+		if (isset($params['source_note_date'])) {
+			$source_note_meta_query = $this->get_source_note_date_meta_query( (array) $params['source_note_date'] );
+			if (null === $source_note_meta_query) {
+				// 區間內完全沒有單據，直接讓查詢查不到任何 receipt
+				$args['post__in'] = [ 0 ];
+			} elseif (!empty($source_note_meta_query)) {
+				$existing_meta_query = isset($args['meta_query']) ? $args['meta_query'] : [];
+				if (isset($existing_meta_query['relation']) && 'AND' !== strtoupper( (string) $existing_meta_query['relation'] )) {
+					// 原本的條件是 OR 群組，要包一層才不會把日期條件混進那個 OR 裡
+					$args['meta_query'] = [ // phpcs:ignore
+						'relation' => 'AND',
+						$existing_meta_query,
+						$source_note_meta_query,
+					];
+				} else {
+					$existing_meta_query[] = $source_note_meta_query;
+					$args['meta_query']    = $existing_meta_query; // phpcs:ignore
+				}
+			}
+		}
 		// error_log(print_r($args, true));
 		$query      = new \WP_Query($args);
 		$posts_data = [];
@@ -184,6 +205,126 @@ final class Receipts {
 		// $response->header( 'X-WP-TotalPages', $total_pages );
 
 		return $response;
+	}
+	/**
+	 * 依「對應單據的日期」組出 receipts 的 meta_query 條件
+	 *
+	 * Receipt 自己的 date 是收款日，Insurer Payment 畫面上的 Note Date 顯示的是它對應的
+	 * debit note / renewal / credit note 的日期。WP_Query 沒辦法跨 post 關聯篩選，
+	 * 所以先把區間內的單據 ID 查出來，再用 IN 比對 receipt 上的關聯欄位。
+	 *
+	 * @param array<int|string, mixed> $date_range [開始時間戳, 結束時間戳]。
+	 * @return array<int|string, mixed>|null 組好的 meta_query 群組；區間內找不到任何單據時回傳 null（代表不該有結果）；
+	 *                    區間無效時回傳空陣列（代表不篩日期）。
+	 */
+	private function get_source_note_date_meta_query( array $date_range ) {
+		$start = ( isset($date_range[0]) && '' !== $date_range[0] ) ? (int) $date_range[0] : null;
+		$end   = ( isset($date_range[1]) && '' !== $date_range[1] ) ? (int) $date_range[1] : null;
+
+		if (null === $start && null === $end) {
+			return [];
+		}
+
+		// 有 date post meta 的單據：直接比對 meta 值
+		if (null !== $start && null !== $end) {
+			$date_condition = [
+				'key'     => 'date',
+				'value'   => [ $start, $end ],
+				'type'    => 'NUMERIC',
+				'compare' => 'BETWEEN',
+			];
+		} elseif (null !== $start) {
+			$date_condition = [
+				'key'     => 'date',
+				'value'   => $start,
+				'type'    => 'NUMERIC',
+				'compare' => '>=',
+			];
+		} else {
+			$date_condition = [
+				'key'     => 'date',
+				'value'   => $end,
+				'type'    => 'NUMERIC',
+				'compare' => '<=',
+			];
+		}
+
+		// 沒有 date post meta 的單據（例如開收據時自動補建的空 debit note）：
+		// Api\DebitNotes / Renewals / CreditNotes 的列表會 fallback 成 post 發佈日，這裡跟著用 post_date 比對，
+		// 否則畫面上看得到 Note Date、篩選卻永遠撈不到。
+		$wp_timezone = \wp_timezone();
+		$date_query  = [ 'inclusive' => true ];
+		if (null !== $start) {
+			$after_datetime = new \DateTime( '@' . $start );
+			$after_datetime->setTimezone( $wp_timezone );
+			$date_query['after'] = $after_datetime->format( 'Y-m-d H:i:s' );
+		}
+		if (null !== $end) {
+			$before_datetime = new \DateTime( '@' . $end );
+			$before_datetime->setTimezone( $wp_timezone );
+			$date_query['before'] = $before_datetime->format( 'Y-m-d H:i:s' );
+		}
+
+		$base_args = [
+			'post_status'            => 'publish',
+			'posts_per_page'         => -1,
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		];
+
+		// receipt 上的關聯欄位 => 對應的單據 CPT
+		$relations = [
+			'debit_note_id'               => 'debit_notes',
+			'created_from_renewal_id'     => 'renewals',
+			'created_from_credit_note_id' => 'credit_notes',
+		];
+
+		$meta_query = [ 'relation' => 'OR' ];
+		foreach ($relations as $meta_key => $post_type) {
+			$ids_by_meta      = \get_posts(
+				array_merge(
+					$base_args,
+					[
+						'post_type'  => $post_type,
+						'meta_query' => [ $date_condition ], // phpcs:ignore
+					]
+				)
+			);
+			$ids_by_post_date = \get_posts(
+				array_merge(
+					$base_args,
+					[
+						'post_type'  => $post_type,
+						'meta_query' => [ // phpcs:ignore
+							[
+								'key'     => 'date',
+								'compare' => 'NOT EXISTS',
+							],
+						],
+						'date_query' => [ $date_query ],
+					]
+				)
+			);
+
+			$note_ids = array_unique( array_merge( $ids_by_meta, $ids_by_post_date ) );
+			if (empty($note_ids)) {
+				continue;
+			}
+			$meta_query[] = [
+				'key'     => $meta_key,
+				'value'   => array_values( $note_ids ),
+				'compare' => 'IN',
+			];
+		}
+
+		// 只剩 relation，表示區間內三種單據都沒有資料
+		if (1 === count($meta_query)) {
+			return null;
+		}
+
+		return $meta_query;
 	}
 	/**
 	 * Create receipts callback
