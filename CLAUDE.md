@@ -78,7 +78,7 @@ Refine dataProvider (js/src/rest-data-provider/index.ts)
 | 名稱 | 機制 | 用途 |
 | --- | --- | --- |
 | Other Earning **模組** | 獨立 CPT `other_earnings` | 手動輸入的年度性進帳(如年終花紅),分銀行戶口 |
-| Other Earning **– Rebate** | `expense_class` 分類,`post_name` 為 `other-earning-rebate` | P&L 報表的回佣科目,由 `OtherReport.php::calculate_other_earning_total()` 統計 |
+| Other Earning **– Rebate** | `expense_class` 分類,`post_name` 為 `other-earning-rebate` | 舊的回佣科目。Trial Balance / P&L 的 Rebate 已改用 Other Earning 模組,此分類列在 `TRIAL_BALANCE_NON_EXPENSE_SLUGS`,不進任何報表 |
 
 `other_earnings` 刻意做成獨立 CPT 而不是像 `adjust_balance` 那樣在 `expenses` 上加旗標,就是為了讓它**不可能**被既有的支出統計誤算。因此 Expenses 列表 / Expense Summary / Dashboard Expenses / P&L 的 Admin Expenses 都不需要、也不應該加排除條件。
 
@@ -151,7 +151,7 @@ Refine dataProvider (js/src/rest-data-provider/index.ts)
 Dashboard(`pages/accounting/dashboard/ListView.tsx`)的 Other Earning 會出現在三個位置:Income 區塊的總額卡片、Income 的各銀行金額、Profit 的各銀行金額。
 
 ### 報表模組
-`inc/classes/Api/OtherReport.php`(約 3,500 行)提供 7 個端點:
+`inc/classes/Api/OtherReport.php`(約 2,500 行)提供 7 個端點:
 
 - `client_ageing_report` — 客戶帳齡分析
 - `insurer_ageing_report` — 保險公司帳齡分析
@@ -165,17 +165,28 @@ Excel 匯出走 `exceljs`,共用 hook 在 `js/src/hooks/useExcelExport.tsx` 與 
 
 #### Trial Balance(`get_trial_balance_callback()`)
 
-55 個科目的清單寫在 PHP 陣列裡,依客戶提供的 Excel 定義。三組金額的來源不同:
+55 個科目連同期初常數集中在 `TRIAL_BALANCE_ACCOUNTS`,依客戶「終極版」Excel 定義。五組金額:
 
 | 欄位 | 來源 |
 | --- | --- |
-| 期初 Beginning | **寫死常數**,為「截至 31/03/2025」的結帳後餘額;損益類科目(No.25–50)期初為空。標題日期固定,不隨報表起始日變動 |
-| 本期 This Period | 1–28 列各有專屬計算(應收、銀行、保險公司應付等);29–55 費用列由 `calculate_expenses_totals_by_trial_balance_item()` 依 `TRIAL_BALANCE_EXPENSE_MAP` 一次彙總 |
-| 期末 Ending、合計 | **即時計算**。`ASSET` / `CONTRA_ASSET` / `EXPENSE` 取「借 − 貸」放借方,其餘取「貸 − 借」放貸方 |
+| 期初常數 Beginning Balance | **寫死**,為截至 `TRIAL_BALANCE_BASE_DATE`(31/03/2025)的結帳後餘額;損益類科目(No.25–55)為空 |
+| 起始日前發生額 Beginning Period | 01/04/2025 ~ 報表起始日前一天,與本期用同一個 `calculate_trial_balance_movements()` 計算 |
+| 起始日期初 Opening Balance | 前兩組相加。損益科目的發生額**全部結轉進 Retained Profit**、自己留空 —— 起始日在年度中間也一樣(客戶 2026-10-06 決定) |
+| 本期 This Period | `calculate_trial_balance_movements()`:1–28 列各有專屬計算(應收、銀行、保險公司應付等);29–55 費用列依 `TRIAL_BALANCE_EXPENSE_MAP` 一次彙總 |
+| 期末 Ending、合計 | **即時計算**。`ASSET` / `CONTRA_ASSET` / `EXPENSE` 取「借 − 貸」放借方,其餘取「貸 − 借」放貸方;合計加總全部 55 列 |
 
 - **改期初數字 = 改 PHP 常數**,沒有設定介面。
+- 起始日早於 01/04/2025 時無從滾算:起始日前發生額留空、期初直接用常數,API 回傳 `notice`,前端匯出時跳出提示。
 - **客戶新增支出分類時要更新 `TRIAL_BALANCE_EXPENSE_MAP`**,否則該分類不會進任何費用列,只會在 `debug.log` 留下「對不到科目的支出分類」並造成借貸不平衡。名稱為 `Others 數字` 的分類自動歸 `Misc`,不必加。
-- 前端匯出依每列的 `Category` 排版,增減科目不必改前端。
+- 前端匯出依每列的 `Category` 與標題列的 `Header Type` 排版,增減科目不必改前端;增減金額組要同步改 `TRIAL_BALANCE_AMOUNT_GROUPS` 與 `useExcelExport.tsx` 的 `amountGroups`。
+
+#### Profit & Loss 與 Balance Sheet
+
+兩張表的數字**全部取自 Trial Balance**,不另外查資料,所以三張表永遠對得上:
+
+- **Profit & Loss**(`get_profit_and_loss_analysis_callback()`):只有本期一欄。Premium Received / Premium Paid / Rebate Received 分別是 No.25 / 26 / 27,Total Expenses 是 No.29–55 加總(不列明細),計算集中在 `calculate_profit_and_loss()`。
+- **Balance Sheet**(`get_balance_sheet_callback()`):每一行都是 Trial Balance 的期末餘額,版面定義在 `BALANCE_SHEET_SECTIONS`;`Profit & Loss A/C` 是本期淨利,Retained Profit 是結轉後的期初。因此 Total Asset 恆等於 Total Current Liabilities + Total Capital。
+- 兩張表的「As at」都是報表結束日。前端共用 `useExcelExport.tsx` 的通用報表分支,金額欄位由 `statementValueKeys` 決定。
 
 ### Debit Note 的 5 種模板
 `general` / `motor` / `shortTerms` / `package` / `marineInsurance`,定義在 `js/src/pages/debitNotes/types/index.ts` 的 `templates` 陣列與 `ZTemplates` enum。每種模板各有一組 `EditTemplate*` 與 `ShowTemplate*` 元件(`js/src/pages/debitNotes/components/`)。列印用 `react-to-print`,進入點在各資源的 `ShowView.tsx`。
